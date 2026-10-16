@@ -3194,7 +3194,7 @@ async function ladeErgebnisse() {
   const haupt = alle.filter(x => x.gruppe === "ausgabe"), vorl = alle.filter(x => x.gruppe === "vorlagen"), digital = alle.filter(x => x.gruppe === "digital");
   if (!haupt.length && !digital.length && !d.einzelbilder) {
     $("#ergebnis-inhalt").innerHTML = `<div class="flaeche leer"><img src="/symbol.svg" alt=""><h2>${esc(t("nichts_erzeugt"))}</h2>
-      <p>${esc(t("nichts_erzeugt_text"))}</p><div class="knopfzeile"><a class="knopf haupt gross" href="#erzeugen">${esc(t("zu_schritt3"))}</a></div></div>`; return;
+      <p>${esc(t("nichts_erzeugt_text"))}</p><div class="knopfzeile"><a class="knopf haupt gross" href="#erzeugen">${esc(t("zu_schritt3"))}</a></div>${appTipp()}</div>`; return;
   }
   const zeile = x => `<div class="ergebnis"><div><h3 style="margin:0">${esc(x.titel)}</h3>
       <div class="name">${esc(x.name)} – ${groesse(x.groesse)}, ${esc(datum(x.zeit))}</div>${x.beschreibung ? `<div class="klein">${esc(x.beschreibung)}</div>` : ""}</div>
@@ -3237,7 +3237,7 @@ async function ladeErgebnisse() {
     <section class="flaeche abstand"><h2 class="schritt-kopf"><span class="schritt-nr">3</span>${esc(t("pr_s3"))}</h2>
       ${digital.length ? `<div class="liste-zeilen">${digital.map(zeile).join("")}</div>${liste("pr_digital_tipps")}`
         : `<p>${esc(t("pr_digital_leer"))}</p><div class="knopfzeile"><button class="knopf haupt" data-ziel-digital title="${esc(t("h_digital_knopf"))}">${esc(t("pr_digital_knopf"))}</button></div>`}
-      ${!AM_APP && appAdresse() ? `<div class="knopfzeile abstand app-tipp"><span class="klein">📲 ${esc(t("pr_app_tipp"))}</span><button class="knopf" type="button" data-app-aktion="zur-app">${esc(t("app_als_app"))}</button></div>` : ""}</section>
+      ${appTipp()}</section>
     ${vorl.length ? `<details class="flaeche abstand"><summary title="${esc(t("h_vorlagen"))}">${esc(t("vorlagen"))}</summary><p class="klein">${esc(t("pr_vorlagen_text"))}</p><div class="liste-zeilen">${vorl.map(zeile).join("")}</div></details>` : ""}`;
 }
 document.addEventListener("click", e => {
@@ -5478,6 +5478,10 @@ function appNaviZahlen() {
   const mehr = $("#app-zahl-mehr"); if (mehr) mehr.hidden = !(APP_UPDATE || wert("zahl-tabelle") || wert("zahl-ideen"));
 }
 function appAdresse() { return (S.status && S.status.web_adresse) || ""; }
+function appTipp() {                                            // Prüfen & drucken: Hinweis auf die Handy-App (am Rechner/Handy-Zugang)
+  return !AM_APP && appAdresse() ? `<div class="knopfzeile abstand app-tipp"><span class="klein">📲 ${esc(t("pr_app_tipp"))}</span>
+    <button class="knopf" type="button" data-app-aktion="zur-app">${esc(t("app_als_app"))}</button></div>` : "";
+}
 function appInstallierbar() { return AM_APP && !alsAppGestartet(); }
 function zeichneMehr() {
   const name = ansicht();
