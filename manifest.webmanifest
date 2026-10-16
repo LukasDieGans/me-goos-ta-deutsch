@@ -1,0 +1,73 @@
+{
+ "id": "./",
+ "name": "Me Goos-ta Deutsch",
+ "short_name": "Goos-ta",
+ "description": "Picture flash cards with goose puns: make, print and learn them – also offline.",
+ "lang": "en",
+ "dir": "ltr",
+ "start_url": "./",
+ "scope": "./",
+ "display": "standalone",
+ "orientation": "any",
+ "background_color": "#E8F2FA",
+ "theme_color": "#FFFFFF",
+ "categories": [
+  "education",
+  "productivity"
+ ],
+ "icons": [
+  {
+   "src": "symbole/symbol-192.png",
+   "sizes": "192x192",
+   "type": "image/png",
+   "purpose": "any"
+  },
+  {
+   "src": "symbole/symbol-512.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "any"
+  },
+  {
+   "src": "symbole/symbol-maskable-512.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "maskable"
+  },
+  {
+   "src": "symbol.svg",
+   "sizes": "any",
+   "type": "image/svg+xml",
+   "purpose": "any"
+  }
+ ],
+ "shortcuts": [
+  {
+   "name": "Learn cards",
+   "short_name": "Learn",
+   "url": "./#lernen",
+   "icons": [
+    {
+     "src": "symbole/symbol-192.png",
+     "sizes": "192x192",
+     "type": "image/png",
+     "purpose": "any"
+    }
+   ]
+  },
+  {
+   "name": "New card",
+   "short_name": "New",
+   "url": "./#bild",
+   "icons": [
+    {
+     "src": "symbole/symbol-192.png",
+     "sizes": "192x192",
+     "type": "image/png",
+     "purpose": "any"
+    }
+   ]
+  }
+ ],
+ "x_version": "1.6-23a0589531"
+}

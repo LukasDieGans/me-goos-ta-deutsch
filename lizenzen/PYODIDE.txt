@@ -1,0 +1,6 @@
+Pyodide 314.0.7 – Python für den Browser (WebAssembly)
+Lizenz: Mozilla Public License 2.0 (MPL-2.0) – https://www.mozilla.org/MPL/2.0/
+Quelltext: https://github.com/pyodide/pyodide (Tag 314.0.7); unverändert mitgeliefert (pyodide/).
+Enthält CPython (Python Software Foundation License) und Pakete mit eigenen Lizenzen, die jeweils in ihren Rädern
+(*.whl → *.dist-info) mitgeliefert werden: NumPy (BSD-3-Clause), Pillow (MIT-CMU), charset-normalizer (MIT), ReportLab (BSD).
+Weitere Angaben: DRITTLIZENZEN.md.

@@ -1,0 +1,1353 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; font-src 'self'; connect-src 'self'; worker-src 'self'; manifest-src 'self'; media-src 'self' blob:; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="description" content="Picture flash cards with goose puns: make, print and learn them – also offline. Bildkarten mit Gänse-Wortwitz. Tarjetas con juegos de palabras de gansos.">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Goos-ta">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#FFFFFF">
+<title>Me Goos-ta Deutsch</title>
+<link rel="icon" href="favicon.ico">
+<link rel="icon" type="image/svg+xml" href="symbol.svg">
+<link rel="apple-touch-icon" href="symbole/apple-touch-icon.png">
+<style>
+@font-face { font-family: "Poppins"; src: url("schrift/Poppins-Regular.ttf") format("truetype"); font-weight: 400; font-display: swap; }
+@font-face { font-family: "Poppins"; src: url("schrift/Poppins-Medium.ttf") format("truetype"); font-weight: 500; font-display: swap; }
+@font-face { font-family: "Poppins"; src: url("schrift/Poppins-Bold.ttf") format("truetype"); font-weight: 700; font-display: swap; }
+
+:root {
+  --himmel: #E8F2FA;
+  --wasser: #BFDDF2;
+  --wasser-hell: #D9EAF7;
+  --nacht: #1B2D4F;
+  --nacht-2: #3F5C88;
+  --nacht-3: #6E84A8;
+  --schnabel: #F6A94B;
+  --schnabel-dunkel: #E08E2B;
+  --feder: #FFFFFF;
+  --linie: #C9DCEB;
+  --gut: #1E8A50;
+  --gut-flaeche: #E3F4EA;
+  --schlecht: #C9383C;
+  --warn: #9A5A12;
+  --warn-flaeche: #FFF4E3;
+  --fehler-flaeche: #FDECEC;
+  /* Weitere Farben (Standardwerte = die bisher fest eingetragenen Töne; Schemata überschreiben sie, siehe Farben & Darstellung) */
+  --auf-nacht: #FFFFFF;          /* Schrift auf --nacht-Flächen (Knöpfe, Toast, Nummern) */
+  --auf-schnabel: #1B2D4F;       /* Schrift auf --schnabel-Flächen (Hauptknopf, Zähler) */
+  --auf-signal: #FFFFFF;         /* Schrift auf --gut-/--schlecht-Flächen */
+  --punkt: #FFFFFF;              /* Schaltknauf */
+  --akzent-text: #E08E2B;        /* Akzentfarbe als Schrift (Schrittmarke) */
+  --fehler-text: #8E1F23;
+  --warn-chip: #FFE2B8;
+  --warn-chip-2: #FFF0D6;
+  --flaeche-aus: #F3F7FB;
+  --flaeche-leise: #F7FAFD;
+  --flaeche-ablage: #FFFBF4;
+  --spur: #C3D2E0;
+  --doku-text: #26395E;
+  --schatten: 27, 45, 79;        /* r, g, b für rgba(var(--schatten), a) */
+  --schwarz: 0, 0, 0;
+  --glas: rgba(255, 255, 255, .92);
+  --toast-rand: rgba(255, 255, 255, .5);
+  --weiss: #FFFFFF;
+  --code-bg: #1B2D4F;
+  --code-text: #DCE8F5;
+  --code-warn: #FFC978;
+  --code-err: #FF9A9A;
+  --code-gut: #9EE3B8;
+  --buehne: #2A3A57;
+  --ente-1: #C98F00;
+  --ente-s: #E07B00;
+  --ente-w1: #2E9CCA;
+  --ente-w2: #2F6FDE;
+  --farbschema: light;
+  --radius-gross: 14px;
+  --radius: 8px;
+  --schrift: "Poppins", "Segoe UI", system-ui, sans-serif;
+  --mono: "Cascadia Mono", Consolas, "SF Mono", monospace;
+}
+:root { color-scheme: var(--farbschema); }
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { font-family: var(--schrift); font-size: 15px; line-height: 1.5; color: var(--nacht); background: var(--himmel);
+  -webkit-font-smoothing: antialiased; }
+button, input, select, textarea { font: inherit; color: inherit; }
+a { color: var(--nacht-2); }
+:focus-visible { outline: 3px solid var(--schnabel); outline-offset: 2px; border-radius: 4px; }
+[hidden] { display: none !important; }
+
+/* ---------- Gerüst ---------- */
+.kopf { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; gap: 16px; height: 64px; padding: 0 24px;
+  background: var(--feder); border-bottom: 1px solid var(--linie); }
+.marke { display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--nacht); min-width: 0; }
+.marke img { width: 44px; height: 44px; flex: none; }
+.marke b { font-size: 18px; font-weight: 700; white-space: nowrap; }
+.kopf .rechts { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+.sprachwahl { display: inline-flex; padding: 3px; border-radius: 10px; background: var(--himmel); border: 1px solid var(--linie); }
+.sprachwahl button { border: 0; background: none; padding: 4px 10px; border-radius: 7px; cursor: pointer; font-weight: 700;
+  font-size: 13px; color: var(--nacht-2); }
+.sprachwahl button[aria-pressed="true"] { background: var(--feder); color: var(--nacht); box-shadow: 0 1px 2px rgba(var(--schatten), .15); }
+
+.rahmen { display: grid; grid-template-columns: 250px 1fr; min-height: calc(100vh - 64px); }
+.navi { padding: 20px 12px; border-right: 1px solid var(--linie); display: flex; flex-direction: column; gap: 2px;
+  position: sticky; top: 64px; height: calc(100vh - 64px); overflow-y: auto; }
+.navi .abschnitt { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--nacht-3);
+  padding: 14px 12px 4px; }
+.navi a { display: flex; align-items: center; gap: 12px; padding: 9px 12px; border-radius: var(--radius); text-decoration: none;
+  color: var(--nacht-2); font-weight: 500; white-space: nowrap; }
+.navi a:hover { background: var(--wasser-hell); color: var(--nacht); }
+.navi a[aria-current="page"] { background: var(--feder); color: var(--nacht); box-shadow: inset 3px 0 0 var(--schnabel); }
+.navi .schritt { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; font-weight: 700;
+  background: var(--wasser); color: var(--nacht); flex: none; }
+.navi a[aria-current="page"] .schritt { background: var(--schnabel); color: var(--auf-schnabel); }
+.navi .symbol { width: 24px; text-align: center; flex: none; color: var(--nacht-3); }
+.navi .zahl { margin-left: auto; min-width: 22px; height: 22px; padding: 0 7px; border-radius: 11px; background: var(--schnabel);
+  color: var(--auf-schnabel); font-size: 12px; font-weight: 700; display: inline-grid; place-items: center; }
+.navi hr { border: 0; border-top: 1px solid var(--linie); margin: 12px 8px; }
+.navi .fuss { margin-top: auto; padding: 12px; font-size: 12px; color: var(--nacht-3); line-height: 1.6; }
+.navi .fuss .ok::before { content: "●"; color: var(--gut); margin-right: 6px; }
+.navi .fuss .nein::before { content: "●"; color: var(--schnabel-dunkel); margin-right: 6px; }
+
+main { padding: 32px 40px 80px; min-width: 0; }
+.ansicht { max-width: 1120px; }
+.titelzeile { display: flex; align-items: flex-end; gap: 16px; flex-wrap: wrap; margin-bottom: 24px; }
+.titelzeile .text { flex: 1 1 320px; }
+.schrittmarke { display: inline-block; font-size: 13px; font-weight: 700; color: var(--akzent-text); margin-bottom: 2px; }
+h1 { font-size: 30px; line-height: 1.2; margin: 0 0 4px; font-weight: 700; }
+h2 { font-size: 18px; margin: 0 0 12px; font-weight: 700; }
+h3 { font-size: 15px; margin: 0 0 8px; font-weight: 700; }
+.unter { color: var(--nacht-2); margin: 0; max-width: 70ch; }
+.klein { font-size: 13px; color: var(--nacht-3); }
+
+/* ---------- Knöpfe ---------- */
+.knopf { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 40px; padding: 8px 16px;
+  border-radius: var(--radius); border: 1px solid var(--linie); background: var(--feder); color: var(--nacht); font-weight: 500;
+  cursor: pointer; text-decoration: none; white-space: nowrap; }
+.knopf:hover { border-color: var(--nacht-3); }
+.knopf:disabled { opacity: .45; cursor: not-allowed; }
+.knopf.haupt { background: var(--schnabel); border-color: var(--schnabel); color: var(--auf-schnabel); font-weight: 700; }
+.knopf.haupt:hover:not(:disabled) { background: var(--schnabel-dunkel); border-color: var(--schnabel-dunkel); }
+.knopf.dunkel { background: var(--nacht); border-color: var(--nacht); color: var(--auf-nacht); }
+.knopf.gross { min-height: 52px; padding: 12px 24px; font-size: 16px; }
+.knopf.leise { border-color: transparent; background: transparent; color: var(--nacht-2); }
+.knopf.leise:hover { background: var(--wasser-hell); }
+.knopf.klein { min-height: 32px; padding: 4px 10px; font-size: 13px; }
+.knopf.rund { width: 40px; padding: 0; font-size: 18px; }
+.knopf.gefahr:hover { color: var(--schlecht); }
+
+/* ---------- Flächen ---------- */
+.flaeche { background: var(--feder); border: 1px solid var(--linie); border-radius: var(--radius-gross); padding: 20px 24px; }
+.flaeche + .flaeche { margin-top: 16px; }
+.hinweise { margin: 0 0 16px; padding: 12px 16px; border-radius: var(--radius); background: var(--warn-flaeche); font-size: 14px; }
+.hinweise ul { margin: 4px 0 0; padding-left: 18px; }
+.hinweise .fehler { color: var(--schlecht); }
+.banner { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 16px; padding: 14px 18px;
+  border-radius: var(--radius-gross); background: var(--feder); border: 1px solid var(--schnabel); }
+.banner p { margin: 0; flex: 1 1 300px; }
+
+/* ---------- Prüfmeldungen ---------- */
+.pruefliste { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; font-size: 14px; }
+.pruefliste li { display: grid; grid-template-columns: 22px 1fr; gap: 8px; align-items: start; padding: 6px 10px; border-radius: 8px; }
+.pruefliste li::before { width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; font-size: 12px;
+  font-weight: 700; margin-top: 1px; }
+.pruefliste .ok::before { content: "✓"; background: var(--gut-flaeche); color: var(--gut); }
+.pruefliste .info::before { content: "i"; background: var(--himmel); color: var(--nacht-2); }
+.pruefliste .warnung { background: var(--warn-flaeche); }
+.pruefliste .warnung::before { content: "!"; background: var(--warn-chip); color: var(--warn); }
+.pruefliste .fehler { background: var(--fehler-flaeche); color: var(--fehler-text); }
+.pruefliste .fehler::before { content: "✕"; background: var(--schlecht); color: var(--auf-signal); }
+
+/* ---------- Karten-Übersicht ---------- */
+.kartenliste { display: flex; flex-direction: column; gap: 12px; }
+.zeile { display: grid; grid-template-columns: 184px minmax(0, 1fr) auto; gap: 20px; align-items: start; padding: 16px;
+  background: var(--feder); border: 1px solid var(--linie); border-radius: var(--radius-gross); }
+.zeile.aus { background: var(--flaeche-aus); }
+.zeile.aus .karte { filter: grayscale(.8); opacity: .6; }
+.karte { width: 184px; aspect-ratio: 88 / 63; padding: 0; border: 0; background: none; cursor: pointer; perspective: 900px;
+  border-radius: 10px; display: block; }
+.karte .innen { position: relative; display: block; width: 100%; height: 100%; transform-style: preserve-3d;
+  transition: transform .55s cubic-bezier(.3, .7, .2, 1); }
+.karte.gedreht .innen { transform: rotateY(180deg); }
+.karte .seite { position: absolute; inset: 0; border-radius: 9px; overflow: hidden; backface-visibility: hidden;
+  background: var(--wasser-hell); box-shadow: 0 1px 2px rgba(var(--schatten), .18), 0 4px 10px rgba(var(--schatten), .10); }
+.karte .hinten { transform: rotateY(180deg); }
+.karte img, .bildchen img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.karte .ersatz { position: absolute; inset: 8%; border-radius: 6px; background: var(--wasser); display: grid; place-items: center;
+  padding: 8px; text-align: center; font-weight: 700; font-size: 15px; line-height: 1.2; }
+.karte-hinweis { display: block; margin-top: 6px; font-size: 12px; color: var(--nacht-3); text-align: center; }
+.kartentext .oben { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 4px; }
+.kartentext h3 { margin: 0; font-size: 17px; }
+.kartentext .es { font-size: 16px; font-weight: 500; color: var(--nacht-2); }
+.kartentext .es.fehlt { color: var(--schlecht); font-weight: 500; }
+.kartentext .notiz { font-size: 13px; color: var(--nacht-3); }
+.nr { min-width: 32px; height: 26px; padding: 0 8px; border-radius: 13px; background: var(--nacht); color: var(--auf-nacht); font-size: 13px;
+  font-weight: 700; display: inline-grid; place-items: center; }
+.nr.ohne { background: var(--wasser); color: var(--nacht-2); }
+.datei { font-size: 12.5px; color: var(--nacht-3); overflow-wrap: anywhere; font-family: var(--mono); }
+.marken { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+.marke-q { font-size: 12px; font-weight: 500; padding: 2px 10px; border-radius: 12px; background: var(--himmel); color: var(--nacht-2); }
+.marke-q.gut { background: var(--gut-flaeche); color: var(--gut); }
+.marke-q.schlecht { background: var(--fehler-flaeche); color: var(--schlecht); }
+.marke-q.warn { background: var(--warn-flaeche); color: var(--warn); }
+.aktionen { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+.reihenfolge { display: flex; gap: 4px; }
+.reihenfolge .knopf { width: 36px; padding: 0; }
+.schalter { display: inline-flex; align-items: center; gap: 10px; cursor: pointer; user-select: none; }
+.schalter input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.schalter .spur { width: 40px; height: 24px; border-radius: 12px; background: var(--spur); position: relative; transition: background .15s; flex: none; }
+.schalter .spur::after { content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%;
+  background: var(--punkt); box-shadow: 0 1px 2px rgba(var(--schwarz), .25); transition: transform .15s; }
+.schalter input:checked + .spur { background: var(--nacht); }
+.schalter input:checked + .spur::after { transform: translateX(16px); }
+.schalter input:focus-visible + .spur { outline: 3px solid var(--schnabel); outline-offset: 2px; }
+
+/* ---------- Schritt 1 ---------- */
+.ablagefeld { display: grid; place-items: center; text-align: center; gap: 8px; padding: 36px 24px; border-radius: var(--radius-gross);
+  border: 2px dashed var(--nacht-3); background: var(--feder); cursor: pointer; }
+.ablagefeld:hover, .ablagefeld.aktiv { border-color: var(--schnabel-dunkel); background: var(--flaeche-ablage); }
+.ablagefeld img { width: 88px; height: 88px; }
+.ablagefeld b { font-size: 18px; }
+.entwurf { display: block; padding: 16px 20px; margin-top: 12px;
+  background: var(--feder); border: 1px solid var(--linie); border-radius: var(--radius-gross); }
+.entwurf.bereit { border-color: var(--gut); }
+.entwurf .bilder { display: flex; flex-direction: column; gap: 10px; }
+.bildchen { position: relative; width: 220px; border-radius: 10px; overflow: hidden; background: var(--himmel);
+  box-shadow: 0 1px 2px rgba(var(--schatten), .18); }
+.bildchen.original { aspect-ratio: 1; }
+.bildchen.original img { object-fit: contain; }
+.bildchen.kartenform { aspect-ratio: 88 / 63; }
+.bildchen .etikett { position: absolute; left: 6px; top: 6px; font-size: 11px; font-weight: 700; padding: 1px 8px; border-radius: 10px;
+  background: var(--glas); color: var(--nacht); }
+.drehen { display: flex; gap: 6px; align-items: center; }
+.entwurf .felder { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.f { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.f > span, .f > label.titel { font-size: 13px; color: var(--nacht-2); font-weight: 500; }
+.f input, .f select, .f textarea, .eingabe { width: 100%; min-height: 42px; padding: 8px 12px; border: 1px solid var(--linie);
+  border-radius: var(--radius); background: var(--feder); }
+.f input:hover, .f select:hover { border-color: var(--nacht-3); }
+.f input.gross { font-size: 17px; font-weight: 500; }
+.f.fehlt input { border-color: var(--schlecht); background: var(--fehler-flaeche); }
+.dateiname code { font-family: var(--mono); font-size: 12.5px; background: var(--himmel); padding: 2px 6px; border-radius: 5px; }
+.knopfzeile { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.knopfzeile .rechts { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }
+.laedt { padding: 18px 24px; margin-top: 16px; border-radius: var(--radius-gross); background: var(--feder); border: 1px dashed var(--linie);
+  color: var(--nacht-2); }
+.segmente span.empf { display: inline; padding: 0; margin-left: 6px; color: var(--gut); background: none; box-shadow: none; }
+.bildchen.unlesbar { aspect-ratio: auto; height: 96px; }
+
+/* ---------- Schritt 2 ---------- */
+.editor { display: grid; grid-template-columns: 260px minmax(0, 1fr); gap: 24px; padding: 20px 24px; margin-top: 16px;
+  background: var(--feder); border: 1px solid var(--linie); border-radius: var(--radius-gross); }
+.editor .bilder { display: flex; flex-direction: column; gap: 10px; }
+.editor .bildchen { width: 260px; }
+.editor .felder { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.editor .bilder > .knopf { align-self: flex-start; }
+.editor .bilder.ziel { outline: 3px dashed var(--schnabel-dunkel); outline-offset: 6px; border-radius: 12px; }
+.bildchen .fehlt-bild { display: grid; place-items: center; height: 100%; padding: 8px; font-size: 13px; color: var(--nacht-3); text-align: center; }
+.editor .ersatz { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 16px 24px; align-items: flex-start; padding: 14px 16px;
+  border-radius: var(--radius-gross); background: var(--himmel); border: 2px dashed var(--schnabel-dunkel); }
+.editor .ersatz .felder { flex: 1 1 280px; }
+.zeichen { display: flex; gap: 4px; flex-wrap: wrap; }
+.zeichen button { min-width: 32px; height: 30px; border-radius: 6px; border: 1px solid var(--linie); background: var(--himmel);
+  cursor: pointer; font-weight: 500; }
+.zeichen button:hover { border-color: var(--nacht-3); background: var(--feder); }
+.tipp { font-size: 12.5px; color: var(--nacht-3); }
+.zwei { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+.leer { text-align: center; padding: 48px 24px; }
+.leer img { width: 120px; height: 120px; margin-bottom: 8px; }
+.leer p { color: var(--nacht-2); margin: 0 auto 20px; max-width: 52ch; }
+.leer .knopfzeile { justify-content: center; }
+
+/* ---------- Erzeugen ---------- */
+.erzeugen-raster { display: grid; grid-template-columns: minmax(0, 1fr) 400px; gap: 24px; align-items: start; }
+.startknoepfe { display: flex; flex-wrap: wrap; gap: 10px; }
+.auswahlzeile { display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap; margin-top: 20px; }
+.auswahlzeile .f { flex: 0 1 240px; }
+.befehl { margin-top: 16px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 13px; color: var(--nacht-3); }
+.befehl code { font-family: var(--mono); font-size: 12.5px; color: var(--nacht); background: var(--himmel); padding: 4px 8px;
+  border-radius: 6px; overflow-wrap: anywhere; }
+.befehl-fehler { margin-top: 8px; color: var(--schlecht); font-size: 14px; }
+.ki-hinweis { margin-top: 16px; padding: 10px 14px; border-radius: var(--radius); background: var(--himmel); font-size: 14px; }
+.gruppe h2 { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.gruppe h2 small { font-weight: 400; font-size: 13px; color: var(--nacht-3); }
+.feldraster { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 16px 20px; }
+.feld { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.feld .etikett { font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 6px; }
+.feld.geaendert .etikett::after { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--schnabel); }
+.feld .hilfe { font-size: 12.5px; color: var(--nacht-3); line-height: 1.4; }
+.feld.breit { grid-column: 1 / -1; }
+.flagge { font-family: var(--mono); font-size: 11.5px; color: var(--nacht-3); white-space: nowrap; margin-left: 4px; }
+.mit-einheit { display: flex; align-items: center; gap: 8px; }
+.mit-einheit span { font-size: 13px; color: var(--nacht-3); }
+.segmente { display: inline-flex; align-self: flex-start; padding: 3px; border-radius: 10px; background: var(--himmel); border: 1px solid var(--linie); flex-wrap: wrap; }
+.segmente label { position: relative; cursor: pointer; }
+.segmente input { position: absolute; opacity: 0; }
+.segmente span { display: block; padding: 6px 14px; border-radius: 7px; font-size: 14px; font-weight: 500; color: var(--nacht-2); }
+.segmente input:checked + span { background: var(--feder); color: var(--nacht); box-shadow: 0 1px 2px rgba(var(--schatten), .15); }
+.segmente input:focus-visible + span { outline: 3px solid var(--schnabel); }
+details.gruppe > summary { cursor: pointer; font-weight: 700; font-size: 18px; list-style-position: outside; }
+details.gruppe[open] > summary { margin-bottom: 12px; }
+details.gruppe > summary small { font-weight: 400; font-size: 13px; color: var(--nacht-3); margin-left: 8px; }
+.abstand { margin-top: 16px; }
+
+.lauf { position: sticky; top: 88px; }
+.lauf .kopfzeile { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+.pille { font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 12px; background: var(--himmel); color: var(--nacht-2); white-space: nowrap; }
+.pille.laeuft { background: var(--warn-flaeche); color: var(--warn); }
+.pille.ok { background: var(--gut-flaeche); color: var(--gut); }
+.pille.fehler { background: var(--fehler-flaeche); color: var(--schlecht); }
+.protokoll { margin: 0; height: 340px; overflow: auto; padding: 14px 16px; border-radius: var(--radius); background: var(--code-bg);
+  color: var(--code-text); font-family: var(--mono); font-size: 12.5px; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; }
+.protokoll .warn { color: var(--code-warn); }
+.protokoll .err { color: var(--code-err); }
+.protokoll .gut { color: var(--code-gut); }
+.lauf .befehlszeile { font-family: var(--mono); font-size: 12px; color: var(--nacht-3); margin: 0 0 10px; overflow-wrap: anywhere; }
+.lauf .nachher { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+
+/* ---------- Ergebnisse / Werkzeuge ---------- */
+.liste-zeilen { display: flex; flex-direction: column; }
+.ergebnis, .werkzeug { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 16px; align-items: center; padding: 16px 0;
+  border-top: 1px solid var(--linie); }
+.ergebnis:first-child, .werkzeug:first-child { border-top: 0; padding-top: 0; }
+.ergebnis .name { font-family: var(--mono); font-size: 12.5px; color: var(--nacht-3); overflow-wrap: anywhere; }
+.ergebnis .knoepfe, .werkzeug .knoepfe { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; align-items: center; }
+.bericht-kopf { display: flex; gap: 24px; flex-wrap: wrap; margin-bottom: 4px; }
+.bericht-kopf div { font-size: 14px; }
+.bericht-kopf b { display: block; font-size: 22px; }
+.druckhinweise { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px 24px; margin: 0; }
+.druckhinweise dt { font-weight: 700; font-size: 14px; }
+.druckhinweise dd { margin: 0; color: var(--nacht-2); font-size: 14px; }
+.meldungen { margin: 12px 0 0; padding-left: 18px; font-size: 14px; }
+.meldungen .fehler { color: var(--schlecht); }
+
+/* ---------- Hilfe ---------- */
+.reiter { display: inline-flex; gap: 4px; padding: 4px; border-radius: 10px; background: var(--feder); border: 1px solid var(--linie);
+  margin-bottom: 16px; flex-wrap: wrap; }
+.reiter button { border: 0; background: none; padding: 8px 16px; border-radius: 7px; cursor: pointer; font-weight: 500; color: var(--nacht-2); }
+.reiter button[aria-selected="true"] { background: var(--nacht); color: var(--auf-nacht); }
+.doku { max-width: 78ch; overflow-wrap: anywhere; }
+.doku h1 { font-size: 26px; }
+.doku h2 { margin-top: 32px; font-size: 20px; }
+.doku h3 { margin-top: 20px; }
+.doku p, .doku li { color: var(--doku-text); }
+.doku table { border-collapse: collapse; width: 100%; margin: 12px 0 20px; font-size: 14px; display: block; overflow-x: auto; }
+.doku th, .doku td { overflow-wrap: normal; text-align: left; vertical-align: top; padding: 8px 12px; border-bottom: 1px solid var(--linie); }
+.doku th { background: var(--himmel); }
+.doku code { font-family: var(--mono); font-size: .88em; background: var(--himmel); padding: 1px 5px; border-radius: 4px; }
+.doku pre { background: var(--code-bg); color: var(--code-text); padding: 14px 16px; border-radius: var(--radius); overflow-x: auto; }
+.doku pre code { background: none; color: inherit; padding: 0; }
+.doku blockquote { margin: 12px 0; padding: 10px 16px; border-left: 4px solid var(--schnabel); background: var(--warn-flaeche); border-radius: 0 8px 8px 0; }
+.ueber { display: grid; grid-template-columns: max-content 1fr; gap: 6px 16px; font-size: 14px; margin: 0; }
+.ueber dt { color: var(--nacht-3); }
+.ueber dd { margin: 0; overflow-wrap: anywhere; }
+
+/* ---------- Meldungen ---------- */
+.toasts { position: fixed; right: 20px; bottom: 20px; z-index: 60; display: flex; flex-direction: column; gap: 8px; max-width: 400px; }
+.toast { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 10px; background: var(--nacht); color: var(--auf-nacht);
+  font-size: 14px; box-shadow: 0 6px 20px rgba(var(--schatten), .25); }
+.toast.fehler { background: var(--schlecht); color: var(--auf-signal); }
+.toast.fehler button { color: var(--auf-signal); border-color: var(--auf-signal); }
+.toast button { margin-left: auto; border: 1px solid var(--toast-rand); background: transparent; color: var(--auf-nacht); border-radius: 6px;
+  padding: 4px 10px; cursor: pointer; font-weight: 700; white-space: nowrap; }
+.verbindung { position: fixed; left: 0; right: 0; top: 0; z-index: 70; padding: 10px 24px; background: var(--schlecht); color: var(--auf-signal);
+  text-align: center; font-weight: 500; }
+.ablage { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; background: rgba(var(--schatten), .55); pointer-events: none; }
+.ue-kopf { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+.ablage div { padding: 40px 56px; border-radius: 20px; background: var(--feder); border: 3px dashed var(--schnabel); font-size: 20px;
+  font-weight: 700; text-align: center; }
+.ablage small { display: block; font-weight: 400; font-size: 14px; color: var(--nacht-2); margin-top: 6px; }
+.ende { position: fixed; inset: 0; z-index: 90; display: grid; place-items: center; background: var(--himmel); text-align: center; padding: 24px; }
+.ende img { width: 120px; height: 120px; }
+
+/* ---------- Schritt 1: viele Bilder auf einmal ---------- */
+.stapel-leiste { position: sticky; top: 72px; z-index: 10; display: flex; gap: 12px; flex-wrap: wrap; align-items: center;
+  padding: 12px 16px; margin-top: 16px; border-radius: var(--radius-gross); background: var(--feder); border: 1px solid var(--linie);
+  box-shadow: 0 4px 14px rgba(var(--schatten), .08); }
+.stapel-leiste .zahlen { font-size: 14px; color: var(--nacht-2); }
+.stapel-leiste .zahlen b { color: var(--nacht); }
+.stapel-leiste .rechts { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }
+.hochladen-stand { margin-top: 16px; padding: 14px 18px; border-radius: var(--radius-gross); background: var(--feder); border: 1px dashed var(--linie); }
+.hochladen-stand .fortschritt { margin-top: 8px; }
+.entwurf-zeile { display: grid; grid-template-columns: 150px minmax(0, 1fr) minmax(0, 1.15fr) 200px auto; gap: 16px; align-items: start; }
+.entwurf-zeile .mini { width: 150px; aspect-ratio: 88 / 63; border-radius: 8px; overflow: hidden; background: var(--himmel);
+  box-shadow: 0 1px 2px rgba(var(--schatten), .18); }
+.entwurf-zeile .mini img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.entwurf-zeile .mini.unlesbar { display: grid; place-items: center; font-size: 12px; color: var(--nacht-3); padding: 6px; text-align: center; }
+.entwurf-zeile .knoepfe-klein { display: flex; flex-direction: column; gap: 6px; align-items: stretch; }
+.status-zelle { font-size: 13px; line-height: 1.4; padding-top: 22px; }
+.status-zelle b { display: block; font-size: 14px; }
+.status-zelle .ok { color: var(--gut); }
+.status-zelle .warn { color: var(--warn); }
+.status-zelle .fehler { color: var(--schlecht); }
+.entwurf-details { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 24px; margin-top: 16px; padding-top: 16px;
+  border-top: 1px solid var(--linie); }
+.entwurf-details .felder { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+
+/* ---------- Übersetzungsvorschläge ---------- */
+.mit-knopf { display: flex; gap: 6px; align-items: stretch; }
+.mit-knopf input { flex: 1 1 auto; min-width: 0; }
+.knopf.symbolknopf { min-width: 44px; padding: 0 10px; font-size: 17px; }
+.vorschlag { margin-top: 6px; padding: 6px 10px; border-radius: 8px; background: var(--himmel); font-size: 12.5px; display: flex;
+  flex-direction: column; gap: 5px; line-height: 1.35; }
+.vorschlag .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { border: 1px solid var(--linie); background: var(--feder); border-radius: 14px; padding: 2px 10px; font-size: 13px; cursor: pointer; }
+.chip:hover { border-color: var(--nacht-3); }
+.chip.haupt { background: var(--nacht); color: var(--auf-nacht); border-color: var(--nacht); font-weight: 500; }
+.vorschlag .quelle { color: var(--nacht-3); }
+.vorschlag.fehler { background: var(--fehler-flaeche); color: var(--fehler-text); }
+.marke-q.auto { background: var(--warn-chip-2); color: var(--warn); }
+.ist-auto { box-shadow: inset 3px 0 0 var(--schnabel); }
+
+/* ---------- Gänse-Bild der Rückseite ---------- */
+/* Flex statt festem Raster: ist der Kasten schmal (z. B. neben dem Protokoll), rutscht der Text unter die Vorschau */
+.gansbild { display: flex; flex-wrap: wrap; gap: 16px 20px; align-items: flex-start; padding: 14px;
+  border-radius: var(--radius-gross); background: var(--himmel); border: 2px solid transparent; }
+.gansbild.ziel { border: 2px dashed var(--schnabel-dunkel); background: var(--flaeche-ablage); }
+.gansbild .vorschau-karte { flex: 0 0 auto; width: 240px; max-width: 100%; aspect-ratio: 88 / 63; border-radius: 10px; overflow: hidden;
+  background: var(--wasser-hell); box-shadow: 0 1px 2px rgba(var(--schatten), .18), 0 4px 10px rgba(var(--schatten), .10); }
+.gansbild .vorschau-karte img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.gansbild .text { flex: 1 1 300px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.gansbild .text b { font-size: 15px; }
+.gansbild .knopfzeile .knopf { white-space: normal; max-width: 100%; text-align: left; }
+
+/* ---------- Tabelle ---------- */
+.leiste { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+.leiste .suche { flex: 1 1 220px; max-width: 340px; min-height: 40px; }
+.tabelle-rahmen { padding: 0; overflow-x: auto; }
+table.vergleich { width: 100%; border-collapse: collapse; font-size: 14px; }
+.vergleich th { background: var(--himmel); text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: .04em;
+  color: var(--nacht-2); padding: 10px 12px; border-bottom: 1px solid var(--linie); white-space: nowrap; }
+.vergleich th button { border: 0; background: none; font: inherit; color: inherit; text-transform: inherit; letter-spacing: inherit;
+  cursor: pointer; padding: 0; }
+.vergleich td { padding: 8px 10px; border-bottom: 1px solid var(--linie); vertical-align: top; }
+.vergleich tbody tr:last-child td { border-bottom: 0; }
+.vergleich tr.aus td { background: var(--flaeche-leise); }
+.vergleich tr.aus .zelle-eingabe { color: var(--nacht-3); }
+.vergleich .nrz { width: 48px; white-space: nowrap; padding-top: 14px; }
+.vergleich .bildz { width: 112px; }
+.vergleich .mini { width: 96px; aspect-ratio: 88 / 63; border-radius: 6px; overflow: hidden; background: var(--wasser-hell); display: block; }
+.vergleich .mini img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.vergleich .pfeilz { width: 20px; color: var(--nacht-3); padding-top: 14px; text-align: center; }
+.vergleich .statusz { width: 150px; }
+.zelle-eingabe { display: block; width: 100%; min-height: 38px; padding: 7px 8px; border: 1px solid transparent; border-radius: 6px;
+  background: transparent; transition: background .8s; resize: none; overflow: hidden; line-height: 1.4; }
+.vergleich .mit-knopf { align-items: flex-start; }
+.vergleich .datei { padding-left: 9px; }
+.zelle-eingabe:hover { border-color: var(--linie); background: var(--feder); }
+.zelle-eingabe:focus { border-color: var(--nacht-3); background: var(--feder); outline: none; }
+.zelle-eingabe.es { font-weight: 500; font-size: 15px; }
+.zelle-eingabe.leer { border-color: var(--linie); border-style: dashed; }
+.zelle-eingabe.gespeichert { background: var(--gut-flaeche); }
+.zelle-eingabe.fehler { border-color: var(--schlecht); background: var(--fehler-flaeche); }
+.zellen-meldung { font-size: 12.5px; margin-top: 3px; }
+.zellen-meldung.fehler { color: var(--schlecht); }
+.hinweisliste { margin: 4px 0 0; padding: 0; list-style: none; font-size: 12.5px; line-height: 1.4; }
+.hinweisliste li::before { content: "! "; font-weight: 700; }
+.hinweisliste li.warnung { color: var(--warn); }
+.hinweisliste li.fehler { color: var(--schlecht); }
+.hinweisliste li.info { color: var(--nacht-2); }
+.hinweisliste li.info::before { content: "i "; }
+.geprueft { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13px; font-weight: 500; }
+.geprueft input { width: 18px; height: 18px; accent-color: var(--gut); }
+.tabelle-leer { padding: 32px; text-align: center; color: var(--nacht-2); }
+
+/* ---------- Bildverbesserung ---------- */
+.verb-kopf { display: flex; gap: 28px; flex-wrap: wrap; align-items: flex-end; }
+.verb-kopf div { font-size: 14px; color: var(--nacht-2); }
+.verb-kopf b { display: block; font-size: 24px; color: var(--nacht); }
+.fortschritt { height: 8px; border-radius: 4px; background: var(--himmel); overflow: hidden; margin: 12px 0 4px; }
+.fortschritt span { display: block; height: 100%; background: var(--gut); width: 0; transition: width .4s; }
+.verb-raster { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 14px; margin-top: 16px; }
+.verb-karte { position: relative; background: var(--feder); border: 2px solid var(--linie); border-radius: var(--radius-gross); padding: 10px;
+  display: flex; flex-direction: column; gap: 6px; }
+.verb-karte.gewaehlt { border-color: var(--nacht); box-shadow: 0 0 0 3px var(--wasser); }
+.verb-karte.ist-verbessert { border-color: var(--gut); }
+.verb-karte.ist-verbessert.gewaehlt { border-color: var(--nacht); }
+.verb-karte .bildflaeche { position: relative; display: block; width: 100%; aspect-ratio: 88 / 63; border-radius: 8px; overflow: hidden;
+  background: var(--wasser-hell); border: 0; padding: 0; cursor: pointer; }
+.verb-karte .bildflaeche img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.verb-karte .wahl { position: absolute; top: 8px; left: 8px; z-index: 2; display: grid; place-items: center; width: 30px; height: 30px;
+  border-radius: 8px; background: var(--glas); }
+.verb-karte .wahl input { width: 18px; height: 18px; accent-color: var(--nacht); margin: 0; }
+.verb-karte .band { position: absolute; right: 8px; bottom: 8px; z-index: 2; font-size: 11.5px; font-weight: 700; padding: 2px 9px;
+  border-radius: 10px; pointer-events: none; }
+.band.verbessert { background: var(--gut); color: var(--auf-signal); }
+.band.anders { background: var(--warn-chip); color: var(--warn); }
+.band.offen { background: var(--glas); color: var(--nacht-2); }
+.band.fehlt { background: var(--schlecht); color: var(--auf-signal); }
+.verb-karte .name { font-weight: 700; font-size: 14px; line-height: 1.3; }
+.verb-karte .info { font-size: 12.5px; color: var(--nacht-3); line-height: 1.4; }
+.verb-karte .zeile-knoepfe { display: flex; gap: 6px; flex-wrap: wrap; margin-top: auto; }
+
+/* ---------- Fenster: Vergleich, Zustimmung ---------- */
+.overlay { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; background: rgba(var(--schatten), .6); padding: 16px; }
+.overlay .fenster { background: var(--feder); border-radius: 16px; padding: 20px 24px; width: min(980px, 100%);
+  max-height: calc(100vh - 32px); max-height: calc(100dvh - 32px); overflow: auto; box-shadow: 0 20px 60px rgba(var(--schatten), .35); }
+.overlay .fenster.schmal { width: min(620px, 100%); }
+.fenster-kopf { display: flex; align-items: flex-start; gap: 16px; margin-bottom: 12px; }
+.fenster-kopf h2 { margin: 0; flex: 1; }
+.vergleich-bild { position: relative; width: 100%; aspect-ratio: 88 / 63; border-radius: 10px; overflow: hidden; background: var(--himmel);
+  user-select: none; touch-action: none; cursor: ew-resize; }
+.vergleich-bild img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.vergleich-bild .nachher { clip-path: inset(0 0 0 50%); }
+.vergleich-bild .linie { position: absolute; top: 0; bottom: 0; left: 50%; width: 3px; margin-left: -1px; background: var(--weiss);
+  box-shadow: 0 0 0 1px rgba(var(--schatten), .35); pointer-events: none; }
+.vergleich-bild .etikett { position: absolute; top: 10px; font-size: 12px; font-weight: 700; padding: 2px 10px; border-radius: 10px;
+  background: var(--glas); }
+.vergleich-bild .etikett.links { left: 10px; }
+.vergleich-bild .etikett.rechts { right: 10px; }
+input[type=range].regler { width: 100%; margin-top: 12px; accent-color: var(--nacht); }
+.zustimmung-text p { margin: 0 0 10px; }
+.zustimmung-text ul { margin: 0 0 12px; padding-left: 20px; }
+
+/* ---------- Werkzeuge: Übersetzung ---------- */
+.dienste { display: flex; flex-direction: column; gap: 8px; margin: 8px 0 4px; }
+.dienst { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 8px; padding: 10px 12px; border: 1px solid var(--linie);
+  border-radius: var(--radius); cursor: pointer; }
+.dienst:has(input:checked) { border-color: var(--nacht); background: var(--himmel); }
+.dienst input { margin-top: 4px; accent-color: var(--nacht); }
+.dienst b { font-size: 14px; }
+.dienst .klein { display: block; }
+.ue-raster { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; }
+
+/* ---------- Lade-Ente: die Animation aus duck_spinner.py (Ente schwimmt hin und her, Wellen ziehen) ---------- */
+.ente-laedt { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 20px 12px; color: var(--nacht-2);
+  font-size: 14px; text-align: center; }
+.ente-laedt.klein { flex-direction: row; padding: 0; gap: 8px; font-size: 13px; }
+.ente-ascii { margin: 0; padding: 6px 10px; border-radius: 10px; background: var(--himmel); font-family: var(--mono);
+  font-size: 14px; line-height: 1.15; white-space: pre; color: var(--ente-1); font-weight: 700; user-select: none; overflow: hidden; }
+.ente-laedt.klein .ente-ascii { font-size: 8px; padding: 2px 5px; border-radius: 6px; }
+.ente-ascii .s { color: var(--ente-s); }
+.ente-ascii .a { color: var(--nacht); }
+.ente-ascii .w1 { color: var(--ente-w1); font-weight: 400; }
+.ente-ascii .w2 { color: var(--ente-w2); font-weight: 400; }
+.ente-punkte { display: inline-block; min-width: 1.4em; text-align: left; }
+.ente-global { position: fixed; left: 16px; bottom: 16px; z-index: 70; pointer-events: none; padding: 6px 14px 6px 8px;
+  border-radius: 22px; background: var(--feder); border: 1px solid var(--linie); box-shadow: 0 6px 20px rgba(var(--schatten), .18); }
+
+/* ---------- Erweiterungen: Tabelle kompakt ---------- */
+table.kompakt { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 14px; }
+.kompakt th { background: var(--himmel); text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: .04em;
+  color: var(--nacht-2); padding: 8px 10px; border-bottom: 1px solid var(--linie); }
+.kompakt th button { all: unset; cursor: pointer; }
+.kompakt td { padding: 7px 10px; border-bottom: 1px solid var(--linie); vertical-align: top; overflow-wrap: anywhere; }
+.kompakt tbody tr { cursor: pointer; }
+.kompakt tbody tr:hover td { background: var(--flaeche-leise); }
+.kompakt tr.aus td { color: var(--nacht-3); }
+.kompakt .k-nr { width: 52px; } .kompakt .k-notiz { width: 22%; } .kompakt .k-pruef { width: 132px; }
+.kompakt td.k-es { font-weight: 500; }
+.kompakt .k-status { white-space: nowrap; font-size: 13px; }
+.kompakt .k-status.ok { color: var(--gut); } .kompakt .k-status.auto { color: var(--warn); }
+@media (max-width: 860px) { .kompakt .k-nr { width: 36px; } .kompakt .k-pruef { width: 82px; } .kompakt td, .kompakt th { padding: 6px; font-size: 13px; } }
+
+/* ---------- Erweiterungen: Fenster, Import/Export, GANS-Werkzeug, Ideen ---------- */
+.overlay .fenster.breit { width: min(1120px, 100%); }
+.ie-spalten { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); gap: 20px; }
+.ie-spalten > section { border: 1px solid var(--linie); border-radius: var(--radius-gross); padding: 16px; min-width: 0; }
+.ie-spalten h3 { margin: 0 0 6px; }
+.wahl-liste { display: flex; flex-direction: column; gap: 6px; margin: 10px 0; }
+.ziehfeld { display: grid; place-items: center; gap: 4px; text-align: center; padding: 22px 12px; border: 2px dashed var(--linie);
+  border-radius: var(--radius-gross); background: var(--himmel); cursor: pointer; }
+.ziehfeld.drueber { border-color: var(--nacht-2); background: var(--wasser-hell); }
+.ie-tabelle { width: 100%; border-collapse: collapse; font-size: 13px; table-layout: fixed; }
+.ie-tabelle td, .ie-tabelle th { padding: 5px 6px; border-bottom: 1px solid var(--linie); text-align: left; vertical-align: top; overflow-wrap: anywhere; }
+.ie-tabelle th { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--nacht-3); }
+.ie-rollen { max-height: 300px; overflow-x: hidden; overflow-y: auto; border: 1px solid var(--linie); border-radius: var(--radius); margin: 8px 0; }
+.chip-s { display: inline-block; font-size: 11.5px; font-weight: 700; padding: 1px 8px; border-radius: 10px; white-space: nowrap; }
+.chip-s.neu { background: var(--gut-flaeche); color: var(--gut); } .chip-s.konflikt { background: var(--warn-flaeche); color: var(--warn); }
+.chip-s.gleich { background: var(--himmel); color: var(--nacht-2); } .chip-s.fehler { background: var(--fehler-flaeche); color: var(--schlecht); }
+.gw-raster { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(260px, 1fr); gap: 20px; align-items: start; }
+.gw-buehne { position: relative; border-radius: var(--radius-gross); overflow: hidden; background: var(--buehne); display: grid; place-items: center; }
+.gw-buehne canvas { display: block; max-width: 100%; max-height: 62vh; width: auto; height: auto; touch-action: none; cursor: grab; }
+.gw-buehne canvas.zieht { cursor: grabbing; }
+.gw-steuer { display: flex; flex-direction: column; gap: 12px; }
+.gw-steuer label.titel { display: block; font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+.gw-text { display: flex; align-items: stretch; border: 1px solid var(--linie); border-radius: var(--radius); overflow: hidden; background: var(--feder); }
+.gw-text b { display: grid; place-items: center; padding: 0 10px; background: var(--himmel); font-weight: 700; letter-spacing: .03em; }
+.gw-text input { flex: 1; min-width: 0; border: 0; padding: 9px 10px; outline: none; text-transform: uppercase; }
+.gw-steuer input[type=range] { width: 100%; accent-color: var(--nacht); }
+.gw-steuer select { width: 100%; }
+.ki-raster { display: grid; grid-template-columns: minmax(260px, 1fr) minmax(0, 1.25fr); gap: 20px; align-items: start; }
+.ki-form { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.ki-form label.titel { display: block; font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+.ki-form textarea { width: 100%; resize: vertical; min-height: 64px; }
+.ki-unter { margin-top: 6px; justify-content: space-between; align-items: center; }
+.ki-ergebnis { min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+.ki-bild { position: relative; width: 100%; aspect-ratio: 88 / 63; border-radius: var(--radius-gross); overflow: hidden;
+  background: var(--himmel); display: grid; place-items: center; }
+.ki-bild img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ki-bild.ki-leer { gap: 6px; text-align: center; color: var(--nacht-3); padding: 12px; align-content: center; }
+.ki-bild.ki-leer img, .ki-modell img { width: 56px; height: 56px; object-fit: contain; }
+.ki-modell { display: grid; justify-items: center; gap: 10px; text-align: center; padding: 22px 14px; border: 2px dashed var(--linie);
+  border-radius: var(--radius-gross); background: var(--himmel); }
+.ki-hilfe, .ki-prompt { border: 1px solid var(--linie); border-radius: var(--radius); padding: 10px 12px; background: var(--himmel);
+  display: flex; flex-direction: column; gap: 6px; }
+.ki-hilfe ul { margin: 0 0 4px; padding-left: 18px; } .ki-hilfe li { margin: 2px 0; font-size: 13.5px; }
+.ki-prompt textarea { width: 100%; resize: vertical; font-family: ui-monospace, Consolas, monospace; font-size: 12.5px; }
+.ki-fertig-prompt { overflow-wrap: anywhere; margin: 0; }
+.ki-zu-lang { color: var(--warn); font-weight: 700; }
+.ideen-raster { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; margin: 12px 0 28px; }
+.idee { background: var(--feder); border: 1px solid var(--linie); border-radius: var(--radius-gross); padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+.idee.fertig { border-color: var(--gut); }
+.idee .bildfeld { position: relative; width: 100%; aspect-ratio: 88 / 63; border-radius: 8px; overflow: hidden; background: var(--himmel);
+  display: grid; place-items: center; text-align: center; color: var(--nacht-3); font-size: 13px; }
+.idee .bildfeld img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.idee .bildfeld.drueber { outline: 3px solid var(--nacht-2); }
+.idee input.eingabe, .idee textarea.eingabe { width: 100%; }
+.idee .feldname { font-size: 12px; font-weight: 700; color: var(--nacht-2); }
+.idee .fehlt { font-size: 12.5px; color: var(--nacht-3); }
+.idee .knoepfe { display: flex; gap: 6px; flex-wrap: wrap; margin-top: auto; }
+.unfertig-liste { display: flex; flex-direction: column; gap: 8px; }
+.unfertig { display: flex; align-items: center; gap: 12px; padding: 10px 12px; background: var(--feder); border: 1px solid var(--linie); border-radius: var(--radius); }
+.unfertig .mini { width: 74px; aspect-ratio: 88 / 63; border-radius: 6px; overflow: hidden; background: var(--himmel); flex: none; }
+.unfertig .mini img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.unfertig .text { flex: 1; min-width: 0; } .unfertig .text b { display: block; overflow-wrap: anywhere; }
+.navi a.leise-navi { color: var(--nacht-3); font-size: 14px; }
+.navi a.leise-navi[aria-current="page"] { color: var(--schlecht); }
+.schritt-nr { display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--nacht); color: var(--auf-nacht);
+  font-size: 14px; margin-right: 6px; vertical-align: 2px; }
+.dei-liste { margin: 6px 0 10px; padding-left: 20px; }
+.gross-frage { font-size: 18px; margin: 0 0 6px; }
+.fenster.willkommen { width: min(640px, 100%); }
+.lan-an { text-align: center; background: var(--himmel); border-radius: var(--radius-gross); padding: 14px; margin: 10px 0; }
+.lan-adresse { font-family: var(--mono); font-size: 20px; font-weight: 700; margin: 4px 0 10px; overflow-wrap: anywhere; }
+.lan-adresse.lang { font-size: 15px; }
+.app-tipp { align-items: center; }
+.lan-pin { font-family: var(--mono); font-size: 34px; font-weight: 700; letter-spacing: 6px; }
+.lan-qr svg { width: 196px; height: 196px; display: block; margin: 6px auto; border-radius: 8px; }
+.wk-ente { display: flex; justify-content: center; }
+.wk-ente .ente-laedt { padding: 6px 0 0; }
+.wk-sprachen .knopf { min-width: 110px; }
+.wk-tour { margin: 6px 0 10px; padding-left: 22px; display: flex; flex-direction: column; gap: 10px; }
+.wk-tour li b { display: block; }
+.wk-tour li span { color: var(--nacht-2); font-size: 14px; }
+.wk-fuss { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 18px; flex-wrap: wrap; }
+.wk-punkte { display: flex; gap: 6px; }
+.wk-punkte span { width: 9px; height: 9px; border-radius: 50%; background: var(--linie); }
+.wk-punkte span.an { background: var(--nacht); }
+.schritt-kopf { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; margin: 0 0 12px; font-size: 19px; }
+.schritt-kopf small { font-size: 13px; font-weight: 400; color: var(--nacht-3); }
+.ziel-raster { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 10px; }
+.ziel-karte { position: relative; display: grid; grid-template-columns: 38px minmax(0, 1fr); gap: 10px; align-items: start; padding: 12px;
+  border: 2px solid var(--linie); border-radius: var(--radius-gross); background: var(--feder); cursor: pointer; }
+.ziel-karte:hover { border-color: var(--nacht-3); }
+.ziel-karte:has(input:checked) { border-color: var(--nacht); background: var(--himmel); box-shadow: 0 0 0 3px var(--wasser); }
+.ziel-karte input { position: absolute; opacity: 0; }
+.ziel-karte input:focus-visible + .ziel-symbol { outline: 3px solid var(--schnabel); border-radius: 8px; }
+.ziel-symbol { font-size: 26px; line-height: 1.2; text-align: center; }
+.ziel-text b { display: block; font-size: 15px; }
+.ziel-text .klein { display: block; line-height: 1.35; }
+.weitere-einstellungen { margin-top: 12px; }
+.weitere-einstellungen > summary, .befehl-box > summary, .lauf-details > summary, .tipp-box > summary { cursor: pointer; font-weight: 600; color: var(--nacht-2); }
+.befehl-box { margin-top: 14px; font-size: 13px; }
+.check-liste { list-style: none; padding: 0; margin: 10px 0; display: flex; flex-direction: column; gap: 6px; }
+.check-liste li { padding: 8px 12px; border-radius: var(--radius); background: var(--himmel); }
+.check-liste li.ok { background: var(--gut-flaeche); color: var(--gut); }
+.druck-wege { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; }
+.druck-weg { border: 1px solid var(--linie); border-radius: var(--radius-gross); padding: 12px 16px; min-width: 0; }
+.druck-weg h3 { margin: 0 0 6px; }
+.tipp-liste { margin: 8px 0 0; padding-left: 20px; font-size: 13.5px; line-height: 1.5; }
+.tipp-box { margin-top: 10px; }
+.lauf-details { margin-top: 12px; }
+@media (max-width: 860px) { .druck-wege { grid-template-columns: minmax(0, 1fr); } }
+.hinweisbox { border-radius: var(--radius); padding: 10px 14px; margin: 0 0 10px; }
+.hinweisbox.warn { background: var(--warn-flaeche); color: var(--warn); }
+.hinweisbox p { margin: 4px 0 8px; color: var(--nacht-2); font-size: 13px; }
+.ie-abschnitt { margin: 12px 0 0; font-size: 15px; }
+.ie-abschnitt .klein { font-weight: 400; }
+.segmente.klein-seg { margin-top: 6px; }
+.segmente.klein-seg span { padding: 3px 10px; font-size: 12.5px; }
+.doppelt-hinweis { background: var(--warn-flaeche); color: var(--warn); border-radius: var(--radius); padding: 8px 10px; font-size: 12.5px; }
+.doppelt-hinweis ul { margin: 4px 0 0; padding-left: 18px; color: var(--nacht-2); }
+.gefahr-flaeche { background: var(--fehler-flaeche); border-radius: var(--radius); padding: 12px 14px; margin: 10px 0; }
+.gefahr-flaeche ul { margin: 6px 0 0; padding-left: 20px; }
+.knopf.gefahr-voll { background: var(--schlecht); border-color: var(--schlecht); color: var(--auf-signal); }
+@media (max-width: 860px) { .ie-spalten, .gw-raster, .ki-raster { grid-template-columns: minmax(0, 1fr); } }
+
+@media print {
+  .ente-global, .ente-laedt { display: none !important; }
+  table.kompakt { font-size: 10pt; }
+  .kompakt th { font-size: 8pt; padding: 4px 6px; }
+  .kompakt td { padding: 4px 6px; }
+  .kompakt tr { break-inside: avoid; }
+  .kompakt thead { display: table-header-group; }
+}
+
+@media print {
+  .kopf, .navi, .leiste, .titelzeile .knopfzeile, .toasts, .verbindung, .ablage, .zellen-meldung, [data-nicht-drucken] { display: none !important; }
+  .rahmen { display: block; } main { padding: 0; } body { background: #fff; }
+  .flaeche { border: 0; padding: 0; } .vergleich th { position: static; }
+  .zelle-eingabe { border: 0 !important; background: none !important; padding: 0; min-height: 0; }
+  .vergleich tr { break-inside: avoid; }
+}
+
+@media (max-width: 1180px) { .erzeugen-raster { grid-template-columns: minmax(0, 1fr); } .lauf { position: static; }
+  .entwurf-zeile { grid-template-columns: 130px minmax(0, 1fr) minmax(0, 1fr); }
+  .entwurf-zeile .mini { width: 130px; }
+  .entwurf-zeile .status-zelle { grid-column: 2 / 4; padding-top: 0; }
+  .entwurf-zeile .knoepfe-klein { grid-column: 1 / -1; flex-direction: row; justify-content: flex-end; } }
+@media (max-width: 860px) {
+  .kopf { padding: 0 12px; gap: 8px; }
+  .marke b { font-size: 15px; }
+  .marke img { width: 36px; height: 36px; }
+  .rahmen { grid-template-columns: 1fr; }
+  .navi { flex-direction: row; overflow-x: auto; border-right: 0; border-bottom: 1px solid var(--linie); padding: 8px;
+    position: static; height: auto; }
+  .navi a { white-space: nowrap; }
+  .navi hr, .navi .fuss, .navi .abschnitt { display: none; }
+  main { padding: 24px 16px 64px; }
+  .zeile, .entwurf, .editor, .entwurf-zeile, .entwurf-details, .gansbild, .ue-raster { grid-template-columns: minmax(0, 1fr); }
+  .entwurf-zeile .status-zelle, .entwurf-zeile .knoepfe-klein { grid-column: auto; }
+  .entwurf-zeile .mini, .gansbild .vorschau-karte { width: min(100%, 320px); }
+  .vergleich .pfeilz { display: none; }
+  table.vergleich thead { display: none; }
+  table.vergleich, .vergleich tbody, .vergleich td { display: block; width: 100%; }
+  .vergleich tr { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 4px 12px; padding: 12px; border-bottom: 1px solid var(--linie); }
+  .vergleich tr:last-child { border-bottom: 0; }
+  .vergleich td { border: 0; padding: 0; }
+  .vergleich td.nrz { grid-column: 1; padding-top: 0; }
+  .vergleich td.bildz { grid-column: 1; grid-row: 2 / span 3; width: 96px; }
+  .vergleich td[data-label], .vergleich td.statusz { grid-column: 2; width: auto; }
+  .vergleich td.nrz + td[data-label], .vergleich td.bildz + td[data-label] { grid-row: 1; }
+  .vergleich td[data-label]::before { content: attr(data-label); display: block; font-size: 11px; font-weight: 700; letter-spacing: .04em;
+    text-transform: uppercase; color: var(--nacht-3); margin-top: 4px; }
+  .bildchen, .editor .bildchen { width: min(100%, 320px); }
+  .aktionen { flex-direction: row; flex-wrap: wrap; align-items: center; justify-content: space-between; }
+  .ergebnis, .werkzeug { grid-template-columns: minmax(0, 1fr); }
+  .ergebnis .knoepfe, .werkzeug .knoepfe { justify-content: flex-start; }
+  .karte { width: min(100%, 320px); }
+  .zwei { grid-template-columns: 1fr; }
+}
+@media (max-width: 480px) { .kopf .beenden-text { display: none; } .marke b { display: none; } .kopf .rechts { gap: 8px; } }
+/* ---------- Warteschlange (Kopfzeile „⏳ n“ + Fenster) ---------- */
+.ws-knopf { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ws-fenster h3 { margin: 18px 0 8px; font-size: 15px; display: flex; align-items: center; gap: 8px; }
+.ws-fenster h3:first-child { margin-top: 0; }
+.ws-liste { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.ws-liste li, .ws-aktiv { display: flex; align-items: center; gap: 8px 10px; flex-wrap: wrap; padding: 8px 10px;
+  border: 1px solid var(--linie); border-radius: var(--radius); background: var(--feder); }
+.ws-aktiv { display: block; border-color: var(--schnabel); background: var(--warn-flaeche); }
+.ws-aktiv .fortschritt { margin: 8px 0 4px; }
+.ws-zeile { display: flex; align-items: center; gap: 8px 10px; flex-wrap: wrap; }
+.ws-titel { flex: 1 1 160px; min-width: 0; overflow-wrap: anywhere; }
+.ws-platz { font-weight: 700; min-width: 4.2em; color: var(--nacht-2); }
+.ws-platz.ok { color: var(--gut); min-width: 1.4em; } .ws-platz.nein { color: var(--schlecht); min-width: 1.4em; }
+.ws-knoepfe { display: flex; gap: 6px; flex-wrap: wrap; }
+.ws-frage, .ws-beenden { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 10px; padding: 10px 12px;
+  border-radius: var(--radius); background: var(--warn-flaeche); }
+.ws-beenden { margin: 0 0 14px; }
+.ws-fenster .protokoll { max-height: 220px; margin: 6px 0 0; flex-basis: 100%; }
+/* ---------- Tools (optionale Funktionen): Karte je Tool, Rückfrage, Erstabfrage ---------- */
+.tools-kopf { display: flex; align-items: baseline; justify-content: space-between; gap: 4px 16px; flex-wrap: wrap; }
+.tools-raster { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(260px, 100%), 1fr)); gap: 12px; margin-top: 12px; }
+.tool { display: flex; flex-direction: column; gap: 8px; padding: 14px 16px; border: 1px solid var(--linie); border-radius: var(--radius); min-width: 0; }
+.tool.da { border-color: var(--gut); }
+.tool-kopf { display: flex; align-items: center; gap: 8px 10px; flex-wrap: wrap; }
+.tool-symbol { font-size: 22px; line-height: 1; }
+.tool-kopf h3 { margin: 0; font-size: 15px; flex: 1 1 140px; min-width: 0; overflow-wrap: anywhere; }
+.tool p.klein { margin: 0; }
+.tool .fortschritt { margin: 0; }
+.tool-fakten { display: flex; gap: 2px 12px; flex-wrap: wrap; font-size: 12.5px; color: var(--nacht-3); }
+.tool .knopfzeile { margin-top: auto; }
+.tool-hinweis { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; border: 2px dashed var(--linie); }
+.tool-hinweis p { margin: 0; }
+.tool-liste { display: flex; flex-direction: column; gap: 8px; margin: 10px 0; }
+.tool-wahl { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 8px; padding: 10px 12px; border: 1px solid var(--linie);
+  border-radius: var(--radius); cursor: pointer; }
+.tool-wahl:has(input:checked) { border-color: var(--nacht); background: var(--himmel); }
+.tool-wahl input { margin-top: 4px; accent-color: var(--nacht); }
+.tool-wahl b { font-size: 14px; }
+.tool-wahl .klein { display: block; }
+.tool-dl { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 12px; margin: 10px 0; font-size: 14px; }
+.tool-dl dt { font-weight: 700; }
+.tool-dl dd { margin: 0; overflow-wrap: anywhere; }
+/* ---------- Über den Handy-Zugang: was nur am Rechner geht (Beenden, Öffnen, Deinstallieren), ausblenden ---------- */
+.am-handy #beenden, .am-handy [data-oeffnen], .am-handy .navi [data-ansicht="deinstallieren"] { display: none !important; }
+/* ---------- Handy: weniger Rand, lange Knopftexte dürfen umbrechen, Sammelleiste klebt nicht ---------- */
+@media (max-width: 860px) { .stapel-leiste { position: static; } }
+@media (max-width: 480px) {
+  .flaeche, .editor, .entwurf { padding: 16px 14px; }
+  .flaeche .flaeche { padding: 14px 12px; }
+  .gansbild { padding: 10px; }
+  .knopf { white-space: normal; }
+}
+/* ---------- Touch (Handy, Tablet): Tippflächen ≥ 44 px, Eingaben 16 px – sonst vergrößert das iPhone beim Antippen ---------- */
+@media screen and (hover: none) and (pointer: coarse) {
+  input, select, textarea, .eingabe, .zelle-eingabe, .zelle-eingabe.es, .ki-prompt textarea { font-size: 16px; }
+  .zelle-eingabe { min-height: 44px; }
+  .knopf { min-height: 44px; }
+  .knopf.klein { min-height: 44px; min-width: 44px; padding: 8px 12px; }
+  .knopf.rund { width: 44px; }
+  .segmente span, .reiter button { padding-top: 11px; padding-bottom: 11px; }
+  .schalter { min-height: 44px; }
+  .sprachwahl button { min-height: 36px; min-width: 40px; }
+  .zeichen button { min-width: 40px; height: 40px; }
+}
+@media screen and (hover: none) and (pointer: coarse) { button.sprach-chip { min-width: 44px; min-height: 36px; font-size: 13px; } }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+/* ---------- Farben & Darstellung (Fenster) ---------- */
+.farb-raster { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(170px, 100%), 1fr)); gap: 10px; margin: 10px 0 14px; }
+.farb-kachel { position: relative; display: flex; flex-direction: column; gap: 8px; padding: 10px; border: 2px solid var(--linie);
+  border-radius: var(--radius-gross); background: var(--feder); cursor: pointer; text-align: left; }
+.farb-kachel:hover { border-color: var(--nacht-3); }
+.farb-kachel[aria-pressed="true"] { border-color: var(--nacht); box-shadow: 0 0 0 3px var(--wasser); }
+.farb-kachel b { font-size: 14px; }
+.farb-vorschau { display: flex; height: 34px; border-radius: 8px; overflow: hidden; border: 1px solid rgba(var(--schatten), .25); }
+.farb-vorschau i { flex: 1; display: block; }
+.farb-eigene { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(200px, 100%), 1fr)); gap: 10px 16px; margin: 6px 0 12px; }
+.farb-eigene label { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 500; }
+.farb-eigene input[type=color] { width: 44px; height: 36px; padding: 2px; border: 1px solid var(--linie); border-radius: 8px;
+  background: var(--feder); cursor: pointer; flex: none; }
+.farb-pruefung { margin: 8px 0; padding: 8px 12px; border-radius: var(--radius); font-size: 14px; background: var(--gut-flaeche); color: var(--gut); }
+.farb-pruefung.schwach { background: var(--warn-flaeche); color: var(--warn); }
+/* ---------- Kartensprache (Tool „Sprachen“): Sprach-Chips, Auswahl, weitere Rückseiten ---------- */
+.sprach-chip { display: inline-flex; align-items: center; justify-content: center; min-width: 26px; padding: 2px 6px;
+  border: 1px solid var(--linie); border-radius: 6px; background: var(--wasser-hell); color: var(--nacht);
+  font: 600 11px/1.4 var(--schrift); letter-spacing: .04em; vertical-align: middle; }
+.sprach-chip.aktuell { background: var(--nacht); border-color: var(--nacht); color: var(--auf-nacht); }
+.sprach-chip.leer { background: transparent; border-style: dashed; color: var(--nacht-3); }
+button.sprach-chip { cursor: pointer; }
+button.sprach-chip[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--schnabel); }
+.sprach-chips { display: flex; flex-wrap: wrap; gap: 4px; margin: 4px 0 2px; }
+.zs-platz:empty { display: none; }
+.zs-wahl { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 500; color: var(--nacht-2); }
+.zs-wahl select { padding: 6px 10px; border: 1px solid var(--linie); border-radius: var(--radius); background: var(--feder);
+  color: var(--nacht); font: inherit; max-width: 100%; }
+.weitere-sprachen { margin: 6px 0 4px; border: 1px solid var(--linie); border-radius: var(--radius); padding: 6px 10px; background: var(--flaeche-leise); }
+.weitere-sprachen summary { cursor: pointer; font-size: 14px; font-weight: 500; color: var(--nacht-2); }
+.weitere-sprachen .rs-feld { margin-top: 8px; }
+.weitere-sprachen .rs-feld label { display: flex; align-items: center; gap: 6px; }
+.rs-weitere { font-size: 13.5px; color: var(--nacht-2); }
+.sprach-liste { display: grid; gap: 6px; margin: 8px 0; }
+.sprach-zeile { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 6px 8px; border: 1px solid var(--linie);
+  border-radius: var(--radius); background: var(--feder); }
+.sprach-zeile .name { flex: 1 1 140px; min-width: 0; }
+.sprach-zeile .name small { color: var(--nacht-3); margin-left: 6px; }
+.sprach-zeile .knopfzeile { margin: 0; }
+/* ---------- Karten lernen: Übersicht, Sitzung, Lernstand in „Meine Karten“ ---------- */
+.lern-heute { display: flex; align-items: center; justify-content: space-between; gap: 12px 20px; flex-wrap: wrap; margin-bottom: 16px; }
+.lern-heute h2 { margin: 0 0 4px; }
+.lern-heute p { margin: 0; }
+.lern-raster { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(340px, 100%), 1fr)); gap: 16px; margin-bottom: 16px; }
+.lern-raster > *, .lern-block { min-width: 0; }
+.lern-block { margin-bottom: 16px; }
+.lern-raster h2, .lern-block h2 { margin: 0 0 12px; font-size: 18px; }
+.lern-stapel-liste { list-style: none; margin: 0 0 12px; padding: 0; display: grid; gap: 8px; }
+.lern-stapel { display: flex; align-items: center; gap: 8px 12px; flex-wrap: wrap; padding: 10px 12px; border: 1px solid var(--linie);
+  border-radius: var(--radius); background: var(--feder); }
+.lern-stapel .name { flex: 1 1 160px; min-width: 0; overflow-wrap: anywhere; }
+.lern-stapel .name .klein { display: block; }
+.lern-woche { width: 100%; max-width: 440px; height: auto; display: block; margin: 4px 0 12px; }
+.lern-woche rect { fill: var(--wasser); }
+.lern-woche rect.heute { fill: var(--schnabel); }
+.lern-woche text { text-anchor: middle; font-family: var(--schrift); font-size: 11px; fill: var(--nacht-2); }
+.lern-woche text.zahl { font-weight: 700; fill: var(--nacht); }
+.lern-stat p { margin: 4px 0; }
+.lern-zustaende .balken { display: flex; height: 12px; border-radius: 6px; overflow: hidden; background: var(--flaeche-aus); }
+.lern-zustaende ul { list-style: none; display: flex; flex-wrap: wrap; gap: 4px 14px; padding: 0; margin: 8px 0; font-size: 13.5px; }
+.lern-zustaende ul i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; }
+.lern-zustaende .st-neu { background: var(--spur); } .lern-zustaende .st-lernt { background: var(--schnabel); }
+.lern-zustaende .st-jung { background: var(--wasser); } .lern-zustaende .st-sicher { background: var(--gut); }
+.lern-einst { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr)); gap: 14px 18px; }
+.lern-einst .breit { grid-column: 1 / -1; }
+.f input[type=range] { min-height: 32px; padding: 0; border: 0; accent-color: var(--nacht); background: transparent; }
+.lern-frage-reset { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 10px; padding: 10px 12px;
+  border-radius: var(--radius); background: var(--fehler-flaeche); }
+.lern-frage-reset p { margin: 0; flex: 1 1 220px; }
+/* Sitzung */
+.lern-sitzung { max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+.lern-oben { display: flex; align-items: center; gap: 8px 14px; flex-wrap: wrap; }
+.lern-oben .fortschritt { flex: 1 1 200px; margin: 0; }
+.lern-oben .knopfzeile { margin-left: auto; }
+.lern-zaehler { font-variant-numeric: tabular-nums; }
+.lern-karte { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 22px 20px; text-align: center; cursor: pointer;
+  background: var(--feder); border: 1px solid var(--linie); border-radius: var(--radius-gross); box-shadow: 0 2px 10px rgba(var(--schatten), .08); }
+.lern-karte.gezeigt { cursor: default; touch-action: pan-y; }
+.lern-frage { margin: 0; color: var(--nacht-2); font-size: 14px; }
+.lern-bild { width: min(100%, 300px); height: auto; border-radius: var(--radius); border: 1px solid var(--linie); }
+.lern-wort { font-size: clamp(28px, 6vw, 44px); font-weight: 700; color: var(--nacht); line-height: 1.2; overflow-wrap: anywhere; }
+.lern-hinten { display: flex; flex-direction: column; align-items: center; gap: 8px; width: 100%; }
+.lern-hinten:empty { display: none; }
+.lern-hinten::before { content: ""; display: block; width: 60%; border-top: 2px dashed var(--linie); margin-bottom: 6px; }
+.lern-kopf-chip { display: flex; align-items: center; gap: 8px; justify-content: center; }
+.lern-de { font-size: 16px; color: var(--nacht-2); }
+.lern-notiz { max-width: 520px; }
+.lern-problem { display: flex; align-items: center; gap: 8px 12px; flex-wrap: wrap; padding: 10px 12px; border-radius: var(--radius);
+  background: var(--warn-flaeche); color: var(--warn); text-align: left; }
+.lern-problem p { margin: 0; flex: 1 1 220px; }
+.lern-noten { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.lern-noten.einer { grid-template-columns: minmax(0, 1fr); }
+.lern-noten .note { display: flex; flex-direction: column; align-items: center; gap: 2px; min-height: 62px; padding: 8px 6px; white-space: normal; }
+.lern-noten .note span { font-size: 12.5px; font-weight: 500; opacity: .85; }
+.lern-noten .note kbd { font: 600 10.5px var(--mono); opacity: .6; }
+.lern-noten .n1 { border-color: var(--schlecht); color: var(--schlecht); }
+.lern-noten .n2 { border-color: var(--warn); color: var(--warn); }
+.lern-noten .n3 { border-color: var(--gut); color: var(--gut); }
+.lern-noten .n4 { border-color: var(--nacht); color: var(--nacht); }
+.lern-tasten { text-align: center; margin: 0; }
+.lern-fertig { max-width: 560px; margin: 0 auto; text-align: center; }
+.lern-fertig img { width: 72px; height: 72px; }
+.lern-fertig .knopfzeile { justify-content: center; }
+/* Meine Karten: Lernstand je Karte, Filter, Auswahl */
+.lern-marke { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 500; padding: 2px 10px 2px 6px;
+  border-radius: 12px; background: var(--himmel); color: var(--nacht-2); }
+.lern-marke i { width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--gut); flex: none; }
+.lern-marke.z-neu i { border-color: var(--spur); }
+.lern-marke.z-lernt i { border-color: var(--schnabel); background: conic-gradient(var(--schnabel) 25%, transparent 0); }
+.lern-marke.z-jung i { background: conic-gradient(var(--gut) 50%, transparent 0); }
+.lern-marke.z-sicher i { background: var(--gut); }
+.lern-marke.problem { background: var(--warn-flaeche); color: var(--warn); }
+.lern-haken { display: inline-flex; align-items: center; justify-content: center; min-width: 28px; min-height: 28px; cursor: pointer; }
+.lern-haken input { width: 18px; height: 18px; accent-color: var(--nacht); }
+.zeile.gewaehlt { box-shadow: 0 0 0 2px var(--nacht); }
+.lern-auswahlleiste { position: sticky; bottom: 12px; z-index: 20; display: flex; align-items: center; gap: 8px 12px; flex-wrap: wrap;
+  margin-top: 14px; padding: 10px 14px; border-radius: var(--radius-gross); background: var(--nacht); color: var(--auf-nacht);
+  box-shadow: 0 4px 16px rgba(var(--schatten), .25); }
+.lern-auswahlleiste b { flex: 1 1 120px; }
+.lern-auswahlleiste .knopf.leise { color: var(--auf-nacht); border-color: var(--toast-rand); }
+.lern-hinweis { margin: 4px 0; font-size: 13.5px; color: var(--warn); }
+.zellen-meldung.lern { color: var(--warn); }
+/* Stapel-Fenster */
+.lern-stapel-form { display: flex; flex-direction: column; gap: 12px; }
+.lern-wahl-raster { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(120px, 100%), 1fr)); gap: 8px; max-height: 46vh; overflow-y: auto;
+  margin-top: 8px; padding: 2px; }
+.lern-wahl-karte { position: relative; display: flex; flex-direction: column; gap: 4px; padding: 6px; border: 1px solid var(--linie);
+  border-radius: var(--radius); cursor: pointer; font-size: 12.5px; overflow-wrap: anywhere; background: var(--feder); }
+.lern-wahl-karte:has(input:checked) { border-color: var(--nacht); background: var(--himmel); }
+.lern-wahl-karte input { position: absolute; top: 8px; left: 8px; width: 18px; height: 18px; accent-color: var(--nacht); }
+.lern-wahl-karte img { width: 100%; height: auto; border-radius: 6px; }
+@media (max-width: 560px) { .lern-noten { grid-template-columns: repeat(2, minmax(0, 1fr)); } .lern-karte { padding: 16px 12px; } }
+@media screen and (hover: none) and (pointer: coarse) {
+  .lern-noten { position: sticky; bottom: 0; z-index: 15; padding: 8px 0 calc(8px + env(safe-area-inset-bottom)); background: var(--himmel); }
+  .lern-noten .note { min-height: 64px; }
+  .lern-haken { min-width: 44px; min-height: 44px; }
+}
+/* ---------- Handy-App (Web-App) + untere App-Navigation (in der App bzw. am Touch-Gerät bis 860 px): Karten · Neu · Lernen · Drucken · Mehr ---------- */
+.app-navi { display: none; }
+.mit-app-navi .navi { display: none; }
+.mit-app-navi .app-navi { position: fixed; left: 0; right: 0; bottom: 0; z-index: 45; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 2px; padding: 4px max(4px, env(safe-area-inset-right, 0px)) calc(4px + env(safe-area-inset-bottom, 0px)) max(4px, env(safe-area-inset-left, 0px));
+  background: var(--feder); border-top: 1px solid var(--linie); box-shadow: 0 -4px 16px rgba(var(--schatten), .08); }
+.app-navi a, .app-navi button { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  min-width: 0; min-height: 54px; padding: 4px 2px; border: 0; border-radius: var(--radius); background: none; color: var(--nacht-2);
+  font-size: 11.5px; font-weight: 500; line-height: 1.2; text-decoration: none; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.app-navi a > span:not(.symbol):not(.zahl), .app-navi button > span:not(.symbol):not(.zahl) { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.app-navi .symbol { display: grid; place-items: center; width: 48px; height: 28px; border-radius: 14px; font-size: 19px; line-height: 1; }
+.app-navi [aria-current="page"] { color: var(--nacht); font-weight: 700; }
+.app-navi [aria-current="page"] .symbol { background: var(--wasser-hell); box-shadow: inset 0 -2px 0 var(--schnabel); }
+.app-navi .zahl { position: absolute; top: 2px; left: calc(50% + 8px); min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px;
+  background: var(--schnabel); color: var(--auf-schnabel); font-size: 11px; font-weight: 700; display: inline-grid; place-items: center; }
+.app-navi .zahl.punkt { min-width: 10px; width: 10px; height: 10px; padding: 0; top: 6px; left: calc(50% + 12px); }
+.mit-app-navi main { padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px)); }
+.mit-app-navi .toasts { left: 12px; right: 12px; bottom: calc(74px + env(safe-area-inset-bottom, 0px)); max-width: none; }
+.mit-app-navi .ente-global { bottom: calc(74px + env(safe-area-inset-bottom, 0px)); }
+.mit-app-navi .lern-auswahlleiste { bottom: calc(74px + env(safe-area-inset-bottom, 0px)); }
+.mit-app-navi .lern-noten { bottom: calc(66px + env(safe-area-inset-bottom, 0px)); padding-bottom: 8px; }
+.mit-app-navi .kopf { height: 52px; }
+.mit-app-navi .marke img { width: 32px; height: 32px; }
+.am-app .kopf { padding-left: max(12px, env(safe-area-inset-left, 0px)); padding-right: max(12px, env(safe-area-inset-right, 0px)); }
+.am-app main { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+/* „Mehr“: Blatt von unten mit den übrigen Bereichen und den App-Aktionen */
+.mit-app-navi #mehr-fenster { align-items: end; padding: 0; }
+.mit-app-navi #mehr-fenster .fenster { width: 100%; border-radius: 18px 18px 0 0; max-height: 85vh; max-height: 85dvh;
+  padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px)); }
+.mehr-liste { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(150px, 100%), 1fr)); gap: 8px; }
+.mehr-liste a { display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 8px 12px; border: 1px solid var(--linie);
+  border-radius: var(--radius); color: var(--nacht); text-decoration: none; font-weight: 500; min-width: 0; overflow-wrap: break-word;
+  hyphens: auto; -webkit-hyphens: auto; }
+.mehr-liste a[aria-current="page"] { border-color: var(--schnabel); background: var(--himmel); }
+.mehr-liste .symbol { width: 24px; text-align: center; flex: none; color: var(--nacht-3); }
+.mehr-liste .zahl { margin-left: auto; min-width: 22px; height: 22px; padding: 0 7px; border-radius: 11px; background: var(--schnabel);
+  color: var(--auf-schnabel); font-size: 12px; font-weight: 700; display: inline-grid; place-items: center; }
+.mehr-app { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
+/* App installieren (Schritte mit Skizzen), Sicherung & Speicher, Datei teilen */
+.app-banner { justify-content: space-between; }
+.app-banner > span { flex: 1 1 260px; min-width: 0; }
+.app-schritte { list-style: none; margin: 12px 0; padding: 0; display: grid; gap: 8px; }
+.app-schritte li { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 12px; align-items: center; padding: 10px 12px;
+  border: 1px solid var(--linie); border-radius: var(--radius); }
+.app-schritte svg { width: 44px; height: 44px; color: var(--nacht-2); }
+.app-speicher { display: flex; gap: 4px 16px; flex-wrap: wrap; font-size: 13px; color: var(--nacht-3); margin: 4px 0 12px; }
+.app-frage { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; padding: 12px; border-radius: var(--radius); background: var(--warn-flaeche); }
+.app-datei { display: flex; flex-direction: column; gap: 12px; }
+.app-datei img { max-width: 100%; max-height: 50vh; border-radius: 10px; align-self: center; }
+label.knopf input[type="file"] { display: none; }
+</style>
+<style id="farben-vars"></style>
+<style>
+.app-start { position: fixed; inset: 0; z-index: 200; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 10px; padding: 24px; background: var(--himmel); color: var(--nacht); text-align: center; font-family: var(--schrift); transition: opacity .3s; }
+.app-start.weg { opacity: 0; pointer-events: none; }
+.app-start img { width: 104px; height: 104px; }
+.app-start b { font-size: 22px; }
+.app-start-ente { margin: 6px 0 0; font: 15px/1.15 ui-monospace, Menlo, Consolas, monospace; color: var(--nacht-2); white-space: pre; }
+.app-start-ente .s { color: var(--schnabel-dunkel); font-weight: 700; }
+.app-start-ente .w1 { color: var(--nacht-3); }
+.app-start-ente .w2 { color: var(--wasser); }
+.app-start-balken { width: min(320px, 80vw); height: 8px; border-radius: 4px; background: var(--wasser-hell); overflow: hidden; }
+.app-start-balken > div { width: 0; height: 100%; background: var(--schnabel); transition: width .2s; }
+#app-start-text { max-width: 420px; }
+</style>
+</head>
+<body>
+<div class="app-start" id="app-start" role="status" aria-live="polite">
+  <img src="symbol.svg" alt=""><b>Me Goos-ta Deutsch</b>
+  <pre class="app-start-ente" id="app-start-ente" aria-hidden="true"></pre>
+  <span id="app-start-text"></span>
+  <div class="app-start-balken" hidden><div id="app-start-balken"></div></div>
+  <button class="knopf" type="button" id="app-start-nochmal" hidden></button>
+</div>
+<div class="verbindung" id="verbindung" hidden data-t="verbindung"></div>
+
+<header class="kopf">
+  <a class="marke" href="#karten" data-t-attr="aria-label:zu_karten">
+    <img src="symbol.svg" alt="">
+    <b>Me Goos-ta Deutsch</b>
+  </a>
+  <div class="rechts">
+    <div class="sprachwahl" role="group" data-t-attr="aria-label:sprache">
+      <button type="button" data-sprache="de" lang="de" title="Deutsch">DE</button>
+      <button type="button" data-sprache="en" lang="en" title="English">EN</button>
+      <button type="button" data-sprache="es" lang="es" title="Español">ES</button>
+    </div>
+    <button type="button" class="knopf klein leise ws-knopf" id="ws-knopf" hidden data-t-attr="title:h_ws_knopf">⏳ <span id="ws-zahl">0</span></button>
+    <button class="knopf klein leise" id="beenden" data-t-attr="title:beenden_titel">⏻ <span class="beenden-text" data-t="beenden"></span></button>
+  </div>
+</header>
+
+<div class="rahmen">
+  <nav class="navi" data-t-attr="aria-label:bereiche">
+    <a href="#karten" data-ansicht="karten" data-t-attr="title:h_nav_karten"><span class="symbol" aria-hidden="true">▦</span><span data-t="nav_karten"></span></a>
+    <a href="#lernen" data-ansicht="lernen" data-t-attr="title:h_nav_lernen"><span class="symbol" aria-hidden="true">🎓</span><span data-t="nav_lernen"></span><span class="zahl" id="zahl-lernen" hidden></span></a>
+    <a href="#tabelle" data-ansicht="tabelle" data-t-attr="title:h_nav_tabelle"><span class="symbol" aria-hidden="true">☰</span><span data-t="nav_tabelle"></span><span class="zahl" id="zahl-tabelle" hidden></span></a>
+    <a href="#verbesserung" data-ansicht="verbesserung" data-t-attr="title:h_nav_verbesserung"><span class="symbol" aria-hidden="true">✦</span><span data-t="nav_verbesserung"></span></a>
+    <div class="abschnitt" data-t="nav_neu"></div>
+    <a href="#bild" data-ansicht="bild" data-t-attr="title:h_nav_bild"><span class="schritt">1</span><span data-t="nav_bild"></span><span class="zahl" id="zahl-bild" hidden></span></a>
+    <a href="#beschriften" data-ansicht="beschriften" data-t-attr="title:h_nav_beschriften"><span class="schritt">2</span><span data-t="nav_beschriften"></span><span class="zahl" id="zahl-offen" hidden></span></a>
+    <a href="#ideen" data-ansicht="ideen" data-t-attr="title:h_nav_ideen"><span class="symbol" aria-hidden="true">✎</span><span data-t="nav_ideen"></span><span class="zahl" id="zahl-ideen" hidden></span></a>
+    <div class="abschnitt" data-t="nav_drucken"></div>
+    <a href="#erzeugen" data-ansicht="erzeugen" data-t-attr="title:h_nav_erzeugen"><span class="schritt">3</span><span data-t="nav_erzeugen"></span></a>
+    <a href="#pruefen" data-ansicht="pruefen" data-t-attr="title:h_nav_pruefen"><span class="schritt">4</span><span data-t="nav_pruefen"></span></a>
+    <hr>
+    <a href="#werkzeuge" data-ansicht="werkzeuge" data-t-attr="title:h_nav_werkzeuge"><span class="symbol" aria-hidden="true">⚙</span><span data-t="nav_werkzeuge"></span></a>
+    <a href="#hilfe" data-ansicht="hilfe" data-t-attr="title:h_nav_hilfe"><span class="symbol" aria-hidden="true">?</span><span data-t="nav_hilfe"></span></a>
+    <a href="#deinstallieren" data-ansicht="deinstallieren" class="leise-navi" data-t-attr="title:nav_deinstallieren_titel"><span class="symbol" aria-hidden="true">⏏</span><span data-t="nav_deinstallieren"></span></a>
+    <div class="fuss" id="statusfuss"></div>
+  </nav>
+
+  <main>
+    <!-- ===================== ÜBERSICHT ===================== -->
+    <section class="ansicht" id="v-karten" hidden>
+      <div class="titelzeile">
+        <div class="text"><h1 data-t="karten_titel"></h1><p class="unter" id="karten-unter"></p><div class="zs-platz" data-zs-platz></div></div>
+        <div class="knopfzeile"><button class="knopf" type="button" data-dialog="import-export" data-t="ie_knopf" data-t-attr="title:h_ie_knopf"></button>
+          <a class="knopf haupt" href="#bild" data-t="neue_karte" data-t-attr="title:h_neue_karte"></a></div>
+      </div>
+      <div id="app-hinweis"></div>
+      <div id="karten-banner"></div>
+      <div id="karten-hinweise"></div>
+      <div id="karten-lernleiste"></div>
+      <div class="kartenliste" id="kartenliste"></div>
+      <div class="lern-auswahlleiste" id="karten-auswahl" hidden></div>
+    </section>
+
+    <!-- ===================== KARTEN LERNEN (Tool „lernen“) ===================== -->
+    <section class="ansicht" id="v-lernen" hidden>
+      <div class="titelzeile">
+        <div class="text"><h1 data-t="ln_titel"></h1><p class="unter" data-t="ln_unter"></p></div>
+      </div>
+      <div id="lern-inhalt"></div>
+    </section>
+
+    <!-- ===================== TABELLE ===================== -->
+    <section class="ansicht" id="v-tabelle" hidden>
+      <div class="titelzeile">
+        <div class="text"><h1 data-t="tabelle_titel"></h1><p class="unter" data-t="tabelle_unter"></p><div class="zs-platz" data-zs-platz></div></div>
+        <div class="knopfzeile"><button class="knopf" id="tabelle-drucken" data-t="tabelle_drucken"></button></div>
+      </div>
+      <div class="leiste">
+        <div class="segmente" role="radiogroup" id="tabelle-filter" data-t-attr="aria-label:tabelle_filter"></div>
+        <input class="eingabe suche" id="tabelle-suche" type="search" autocomplete="off" data-t-attr="placeholder:tabelle_suche;aria-label:tabelle_suche">
+        <label class="schalter"><input type="checkbox" id="tabelle-bilder" checked><span class="spur"></span><span data-t="tabelle_bilder"></span></label>
+        <button class="knopf" id="tabelle-uebersetzen" data-t="alle_uebersetzen" hidden></button>
+        <div class="segmente" role="radiogroup" id="tabelle-ansicht" data-t-attr="aria-label:tab_ansicht">
+          <label><input type="radio" name="tabansicht" value="bearbeiten" checked><span data-t="tab_ansicht_bearbeiten"></span></label>
+          <label><input type="radio" name="tabansicht" value="kompakt"><span data-t="tab_ansicht_kompakt"></span></label>
+        </div>
+      </div>
+      <div class="flaeche tabelle-rahmen" id="tabelle-rahmen"><table class="vergleich" id="tabelle"></table></div>
+      <div class="flaeche tabelle-rahmen" id="kompakt-rahmen" hidden><table class="kompakt" id="tabelle-kompakt"></table></div>
+      <p class="klein" data-t="tabelle_fuss"></p>
+    </section>
+
+    <!-- ===================== BILDVERBESSERUNG ===================== -->
+    <section class="ansicht" id="v-verbesserung" hidden>
+      <div class="titelzeile">
+        <div class="text"><h1 data-t="verbesserung_titel"></h1><p class="unter" data-t="verbesserung_unter"></p></div>
+      </div>
+      <section class="flaeche tool-hinweis" id="verb-tool" hidden></section>
+      <div class="erzeugen-raster">
+        <div>
+          <section class="flaeche">
+            <div class="verb-kopf" id="verb-kopf"></div>
+            <div class="fortschritt" aria-hidden="true"><span id="verb-balken"></span></div>
+            <div class="knopfzeile abstand">
+              <button class="knopf klein" data-verb-wahl="alle" data-t="verb_alle"></button>
+              <button class="knopf klein" data-verb-wahl="offen" data-t="verb_offene"></button>
+              <button class="knopf klein leise" data-verb-wahl="keine" data-t="verb_keine"></button>
+              <div class="rechts"><button class="knopf haupt" id="verb-start"></button></div>
+            </div>
+            <p class="klein" id="verb-schaetzung" style="margin:10px 0 0"></p>
+          </section>
+          <div class="verb-raster" id="verb-liste"></div>
+          <div id="gruppen-verbesserung"></div>
+        </div>
+        <aside class="flaeche lauf" data-lauf></aside>
+      </div>
+    </section>
+
+    <!-- ===================== SCHRITT 1 ===================== -->
+    <section class="ansicht" id="v-bild" hidden>
+      <div class="titelzeile">
+        <div class="text"><span class="schrittmarke" data-t="schritt1"></span><h1 data-t="bild_titel"></h1>
+          <p class="unter" data-t="bild_unter"></p></div>
+      </div>
+      <label class="ablagefeld" id="ablagefeld" for="dateiwahl">
+        <img src="symbol.svg" alt="">
+        <b data-t="ablage_titel"></b>
+        <span class="klein" data-t="ablage_unter"></span>
+      </label>
+      <input type="file" id="dateiwahl" accept="image/jpeg,image/png,image/webp,image/gif,image/bmp,image/tiff,.jpg,.jpeg,.png,.webp,.gif,.bmp,.tif,.tiff" multiple hidden>
+      <div class="knopfzeile abstand" data-ki-knopf><button class="knopf" type="button" data-dialog="ki-bild" data-t="ki_knopf" data-t-attr="title:ki_knopf_unter"></button>
+        <span class="klein" data-t="ki_knopf_unter"></span></div>
+      <div class="knopfzeile abstand"><button class="knopf" type="button" data-dialog="gans-werkzeug" data-t="gw_knopf" data-t-attr="title:gw_knopf_unter"></button>
+        <span class="klein" data-t="gw_knopf_unter"></span></div>
+      <div id="hochladen"></div>
+      <div class="stapel-leiste" id="entwurf-alle" hidden>
+        <span class="zahlen" id="entwurf-zahlen"></span>
+        <div class="rechts">
+          <button class="knopf" id="entwuerfe-uebersetzen" data-t="alle_uebersetzen" data-t-attr="title:h_alle_uebersetzen"></button>
+          <button class="knopf haupt" id="alle-uebernehmen" data-t-attr="title:h_alle_uebernehmen"></button>
+        </div>
+      </div>
+      <div id="entwurf-liste"></div>
+    </section>
+
+    <!-- ===================== SCHRITT 2 ===================== -->
+    <section class="ansicht" id="v-beschriften" hidden>
+      <div class="titelzeile">
+        <div class="text"><span class="schrittmarke" data-t="schritt2"></span><h1 data-t="beschriften_titel"></h1>
+          <p class="unter" data-t="beschriften_unter"></p><div class="zs-platz" data-zs-platz></div></div>
+      </div>
+      <div class="stapel-leiste" id="editor-leiste" hidden>
+        <span class="zahlen" id="editor-zahlen"></span>
+        <div class="rechts">
+          <button class="knopf" id="editoren-uebersetzen" data-t="alle_uebersetzen" data-t-attr="title:h_alle_uebersetzen"></button>
+          <button class="knopf haupt" id="editoren-speichern" data-t="alle_speichern" data-t-attr="title:h_alle_speichern"></button>
+        </div>
+      </div>
+      <div id="editor-liste"></div>
+    </section>
+
+    <!-- ===================== IDEEN ===================== -->
+    <section class="ansicht" id="v-ideen" hidden>
+      <div class="titelzeile">
+        <div class="text"><h1 data-t="ideen_titel"></h1><p class="unter" data-t="ideen_unter"></p></div>
+        <div class="knopfzeile"><button class="knopf" type="button" data-dialog="import-export" data-vorwahl="ideen" data-t="ie_knopf" data-t-attr="title:ie_ideen_titel"></button>
+          <button class="knopf" type="button" data-dialog="gans-werkzeug" data-t="gw_knopf" data-t-attr="title:gw_knopf_unter"></button>
+          <button class="knopf haupt" type="button" id="idee-neu" data-t="idee_neu" data-t-attr="title:h_idee_neu"></button></div>
+      </div>
+      <div id="ideen-inhalt"></div>
+    </section>
+
+    <!-- ===================== SCHRITT 3 ===================== -->
+    <section class="ansicht" id="v-erzeugen" hidden>
+      <div class="titelzeile">
+        <div class="text"><span class="schrittmarke" data-t="schritt3"></span><h1 data-t="erzeugen_titel"></h1>
+          <p class="unter" data-t="erzeugen_unter"></p></div>
+      </div>
+      <div class="erzeugen-raster">
+        <div>
+          <section class="flaeche">
+            <h2 class="schritt-kopf"><span class="schritt-nr">1</span><span data-t="ez_s1"></span></h2>
+            <div class="ziel-raster" id="ziel-raster" role="radiogroup" data-t-attr="aria-label:ez_s1"></div>
+          </section>
+          <section class="flaeche abstand">
+            <h2 class="schritt-kopf"><span class="schritt-nr">2</span><span data-t="ez_s2"></span> <small data-t="ez_s2_unter"></small></h2>
+            <div id="gruppen"></div>
+            <details class="weitere-einstellungen" id="weitere-box"><summary data-t="ez_weitere" data-t-attr="title:ez_weitere_titel"></summary><div id="gruppen-weitere"></div></details>
+            <div class="abstand"><button class="knopf leise" id="standard" data-t="alles_standard" data-t-attr="title:ez_standard_titel"></button></div>
+          </section>
+          <section class="flaeche abstand">
+            <h2 class="schritt-kopf"><span class="schritt-nr">3</span><span data-t="ez_s3"></span></h2>
+            <div class="auswahlzeile" id="auswahlzeile"></div>
+            <div class="startknoepfe" id="startknoepfe"></div>
+            <div class="ki-hinweis" id="ki-hinweis"></div>
+            <div class="befehl-fehler" id="befehl-fehler" hidden></div>
+            <details class="befehl-box"><summary data-t="ez_befehl" data-t-attr="title:h_befehl"></summary>
+              <div class="befehl"><code id="befehl">…</code>
+                <button class="knopf klein leise" id="befehl-kopieren" data-t="kopieren" data-t-attr="title:h_kopieren"></button></div></details>
+          </section>
+        </div>
+        <aside class="flaeche lauf" data-lauf></aside>
+      </div>
+    </section>
+
+    <!-- ===================== SCHRITT 4 ===================== -->
+    <section class="ansicht" id="v-pruefen" hidden>
+      <div class="titelzeile">
+        <div class="text"><span class="schrittmarke" data-t="schritt4"></span><h1 data-t="pruefen_titel"></h1>
+          <p class="unter" data-t="pruefen_unter"></p></div>
+        <button class="knopf" data-oeffnen="ausgabe" data-t="ausgabe_oeffnen" data-t-attr="title:h_ausgabe_oeffnen"></button>
+      </div>
+      <div id="ergebnis-inhalt"></div>
+    </section>
+
+    <!-- ===================== WERKZEUGE ===================== -->
+    <section class="ansicht" id="v-werkzeuge" hidden>
+      <div class="titelzeile"><div class="text"><h1 data-t="werkzeuge_titel"></h1><p class="unter" data-t="werkzeuge_unter"></p></div></div>
+      <div class="erzeugen-raster">
+        <div>
+          <section class="flaeche" id="tools-bereich" hidden></section>
+          <section class="flaeche"><div class="liste-zeilen" id="werkzeug-liste"></div></section>
+          <section class="flaeche" id="ue-einstellungen"></section>
+        </div>
+        <aside class="flaeche lauf" data-lauf></aside>
+      </div>
+    </section>
+
+    <!-- ===================== HILFE ===================== -->
+    <section class="ansicht" id="v-hilfe" hidden>
+      <div class="titelzeile"><div class="text"><h1 data-t="hilfe_titel"></h1><p class="unter" data-t="hilfe_unter"></p></div></div>
+      <div class="reiter" role="tablist">
+        <button role="tab" data-doc="leitfaden" aria-selected="true" data-t="tab_leitfaden" data-t-attr="title:h_tab_leitfaden"></button>
+        <button role="tab" data-doc="spec" aria-selected="false" data-t="tab_spec" data-t-attr="title:h_tab_spec"></button>
+        <button role="tab" data-doc="ueber" aria-selected="false" data-t="tab_ueber" data-t-attr="title:h_tab_ueber"></button>
+      </div>
+      <article class="flaeche doku" id="doku"></article>
+    </section>
+
+    <!-- ===================== DEINSTALLIEREN (letzter Reiter) ===================== -->
+    <section class="ansicht" id="v-deinstallieren" hidden>
+      <div class="titelzeile"><div class="text"><h1 data-t="dei_titel"></h1><p class="unter" data-t="dei_unter"></p></div></div>
+      <div id="deinst-seite"></div>
+    </section>
+  </main>
+</div>
+
+<!-- ===================== Untere App-Navigation (Handy-App bzw. Touch bis 860 px) ===================== -->
+<nav class="app-navi" id="app-navi" data-t-attr="aria-label:bereiche">
+  <a href="#karten" data-app="karten" data-t-attr="title:h_nav_karten"><span class="symbol" aria-hidden="true">▦</span><span data-t="app_karten"></span></a>
+  <a href="#bild" data-app="neu" data-t-attr="title:h_nav_bild"><span class="symbol" aria-hidden="true">＋</span><span data-t="app_neu"></span><span class="zahl" id="app-zahl-neu" hidden></span></a>
+  <a href="#lernen" data-app="lernen" data-t-attr="title:h_nav_lernen"><span class="symbol" aria-hidden="true">🎓</span><span data-t="app_lernen"></span><span class="zahl" id="app-zahl-lernen" hidden></span></a>
+  <a href="#erzeugen" data-app="drucken" data-t-attr="title:h_nav_erzeugen"><span class="symbol" aria-hidden="true">🖨</span><span data-t="app_drucken"></span></a>
+  <button type="button" data-app="mehr" aria-haspopup="dialog" data-t-attr="title:h_app_mehr"><span class="symbol" aria-hidden="true">☰</span><span data-t="app_mehr"></span><span class="zahl punkt" id="app-zahl-mehr" hidden></span></button>
+</nav>
+
+<div class="ablage" id="ablage" hidden><div><span data-t="ablage_loslassen"></span><small data-t="ablage_loslassen_unter"></small></div></div>
+<div class="overlay" id="vergleich-fenster" hidden>
+  <div class="fenster" role="dialog" aria-modal="true" aria-labelledby="vergleich-titel">
+    <div class="fenster-kopf"><h2 id="vergleich-titel"></h2><button class="knopf klein leise" data-schliessen data-t="schliessen"></button></div>
+    <div id="vergleich-inhalt"></div>
+  </div>
+</div>
+<div class="overlay" id="zustimmung" hidden>
+  <div class="fenster schmal" role="dialog" aria-modal="true" aria-labelledby="zustimmung-titel">
+    <div class="fenster-kopf"><h2 id="zustimmung-titel" data-t="zust_titel"></h2></div>
+    <div class="zustimmung-text" id="zustimmung-text"></div>
+    <label class="schalter abstand"><input type="checkbox" id="zustimmung-auto"><span class="spur"></span><span data-t="zust_auto"></span></label>
+    <div class="knopfzeile abstand"><div class="rechts"><button class="knopf leise" id="zustimmung-nein" data-t="abbrechen"></button>
+      <button class="knopf haupt" id="zustimmung-ja" data-t="zust_ja"></button></div></div>
+  </div>
+</div>
+<!-- (Ansicht „Deinstallieren“ steht in <main>, siehe unten) -->
+<!-- ===================== Fenster der Erweiterungen ===================== -->
+<div class="overlay" id="ie-fenster" hidden data-dialogfenster>
+  <div class="fenster" role="dialog" aria-modal="true" aria-labelledby="ie-titel">
+    <div class="fenster-kopf"><h2 id="ie-titel" data-t="ie_titel"></h2><button class="knopf klein leise" data-zu data-t="schliessen"></button></div>
+    <div id="ie-inhalt"></div>
+  </div>
+</div>
+<div class="overlay" id="gw-fenster" hidden data-dialogfenster>
+  <div class="fenster breit" role="dialog" aria-modal="true" aria-labelledby="gw-titel">
+    <div class="fenster-kopf"><h2 id="gw-titel" data-t="gw_titel"></h2><button class="knopf klein leise" data-zu data-t="schliessen"></button></div>
+    <div id="gw-inhalt"></div>
+  </div>
+</div>
+<div class="overlay" id="ki-fenster" hidden data-dialogfenster>
+  <div class="fenster breit" role="dialog" aria-modal="true" aria-labelledby="ki-titel">
+    <div class="fenster-kopf"><h2 id="ki-titel" data-t="ki_titel"></h2><button class="knopf klein leise" data-zu data-t="schliessen"></button></div>
+    <div id="ki-inhalt"></div>
+  </div>
+</div>
+<div class="overlay" id="ws-fenster" hidden data-dialogfenster>
+  <div class="fenster schmal ws-fenster" role="dialog" aria-modal="true" aria-labelledby="ws-titel">
+    <div class="fenster-kopf"><h2 id="ws-titel" data-t="ws_titel"></h2><button class="knopf klein leise" data-zu data-t="schliessen"></button></div>
+    <div id="ws-inhalt" aria-live="polite"></div>
+  </div>
+</div>
+<div class="overlay" id="lan-fenster" hidden data-dialogfenster>
+  <div class="fenster schmal" role="dialog" aria-modal="true" aria-labelledby="lan-titel">
+    <div class="fenster-kopf"><h2 id="lan-titel" data-t="lan_titel"></h2><button class="knopf klein leise" data-zu data-t="schliessen"></button></div>
+    <div id="lan-inhalt"></div>
+  </div>
+</div>
+<div class="overlay" id="tool-fenster" hidden data-dialogfenster>
+  <div class="fenster schmal" role="dialog" aria-modal="true" aria-labelledby="tool-titel">
+    <div class="fenster-kopf"><h2 id="tool-titel"></h2><button class="knopf klein leise" data-zu data-t="schliessen"></button></div>
+    <div id="tool-inhalt"></div>
+  </div>
+</div>
+<div class="overlay" id="willkommen-fenster" hidden data-dialogfenster data-fest>
+  <div class="fenster schmal willkommen" role="dialog" aria-modal="true" aria-labelledby="wk-titel"><div id="wk-inhalt"></div></div>
+</div>
+<div class="overlay" id="start-fenster" hidden data-dialogfenster data-fest>
+  <div class="fenster schmal" role="dialog" aria-modal="true" aria-labelledby="start-titel">
+    <div class="fenster-kopf"><h2 id="start-titel" data-t="st_titel"></h2></div>
+    <div id="start-inhalt"></div>
+  </div>
+</div>
+<div class="overlay" id="deinst-fenster" hidden data-dialogfenster>
+  <div class="fenster schmal" role="dialog" aria-modal="true" aria-labelledby="deinst-titel">
+    <div class="fenster-kopf"><h2 id="deinst-titel" data-t="de_titel"></h2><button class="knopf klein leise" data-zu data-t="schliessen"></button></div>
+    <div id="deinst-inhalt"></div>
+  </div>
+</div>
+<div class="overlay" id="lern-fenster" hidden data-dialogfenster>
+  <div class="fenster" role="dialog" aria-modal="true" aria-labelledby="lern-dlg-titel">
+    <div class="fenster-kopf"><h2 id="lern-dlg-titel"></h2><button class="knopf klein leise" data-zu data-t="schliessen"></button></div>
+    <div id="lern-dlg-inhalt"></div>
+  </div>
+</div>
+<div class="overlay" id="farben-fenster" hidden data-dialogfenster>
+  <div class="fenster" role="dialog" aria-modal="true" aria-labelledby="farben-titel">
+    <div class="fenster-kopf"><h2 id="farben-titel" data-t="fa_titel"></h2><button class="knopf klein leise" data-zu data-t="schliessen"></button></div>
+    <div id="farben-inhalt"></div>
+  </div>
+</div>
+<div class="overlay" id="mehr-fenster" hidden data-dialogfenster>
+  <div class="fenster schmal" role="dialog" aria-modal="true" aria-labelledby="mehr-titel">
+    <div class="fenster-kopf"><h2 id="mehr-titel" data-t="app_mehr_titel"></h2><button class="knopf klein leise" data-zu data-t="schliessen"></button></div>
+    <div id="mehr-inhalt"></div>
+  </div>
+</div>
+<div class="overlay" id="app-fenster" hidden data-dialogfenster>
+  <div class="fenster schmal" role="dialog" aria-modal="true" aria-labelledby="app-titel">
+    <div class="fenster-kopf"><h2 id="app-titel"></h2><button class="knopf klein leise" data-zu data-t="schliessen"></button></div>
+    <div id="app-inhalt"></div>
+  </div>
+</div>
+<div class="toasts" id="toasts" aria-live="polite"></div>
+<div class="ente-global" id="ente-global" hidden></div>
+<div class="ende" id="ende" hidden><div><img src="symbol.svg" alt=""><h1>Me Goos-ta Deutsch</h1><p id="ende-text"></p></div></div>
+
+<script src="app.js"></script>
+</body>
+</html>
