@@ -18,8 +18,9 @@ licenses. · Me Goos-ta Deutsch tiene licencia MIT; los componentes de abajo con
 
 ## Beim ersten Start geladen · Downloaded on first start
 
-Diese Teile lädt das Startprogramm von den offiziellen Quellen und prüft jede Datei per SHA-256-Prüfsumme. Sie liegen
-danach im Benutzerordner (nicht im Programmordner).
+Diese Teile lädt das Startprogramm von den offiziellen Quellen (Python mit eigener SHA-256-Prüfsumme, die Pakete über
+pip von pypi.org, das jede Datei ebenfalls per Prüfsumme kontrolliert). Sie liegen danach im Benutzerordner (nicht im
+Programmordner).
 
 | Bestandteil | Wofür | Lizenz | Quelle |
 | --- | --- | --- | --- |
@@ -29,13 +30,22 @@ danach im Benutzerordner (nicht im Programmordner).
 | **NumPy** | Rechnen (KI-Vergrößerung) | BSD-3-Clause (Teile 0BSD, MIT, Zlib, CC0) | https://numpy.org |
 | **ReportLab** | PDFs erzeugen | BSD-3-Clause | https://www.reportlab.com |
 | **pypdfium2** mit **PDFium** | Vorschaubilder, PNG-Export | Apache-2.0 / BSD-3-Clause (PDFium: BSD-3-Clause; Lizenzen der Bauteile im Paket) | https://github.com/pypdfium2-team/pypdfium2 |
+
+## Nur auf Wunsch geladen: Bildverbesserung · Downloaded only on request: image enhancement
+
+Erst wenn du das Tool **Bildverbesserung** installierst (Werkzeuge → Tools oder auf Nachfrage beim ersten Gebrauch),
+lädt das Programm das Modell von GitHub – mit SHA-256-Prüfsumme – und wandelt es in eine NumPy-Datei um
+(`modelle/realesrgan-*.npz`). Deinstallieren löscht es wieder; ohne Tool verbessert das eingebaute FSRCNN.
+
+| Bestandteil | Wofür | Lizenz | Quelle |
+| --- | --- | --- | --- |
 | **Real-ESRGAN x4plus** (Wang, Xie, Dong, Shan 2021), umgewandelt nach NumPy | beste Bildverbesserung | BSD-3-Clause (`modelle/LICENSE-RealESRGAN.txt`) | https://github.com/xinntao/Real-ESRGAN |
-| Real-ESRGAN x2plus (optional, Werkzeuge) | schnellere Bildverbesserung | BSD-3-Clause | https://github.com/xinntao/Real-ESRGAN |
+| Real-ESRGAN x2plus (optional, „Schneller ×2“) | schnellere Bildverbesserung | BSD-3-Clause | https://github.com/xinntao/Real-ESRGAN |
 
 ## Nur auf Wunsch geladen: KI-Bildmodell · Downloaded only on request: AI image model
 
-Erst nach Klick auf **Werkzeuge → „KI-Bildmodell laden“** (mit Rückfrage) lädt das Programm diese Dateien von Hugging
-Face – feste Revision, jede Datei mit Prüfsumme – in den Datenordner (`modelle/ki-bild`, ca. 3,5 GB). Sie sind nie Teil
+Erst wenn du das Tool **KI-Bilder** installierst (Werkzeuge → Tools, mit Rückfrage), lädt das Programm diese Dateien von
+Hugging Face – feste Revision, jede Datei mit Prüfsumme – in den Datenordner (`modelle/ki-bild`, ca. 3,5 GB). Sie sind nie Teil
 des Downloads von Me Goos-ta Deutsch; gerechnet wird damit offline in reinem NumPy.
 
 | Bestandteil | Wofür | Lizenz | Quelle |

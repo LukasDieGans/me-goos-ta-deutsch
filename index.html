@@ -785,10 +785,18 @@ table.kompakt { width: 100%; border-collapse: collapse; table-layout: fixed; fon
   .knopf { min-height: 44px; }
   .knopf.klein { min-height: 44px; min-width: 44px; padding: 8px 12px; }
   .knopf.rund { width: 44px; }
-  .segmente span, .reiter button { padding-top: 11px; padding-bottom: 11px; }
+  .segmente span, .reiter button { padding-top: 11px; padding-bottom: 11px; min-height: 44px; }
   .schalter { min-height: 44px; }
-  .sprachwahl button { min-height: 36px; min-width: 40px; }
-  .zeichen button { min-width: 40px; height: 40px; }
+  .sprachwahl { padding: 1px; }
+  .sprachwahl button { min-height: 44px; min-width: 44px; }
+  .zeichen button { min-width: 44px; height: 44px; }
+  .marke { min-width: 44px; min-height: 44px; }
+  input:not([type="checkbox"]):not([type="radio"]):not([type="color"]):not([type="file"]), select, .f select, .eingabe { min-height: 44px; }
+  .geprueft { min-height: 44px; }
+  .verb-karte .wahl { width: 44px; height: 44px; }
+  details > summary { min-height: 44px; padding-top: 10px; padding-bottom: 10px; box-sizing: border-box; }
+  button.sprach-chip { position: relative; }
+  button.sprach-chip::after { content: ""; position: absolute; inset: -4px 0; }   /* Tippfläche 44 px, Chip bleibt klein */
 }
 @media screen and (hover: none) and (pointer: coarse) { button.sprach-chip { min-width: 44px; min-height: 36px; font-size: 13px; } }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }

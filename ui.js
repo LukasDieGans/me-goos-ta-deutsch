@@ -39,7 +39,7 @@ de: {
   bild_unter: "Füge ein oder gleich viele Bilder mit deinem Wortwitz hinzu (z. B. „Gans alt“). Den Rest übernimmt das Programm: Es prüft Format, Größe und Schärfe, übernimmt den Text aus dem Dateinamen und benennt die Datei passend. Das Wort auf {zs} trägst du gleich hier ein – oder lässt es dir mit 🌐 vorschlagen.",
   ablage_titel: "Bilder hierher ziehen oder klicken", ablage_unter: "JPG, PNG oder WEBP · GIF, BMP, TIFF werden umgewandelt · bis 40 MB",
   ablage_loslassen: "Bilder loslassen", ablage_loslassen_unter: "Jedes Bild wird sorgfältig geprüft und vorbereitet.",
-  wird_geprueft: n => `Wird hochgeladen und geprüft: ${n} …`, nicht_hinzugefuegt: n => `Noch nicht dabei: ${n}`,
+  nicht_hinzugefuegt: n => `Noch nicht dabei: ${n}`,
   zu_gross: (n, mb) => `${n} ist größer als ${mb} MB – etwas verkleinert passt es bestimmt.`,
   original: "Original", vorderseite: "Vorderseite", schnellvorschau: "Schnellvorschau",
   drehen_links: "90° nach links drehen", drehen_rechts: "90° nach rechts drehen",
@@ -59,7 +59,7 @@ de: {
   karte_gespeichert: "Karte gespeichert – stark!", neu_ohne_zeile: "neu – noch nicht in der Kartenliste",
   alles_beschriftet: "Alle Karten sind beschriftet – klasse!", alles_beschriftet_text: "Weiter geht’s mit den Druckdateien – oder du bereitest gleich noch ein Bild vor.",
   noch_ein_bild: "Noch ein Bild vorbereiten", weiter_erzeugen: "Weiter zu Schritt 3: Erzeugen",
-  erzeugen_titel: "Erzeugen", erzeugen_unter: "Wähle, was entstehen soll. Die Einstellungen darunter gelten für alle Läufe und die Vorschau; sie werden automatisch gespeichert.",
+  erzeugen_titel: "Erzeugen",
   befehl: "Entspricht dem Befehl", kopieren: "Kopieren", kopiert: "Befehl kopiert", kopieren_fehler: "Kopieren hat nicht geklappt – markiere den Text einfach selbst",
   alles_standard: "Alle Einstellungen auf Standard", standard_ok: "Alle Einstellungen stehen wieder auf Standard",
   bitte_pruefen: "Kurz prüfen: ", auswahl_ph: "alle Karten", auswahl_tipp: "Praktisch, um nur neue Karten zu drucken.",
@@ -75,13 +75,11 @@ de: {
   pruefen_titel: "Prüfen & drucken", pruefen_unter: "Fast am Ziel! Ein Blick auf den Prüfbogen, dann geht’s ans Drucken. „Öffnen“ startet das passende Programm auf diesem Rechner.",
   ausgabe_oeffnen: "Ausgabeordner öffnen", nichts_erzeugt: "Hier landen gleich deine Druckdateien",
   nichts_erzeugt_text: "Starte in Schritt 3 deinen ersten Lauf – danach findest du hier Prüfbogen und Druckdateien.",
-  zu_schritt3: "Zu Schritt 3: Erzeugen", letzter_lauf: "Letzter Lauf", zeitpunkt: "Zeitpunkt", karten: "Karten",
+  zu_schritt3: "Zu Schritt 3: Erzeugen", letzter_lauf: "Letzter Lauf", karten: "Karten",
   ausgewaehlte: "Ausgewählte Karten", format: "Format", bildverbesserung: "Bildverbesserung", keine_hinweise: "Keine Hinweise – alles bestens!",
-  druckdateien: "Druckdateien", oeffnen: "Öffnen", im_browser: "Im Browser ansehen", einzelbilder: "Einzelbilder",
+  oeffnen: "Öffnen", im_browser: "Im Browser ansehen", einzelbilder: "Einzelbilder",
   einzelbilder_text: n => `${n} PNG-Dateien, eine je Kartenseite – für Druckereien mit Bild-Upload`, ordner_oeffnen: "Ordner öffnen",
-  heimdruck: "So druckst du zu Hause", g_groesse: "Größe", g_groesse_t: "100 % bzw. „Tatsächliche Größe“, nicht „An Seite anpassen“",
-  g_seiten: "Seiten", g_seiten_t: "beidseitig, Wenden an der langen Kante", g_papier: "Papier", g_papier_t: "Karton 200–250 g/m², vorher ein Testbogen auf Normalpapier",
-  g_versatz: "Versetzt?", g_versatz_t: "In Schritt 3 beim Heimdruck den Versatz in mm einstellen", vorlagen: "Leere Vorlagen",
+  vorlagen: "Leere Vorlagen",
   wird_geoeffnet: "Wird geöffnet …",
   werkzeuge_titel: "Werkzeuge", werkzeuge_unter: "Alles, was dir die Arbeit leichter macht: Tools, Selbsttest, Sicherung und Ordner.", erledigt: "Erledigt ✓",
   hilfe_titel: "Hilfe", hilfe_unter: "Der ganze Weg Schritt für Schritt – und alle technischen Angaben für Neugierige.",
@@ -198,7 +196,7 @@ en: {
   bild_unter: "Add one image or a whole bunch with your pun (e.g. “Gans alt”). The program takes care of the rest: it checks format, size and sharpness, takes the text from the file name and names the file to match. Enter the {zs} word right here – or let 🌐 suggest one.",
   ablage_titel: "Drag images here or click", ablage_unter: "JPG, PNG or WEBP · GIF, BMP, TIFF are converted · up to 40 MB",
   ablage_loslassen: "Drop images", ablage_loslassen_unter: "Each image is carefully checked and prepared.",
-  wird_geprueft: n => `Uploading and checking: ${n} …`, nicht_hinzugefuegt: n => `Not in yet: ${n}`,
+  nicht_hinzugefuegt: n => `Not in yet: ${n}`,
   zu_gross: (n, mb) => `${n} is larger than ${mb} MB – shrink it a little and it will fit.`,
   original: "Original", vorderseite: "Front", schnellvorschau: "Quick preview",
   drehen_links: "Rotate 90° left", drehen_rechts: "Rotate 90° right",
@@ -218,7 +216,7 @@ en: {
   karte_gespeichert: "Card saved – nice work!", neu_ohne_zeile: "new – not yet in the card list",
   alles_beschriftet: "All cards are labelled – brilliant!", alles_beschriftet_text: "On to the print files – or prepare another image right away.",
   noch_ein_bild: "Prepare another image", weiter_erzeugen: "Continue to step 3: Generate",
-  erzeugen_titel: "Generate", erzeugen_unter: "Choose what to create. The settings below apply to all runs and to the preview; they are saved automatically.",
+  erzeugen_titel: "Generate",
   befehl: "Equivalent command", kopieren: "Copy", kopiert: "Command copied", kopieren_fehler: "Copying didn’t work – just select the text yourself",
   alles_standard: "Reset all settings", standard_ok: "All settings are back to default",
   bitte_pruefen: "Quick check: ", auswahl_ph: "all cards", auswahl_tipp: "Handy for printing only new cards.",
@@ -234,13 +232,11 @@ en: {
   pruefen_titel: "Check & print", pruefen_unter: "Almost there! A look at the proof sheet, then off to print. “Open” starts the matching program on this computer.",
   ausgabe_oeffnen: "Open output folder", nichts_erzeugt: "Your print files will land here",
   nichts_erzeugt_text: "Start your first run in step 3 – then you will find the proof sheet and print files here.",
-  zu_schritt3: "Go to step 3: Generate", letzter_lauf: "Last run", zeitpunkt: "Time", karten: "Cards",
+  zu_schritt3: "Go to step 3: Generate", letzter_lauf: "Last run", karten: "Cards",
   ausgewaehlte: "Selected cards", format: "Format", bildverbesserung: "Image enhancement", keine_hinweise: "No notes – all good!",
-  druckdateien: "Print files", oeffnen: "Open", im_browser: "View in browser", einzelbilder: "Single images",
+  oeffnen: "Open", im_browser: "View in browser", einzelbilder: "Single images",
   einzelbilder_text: n => `${n} PNG files, one per card side – for print shops with image upload`, ordner_oeffnen: "Open folder",
-  heimdruck: "Printing at home", g_groesse: "Size", g_groesse_t: "100 % or “Actual size”, not “Fit to page”",
-  g_seiten: "Sides", g_seiten_t: "double-sided, flip on the long edge", g_papier: "Paper", g_papier_t: "card stock 200–250 g/m², print a test sheet on plain paper first",
-  g_versatz: "Misaligned?", g_versatz_t: "Set the offset in mm for home printing in step 3", vorlagen: "Blank templates",
+  vorlagen: "Blank templates",
   wird_geoeffnet: "Opening …",
   werkzeuge_titel: "Tools", werkzeuge_unter: "Everything that makes your work easier: optional tools, self-test, backup and folders.", erledigt: "Done ✓",
   hilfe_titel: "Help", hilfe_unter: "The whole way step by step – plus all the technical details for the curious.",
@@ -357,7 +353,7 @@ es: {
   bild_unter: "Agrega una imagen o muchas a la vez con tu juego de palabras (p. ej. «Gans alt»). Del resto se encarga el programa: revisa formato, tamaño y nitidez, toma el texto del nombre del archivo y lo nombra como corresponde. La palabra en {zs} la escribes aquí mismo, o deja que 🌐 te la sugiera.",
   ablage_titel: "Arrastra imágenes aquí o haz clic", ablage_unter: "JPG, PNG o WEBP · GIF, BMP y TIFF se convierten · hasta 40 MB",
   ablage_loslassen: "Suelta las imágenes", ablage_loslassen_unter: "Cada imagen se revisa y se prepara con cuidado.",
-  wird_geprueft: n => `Subiendo y revisando: ${n} …`, nicht_hinzugefuegt: n => `Todavía no entró: ${n}`,
+  nicht_hinzugefuegt: n => `Todavía no entró: ${n}`,
   zu_gross: (n, mb) => `${n} pesa más de ${mb} MB; un poco más pequeña y seguro que entra.`,
   original: "Original", vorderseite: "Anverso", schnellvorschau: "Vista rápida",
   drehen_links: "Girar 90° a la izquierda", drehen_rechts: "Girar 90° a la derecha",
@@ -377,7 +373,7 @@ es: {
   karte_gespeichert: "Carta guardada. ¡Genial!", neu_ohne_zeile: "nueva: aún no está en la lista",
   alles_beschriftet: "¡Todas las cartas están rotuladas, excelente!", alles_beschriftet_text: "Sigue con los archivos de impresión, o prepara otra imagen ahora mismo.",
   noch_ein_bild: "Preparar otra imagen", weiter_erzeugen: "Continuar al paso 3: Generar",
-  erzeugen_titel: "Generar", erzeugen_unter: "Elige qué crear. Los ajustes de abajo valen para todas las ejecuciones y la vista previa; se guardan automáticamente.",
+  erzeugen_titel: "Generar",
   befehl: "Comando equivalente", kopieren: "Copiar", kopiert: "Comando copiado", kopieren_fehler: "No se pudo copiar; selecciona el texto tú mismo",
   alles_standard: "Restablecer todos los ajustes", standard_ok: "Todos los ajustes volvieron a los valores predeterminados",
   bitte_pruefen: "Revisa rápido: ", auswahl_ph: "todas las cartas", auswahl_tipp: "Útil para imprimir solo las cartas nuevas.",
@@ -393,13 +389,11 @@ es: {
   pruefen_titel: "Revisar e imprimir", pruefen_unter: "¡Ya casi! Échale un vistazo a la hoja de control y luego a imprimir. «Abrir» inicia el programa adecuado en esta computadora.",
   ausgabe_oeffnen: "Abrir carpeta de salida", nichts_erzeugt: "Aquí llegarán tus archivos de impresión",
   nichts_erzeugt_text: "Inicia tu primera ejecución en el paso 3; después encontrarás aquí la hoja de control y los archivos de impresión.",
-  zu_schritt3: "Ir al paso 3: Generar", letzter_lauf: "Última ejecución", zeitpunkt: "Fecha", karten: "Cartas",
+  zu_schritt3: "Ir al paso 3: Generar", letzter_lauf: "Última ejecución", karten: "Cartas",
   ausgewaehlte: "Cartas seleccionadas", format: "Formato", bildverbesserung: "Mejora de imagen", keine_hinweise: "Sin avisos: ¡todo perfecto!",
-  druckdateien: "Archivos de impresión", oeffnen: "Abrir", im_browser: "Ver en el navegador", einzelbilder: "Imágenes individuales",
+  oeffnen: "Abrir", im_browser: "Ver en el navegador", einzelbilder: "Imágenes individuales",
   einzelbilder_text: n => `${n} archivos PNG, uno por lado de carta, para imprentas que reciben imágenes`, ordner_oeffnen: "Abrir carpeta",
-  heimdruck: "Así imprimes en casa", g_groesse: "Tamaño", g_groesse_t: "100 % o «Tamaño real», no «Ajustar a la página»",
-  g_seiten: "Caras", g_seiten_t: "a doble cara, volteo por el borde largo", g_papier: "Papel", g_papier_t: "cartulina de 200–250 g/m²; antes imprime una prueba en papel normal",
-  g_versatz: "¿Desfasado?", g_versatz_t: "Ajusta el desplazamiento en mm para la impresión en casa en el paso 3", vorlagen: "Plantillas vacías",
+  vorlagen: "Plantillas vacías",
   wird_geoeffnet: "Abriendo …",
   werkzeuge_titel: "Herramientas", werkzeuge_unter: "Todo lo que te facilita el trabajo: herramientas opcionales, autoprueba, respaldo y carpetas.", erledigt: "Listo ✓",
   hilfe_titel: "Ayuda", hilfe_unter: "Todo el camino paso a paso, y los datos técnicos para los curiosos.",
@@ -600,7 +594,6 @@ Object.assign(TXT.de, {
   ie_waehlen: "Datei wählen …", ie_pruefe: "Datei wird geprüft …", ie_andere: "Andere Datei wählen",
   ie_vorschau: z => `${z.neu} neu · ${z.konflikt} schon da, aber anders · ${z.gleich} gleich · ${z.fehler} mit Fehler`,
   ie_s_neu: "neu", ie_s_konflikt: "anders", ie_s_gleich: "gleich", ie_s_fehler: "Fehler", ie_hier: "hier:",
-  ie_konflikt_frage: "Karten, die es hier schon gibt, die aber anders sind:",
   ie_behalten: "Meine behalten", ie_ersetzen: "Durch den Import ersetzen (alte Bilder kommen nach bilder/_entfernt)",
   ie_uebernehmen: n => `${n} ${n === 1 ? "Karte" : "Karten"} übernehmen`, ie_nichts: "Nichts zu übernehmen – alles ist schon da, oder die Einträge brauchen noch etwas Feinschliff.",
   ie_fertig: z => `Import geschafft: ${z.neu + z.ersetzt} Karten (${z.ersetzt} ersetzt) und ${z.ideen_neu + z.ideen_ersetzt} Ideen übernommen${z.uebersprungen ? `, ${z.uebersprungen} behalten` : ""}${z.fehler ? `, ${z.fehler} ausgelassen` : ""}. Stark!`,
@@ -668,7 +661,7 @@ Object.assign(TXT.de, {
   idee_aufnehmen: "Als Karte aufnehmen", idee_weg: "Verwerfen", idee_fehlt_noch: l => `Fast eine Karte! Es fehlt nur noch: ${l}`,
   idee_teil_bild: "Bild", idee_teil_de: "Text auf dem Bild", idee_teil_es: "Wort auf {zs}",
   idee_aufgenommen: n => `Karte ${n} angelegt – sie steht jetzt unter Meine Karten. Toll!`, idee_verworfen: "Idee verworfen – Platz für neue!",
-  idee_ersetzen: "Vorhandenes Bild mit diesem Namen ersetzen", idee_gespeichert: "gespeichert",
+  idee_ersetzen: "Vorhandenes Bild mit diesem Namen ersetzen",
   unfertig_entwurf: "Bild vorbereitet, noch nicht übernommen", unfertig_offen: "Wort auf {zs} kommt noch", unfertig_ohne: "Bild ohne Zeile in der Kartenliste",
   unfertig_weiter: "Weiter bearbeiten →",
   // Programmstart
@@ -681,7 +674,7 @@ Object.assign(TXT.de, {
   de_titel: "Programm deinstallieren", de_text: "Damit wird Me Goos-ta Deutsch vollständig von diesem Rechner entfernt:",
   de_p1: "Desktop-Symbol und Startmenü-Eintrag (Mac: App, Linux: Menüeintrag)", de_p2: "das eigene Python, Einstellungen und gemerkte Übersetzungen",
   de_p3: "der Programmordner – mit allen Karten, Bildern, Ideen und Druckdateien", de_warnung: "Das lässt sich nicht rückgängig machen – sichere deine Karten also am besten vorher.",
-  de_export: "Vorher Karten exportieren …", de_haken: "Ja, Me Goos-ta Deutsch mit allen Karten und Bildern löschen.",
+  de_haken: "Ja, Me Goos-ta Deutsch mit allen Karten und Bildern löschen.",
   de_los: "Endgültig deinstallieren", de_ende: "Me Goos-ta Deutsch wird entfernt. Du kannst dieses Fenster schließen.",
 });
 Object.assign(TXT.en, {
@@ -788,7 +781,6 @@ Object.assign(TXT.en, {
   ie_waehlen: "Choose file …", ie_pruefe: "Checking file …", ie_andere: "Choose another file",
   ie_vorschau: z => `${z.neu} new · ${z.konflikt} already here but different · ${z.gleich} identical · ${z.fehler} with errors`,
   ie_s_neu: "new", ie_s_konflikt: "different", ie_s_gleich: "identical", ie_s_fehler: "error", ie_hier: "here:",
-  ie_konflikt_frage: "Cards that already exist here but are different:",
   ie_behalten: "Keep mine", ie_ersetzen: "Replace with the import (old images go to bilder/_entfernt)",
   ie_uebernehmen: n => `Take over ${n} ${n === 1 ? "card" : "cards"}`, ie_nichts: "Nothing to take over – everything is already here, or the entries need a little polish.",
   ie_fertig: z => `Import done: ${z.neu + z.ersetzt} cards (${z.ersetzt} replaced) and ${z.ideen_neu + z.ideen_ersetzt} ideas added${z.uebersprungen ? `, ${z.uebersprungen} kept as they were` : ""}${z.fehler ? `, ${z.fehler} left out` : ""}. Nice one!`,
@@ -854,7 +846,7 @@ Object.assign(TXT.en, {
   idee_aufnehmen: "Make it a card", idee_weg: "Discard", idee_fehlt_noch: l => `Almost a card! All that is missing: ${l}`,
   idee_teil_bild: "image", idee_teil_de: "text on the image", idee_teil_es: "{zs} word",
   idee_aufgenommen: n => `Card ${n} created – it is now under My cards. Awesome!`, idee_verworfen: "Idea discarded – room for new ones!",
-  idee_ersetzen: "Replace the existing image with this name", idee_gespeichert: "saved",
+  idee_ersetzen: "Replace the existing image with this name",
   unfertig_entwurf: "Image prepared, not taken over yet", unfertig_offen: "{zs} word coming soon", unfertig_ohne: "Image without a row in the card list",
   unfertig_weiter: "Continue →",
   st_titel: "How should Me Goos-ta Deutsch open?", st_text: "Applies from the next start. You can change it any time under Tools → Program start.",
@@ -865,7 +857,7 @@ Object.assign(TXT.en, {
   de_titel: "Uninstall program", de_text: "This removes Me Goos-ta Deutsch completely from this computer:",
   de_p1: "Desktop icon and Start menu entry (Mac: app, Linux: menu entry)", de_p2: "its own Python, settings and remembered translations",
   de_p3: "the program folder – with all cards, images, ideas and print files", de_warnung: "This cannot be undone – so best back up your cards first.",
-  de_export: "Export cards first …", de_haken: "Yes, delete Me Goos-ta Deutsch with all cards and images.",
+  de_haken: "Yes, delete Me Goos-ta Deutsch with all cards and images.",
   de_los: "Uninstall for good", de_ende: "Me Goos-ta Deutsch is being removed. You can close this window.",
 });
 Object.assign(TXT.es, {
@@ -972,7 +964,6 @@ Object.assign(TXT.es, {
   ie_waehlen: "Elegir archivo …", ie_pruefe: "Revisando el archivo …", ie_andere: "Elegir otro archivo",
   ie_vorschau: z => `${z.neu} nuevas · ${z.konflikt} ya existen pero distintas · ${z.gleich} iguales · ${z.fehler} con error`,
   ie_s_neu: "nueva", ie_s_konflikt: "distinta", ie_s_gleich: "igual", ie_s_fehler: "error", ie_hier: "aquí:",
-  ie_konflikt_frage: "Cartas que ya existen aquí pero son distintas:",
   ie_behalten: "Conservar las mías", ie_ersetzen: "Reemplazar con la importación (las imágenes viejas van a bilder/_entfernt)",
   ie_uebernehmen: n => `Tomar ${n} ${n === 1 ? "carta" : "cartas"}`, ie_nichts: "Nada que tomar: todo ya está aquí, o las entradas necesitan un retoque.",
   ie_fertig: z => `¡Importación lista! ${z.neu + z.ersetzt} cartas (${z.ersetzt} reemplazadas) y ${z.ideen_neu + z.ideen_ersetzt} ideas${z.uebersprungen ? `, ${z.uebersprungen} conservadas` : ""}${z.fehler ? `, ${z.fehler} omitidas` : ""}. ¡Genial!`,
@@ -1038,7 +1029,7 @@ Object.assign(TXT.es, {
   idee_aufnehmen: "Hacer carta", idee_weg: "Descartar", idee_fehlt_noch: l => `¡Casi es una carta! Solo falta: ${l}`,
   idee_teil_bild: "imagen", idee_teil_de: "texto de la imagen", idee_teil_es: "palabra en {zs}",
   idee_aufgenommen: n => `Carta ${n} creada; ahora está en Mis cartas. ¡Bravo!`, idee_verworfen: "Idea descartada: ¡espacio para nuevas!",
-  idee_ersetzen: "Reemplazar la imagen existente con este nombre", idee_gespeichert: "guardado",
+  idee_ersetzen: "Reemplazar la imagen existente con este nombre",
   unfertig_entwurf: "Imagen preparada, aún no tomada", unfertig_offen: "La palabra en {zs} viene pronto", unfertig_ohne: "Imagen sin fila en la lista de cartas",
   unfertig_weiter: "Seguir →",
   st_titel: "¿Cómo debe abrirse Me Goos-ta Deutsch?", st_text: "Se aplica desde el próximo inicio. Puedes cambiarlo cuando quieras en Herramientas → Inicio.",
@@ -1049,7 +1040,7 @@ Object.assign(TXT.es, {
   de_titel: "Desinstalar programa", de_text: "Esto quita Me Goos-ta Deutsch por completo de esta computadora:",
   de_p1: "Icono del escritorio y del menú Inicio (Mac: app, Linux: entrada de menú)", de_p2: "el Python propio, los ajustes y las traducciones guardadas",
   de_p3: "la carpeta del programa, con todas las cartas, imágenes, ideas y archivos de impresión", de_warnung: "No se puede deshacer; mejor respalda antes tus cartas.",
-  de_export: "Exportar cartas antes …", de_haken: "Sí, borrar Me Goos-ta Deutsch con todas las cartas e imágenes.",
+  de_haken: "Sí, borrar Me Goos-ta Deutsch con todas las cartas e imágenes.",
   de_los: "Desinstalar definitivamente", de_ende: "Me Goos-ta Deutsch se está quitando. Puedes cerrar esta ventana.",
 });
 
@@ -3640,7 +3631,15 @@ let TAB = { karten: [] };
 const TAB_FILTER = ["alle", "ungeprueft", "auto", "ohne", "hinweise"];
 async function ladeTabelle() {
   if (!TAB.karten.length) { $("#tabelle").innerHTML = `<tbody><tr><td colspan="7">${enteHTML()}</td></tr></tbody>`; $("#tabelle-kompakt").innerHTML = `<tbody><tr><td>${enteHTML()}</td></tr></tbody>`; }
-  try { TAB = await api("/api/tabelle"); } catch (e) { fehlerToast(e); return; }
+  try { TAB = await api("/api/tabelle"); }
+  catch (e) {                                                // Ente nicht stehen lassen: Fehlertext statt Ladeanzeige
+    fehlerToast(e);
+    if ($("#tabelle .ente-laedt")) {
+      $("#tabelle").innerHTML = `<tbody><tr><td colspan="7">${esc(e.message)}</td></tr></tbody>`;
+      $("#tabelle-kompakt").innerHTML = `<tbody><tr><td>${esc(e.message)}</td></tr></tbody>`;
+    }
+    return;
+  }
   zeichneTabelle();
 }
 const tabWeitere = () => zsMehrere() ? ZS.installiert.filter(c => c !== ZS.code) : [];
