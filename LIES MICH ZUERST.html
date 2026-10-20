@@ -1,0 +1,372 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Me Goos-ta Deutsch – Read me first</title>
+<style>
+:root { --grund:#E8F2FA; --karte:#FFFFFF; --text:#1B2D4F; --leise:#4A6488; --rand:#C9DCEB; --akzent:#D7263D;
+  --gruen:#1E9E5A; --fenster:#FFFFFF; --leiste:#F3F6FA; --kasten:#FFF6E5; --kastenrand:#F6A94B; }
+@media (prefers-color-scheme: dark) {
+  :root { --grund:#0F1B2E; --karte:#16243A; --text:#E6EEF8; --leise:#A9BCD6; --rand:#2C4262; --fenster:#1D2D46;
+    --leiste:#22344F; --kasten:#2B2416; --kastenrand:#B98234; } }
+* { box-sizing:border-box; }
+body { margin:0; background:var(--grund); color:var(--text); font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; }
+header { max-width:920px; margin:0 auto; padding:20px 16px 0; display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
+header svg { width:64px; height:64px; flex:none; }
+header .name { font-weight:700; font-size:20px; flex:1; min-width:180px; }
+.sprachen button, .os-wahl button { font:inherit; border:1px solid var(--rand); background:var(--karte); color:var(--text);
+  padding:6px 12px; border-radius:999px; cursor:pointer; }
+.sprachen button[aria-pressed=true], .os-wahl button[aria-pressed=true] { background:var(--text); color:var(--karte); border-color:var(--text); }
+main { max-width:920px; margin:0 auto; padding:8px 16px 40px; }
+.sprache { background:var(--karte); border:1px solid var(--rand); border-radius:16px; padding:8px 24px 20px; }
+h1 { font-size:28px; line-height:1.2; margin:18px 0 8px; }
+h2 { font-size:20px; margin:30px 0 8px; }
+h3 { font-size:18px; margin:0 0 6px; }
+.lead { color:var(--leise); font-size:17px; margin-top:0; }
+.os-wahl { display:flex; gap:8px; margin:16px 0 4px; }
+ol.schritte { list-style:none; counter-reset:s; padding:0; margin:12px 0; }
+ol.schritte > li { counter-increment:s; position:relative; padding:14px 0 14px 54px; border-top:1px solid var(--rand); }
+ol.schritte > li::before { content:counter(s); position:absolute; left:0; top:14px; width:38px; height:38px; border-radius:50%;
+  background:var(--akzent); color:#fff; font-weight:700; display:grid; place-items:center; font-size:18px; }
+.marke { font-size:12px; font-weight:600; background:var(--akzent); color:#fff; border-radius:999px; padding:2px 8px; vertical-align:middle; }
+.kasten { background:var(--kasten); border:1px solid var(--kastenrand); border-radius:12px; padding:12px 16px; margin:8px 0; }
+.klein { font-size:14px; color:var(--leise); }
+.pfad, code { font-family:ui-monospace,Consolas,Menlo,monospace; font-size:14px; overflow-wrap:anywhere; }
+code { background:var(--leiste); border:1px solid var(--rand); border-radius:4px; padding:0 4px; }
+svg.dialog { width:100%; max-width:520px; height:auto; display:block; margin:10px 0; }
+svg.dialog .t { font:600 14px "Segoe UI",system-ui,sans-serif; fill:var(--text); }
+svg.dialog .k { font:13px "Segoe UI",system-ui,sans-serif; fill:var(--text); }
+svg.dialog .b { font-weight:700; }
+svg.dialog .m { text-anchor:middle; }
+svg.dialog .w { fill:#fff; }
+svg.dialog .h { font:700 14px system-ui,sans-serif; fill:#D7263D; }
+table.probleme { width:100%; border-collapse:collapse; font-size:15px; }
+table.probleme th, table.probleme td { text-align:left; vertical-align:top; padding:8px 10px; border-top:1px solid var(--rand); }
+table.probleme td:first-child { font-weight:600; width:38%; }
+.schutz { margin-top:26px; }
+body:not(.de) [data-lang=de], body:not(.en) [data-lang=en], body:not(.es) [data-lang=es] { display:none; }
+body:not(.win) [data-os-inhalt=win], body:not(.mac) [data-os-inhalt=mac], body:not(.linux) [data-os-inhalt=linux] { display:none; }
+@media (max-width:600px) { .sprache { padding:4px 14px 16px; } h1 { font-size:23px; }
+  table.probleme td:first-child { width:auto; } table.probleme, table.probleme tbody, table.probleme tr, table.probleme td { display:block; }
+  table.probleme thead { display:none; } table.probleme td { border:0; padding:4px 0; } table.probleme tr { border-top:1px solid var(--rand); padding:8px 0; } }
+@media print { header .sprachen, .os-wahl { display:none; } }
+</style>
+</head>
+<body class="en win">
+<header><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" aria-hidden="true" aria-label="Me Goos-ta Deutsch">
+  <defs>
+    <clipPath id="lm-decke"><path d="M118 304 C186 268 300 264 352 296 L354 424 C292 442 190 444 126 424 Z"/></clipPath>
+    <clipPath id="lm-krone"><path d="M318 134 C318 66 338 38 368 38 C398 38 418 66 418 134 Z"/></clipPath>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="#BFDDF2"/>
+  <!-- Füße -->
+  <path d="M200 458 L190 490 M266 460 L274 490" stroke="#F6A94B" stroke-width="16" stroke-linecap="round"/>
+  <path d="M172 492 H210 M256 492 H294" stroke="#F6A94B" stroke-width="12" stroke-linecap="round"/>
+  <!-- Körper, Schwanz, Hals, Kopf -->
+  <path d="M84 344 C54 322 38 294 44 272 C72 276 104 292 128 310 Z" fill="#fff"/>
+  <ellipse cx="228" cy="372" rx="168" ry="100" fill="#fff"/>
+  <path d="M300 312 C292 252 306 212 332 182 L402 198 C380 228 370 268 382 324 Z" fill="#fff"/>
+  <circle cx="368" cy="184" r="54" fill="#fff"/>
+  <path d="M110 392 C150 430 250 446 330 430" stroke="#D6E6F3" stroke-width="10" fill="none" stroke-linecap="round"/>
+  <!-- Sarape (bunt gestreifte Decke) über dem Rücken -->
+  <g clip-path="url(#lm-decke)">
+    <rect x="110" y="250" width="16" height="200" fill="#D7263D"/>
+    <rect x="126" y="250" width="10" height="200" fill="#F7D046"/>
+    <rect x="136" y="250" width="22" height="200" fill="#1E9E5A"/>
+    <rect x="158" y="250" width="7"  height="200" fill="#FFFFFF"/>
+    <rect x="165" y="250" width="22" height="200" fill="#E4007C"/>
+    <rect x="187" y="250" width="10" height="200" fill="#F6A94B"/>
+    <rect x="197" y="250" width="24" height="200" fill="#1FA2B8"/>
+    <rect x="221" y="250" width="7"  height="200" fill="#1B2D4F"/>
+    <rect x="228" y="250" width="24" height="200" fill="#F7D046"/>
+    <rect x="252" y="250" width="10" height="200" fill="#D7263D"/>
+    <rect x="262" y="250" width="22" height="200" fill="#1E9E5A"/>
+    <rect x="284" y="250" width="7"  height="200" fill="#FFFFFF"/>
+    <rect x="291" y="250" width="22" height="200" fill="#E4007C"/>
+    <rect x="313" y="250" width="10" height="200" fill="#F6A94B"/>
+    <rect x="323" y="250" width="40" height="200" fill="#D7263D"/>
+  </g>
+  <!-- Fransen -->
+  <path d="M134 428 l-3 18 M156 432 l-2 18 M180 435 l-1 18 M204 437 v18 M228 438 v18 M252 437 v18 M276 436 l1 18 M300 433 l2 18 M324 429 l3 18 M346 425 l3 17"
+        stroke="#D7263D" stroke-width="5" stroke-linecap="round" fill="none"/>
+  <!-- Schnabel und Auge -->
+  <path d="M412 170 C446 166 474 176 484 190 C474 204 448 210 412 204 Z" fill="#F6A94B"/>
+  <path d="M414 190 C440 192 462 192 478 190" stroke="#DE8A2B" stroke-width="4" stroke-linecap="round" fill="none"/>
+  <circle cx="386" cy="176" r="10" fill="#1B2D4F"/>
+  <circle cx="389" cy="173" r="3" fill="#fff"/>
+  <!-- Sombrero -->
+  <g transform="rotate(-8 368 130)">
+    <ellipse cx="368" cy="138" rx="136" ry="31" fill="#E7A93C"/>
+    <ellipse cx="368" cy="132" rx="130" ry="26" fill="#F2C462"/>
+    <ellipse cx="368" cy="132" rx="114" ry="21" fill="none" stroke="#1E9E5A" stroke-width="4"/>
+    <ellipse cx="368" cy="132" rx="100" ry="17" fill="none" stroke="#D7263D" stroke-width="5" stroke-dasharray="12 8"/>
+    <path d="M318 134 C318 66 338 38 368 38 C398 38 418 66 418 134 Z" fill="#F2C462"/>
+    <g clip-path="url(#lm-krone)">
+      <rect x="300" y="102" width="140" height="20" fill="#D7263D"/>
+      <path d="M300 112 l10 -8 l10 8 l10 -8 l10 8 l10 -8 l10 8 l10 -8 l10 8 l10 -8 l10 8 l10 -8 l10 8 l10 -8"
+            stroke="#F7D046" stroke-width="4" fill="none" stroke-linejoin="round"/>
+      <path d="M342 52 C334 72 332 94 334 102" stroke="#E7A93C" stroke-width="6" fill="none" stroke-linecap="round"/>
+    </g>
+    <circle cx="246" cy="156" r="9" fill="#D7263D"/>
+    <circle cx="274" cy="163" r="9" fill="#1E9E5A"/>
+    <circle cx="462" cy="163" r="9" fill="#1E9E5A"/>
+    <circle cx="490" cy="156" r="9" fill="#D7263D"/>
+  </g>
+</svg>
+<div class="name">Me Goos-ta Deutsch</div>
+<div class="sprachen"><button type="button" data-l="de">Deutsch</button> <button type="button" data-l="en">English</button> <button type="button" data-l="es">Español</button></div>
+</header>
+<main>
+<section class="sprache" lang="de" data-lang="de">
+<h1>Me Goos-ta Deutsch – so geht der Start</h1>
+<p class="lead">Lernkarten zum Ausdrucken: vorne ein Gans-Wortspiel-Bild, hinten das Wort auf Spanisch (gemeint ist immer das in Mexiko gesprochene Spanisch).Alles läuft auf deinem Rechner – Internet braucht es nur einmal für die Einrichtung und, wenn du willst, für die automatische Übersetzung.</p>
+<div class="kasten"><b>Neu in Version 2.1:</b> <b>Download für alle Systeme</b> – ein ZIP für Windows, macOS und Linux, bequem über die freundliche Download-Seite (erkennt dein System, drei Schritte mit Bildern, Hilfe zu SmartScreen und Gatekeeper) · <b>alles vor der Installation startet auf Englisch</b> – danach gilt die Sprache, die du im Programm wählst · <b>neue Gans auf der Rückseite</b>: das Wort steht auf ruhigem, einfarbigem Grund, die Gans des Programmsymbols paddelt klein unten rechts in ihrem Teich und lässt dem Wort den Vortritt · der Knopf „Schneller ×2“ unter Tools ist sauber gestaltet · Update ohne Datenverlust wie gewohnt (siehe unten).</div>
+<div class="os-wahl" role="tablist"><button type="button" data-os="win">Windows</button><button type="button" data-os="mac">Mac</button><button type="button" data-os="linux">Linux</button></div>
+<div class="os" data-os-inhalt="win">
+<ol class="schritte">
+<li><h3>ZIP-Datei freigeben <span class="marke">wichtig bei Windows 11</span></h3>
+<p>Rechtsklick auf die heruntergeladene ZIP-Datei → <b>„Eigenschaften“</b> → unten bei „Sicherheit“ ein Häkchen bei <b>„Zulassen“</b> → <b>„OK“</b>.</p>
+<svg class="dialog" viewBox="0 0 520 436" role="img" aria-label="Me-Goos-ta-Deutsch.zip – Eigenschaften"><rect x="1" y="1" width="518" height="434" rx="10" fill="var(--fenster)" stroke="var(--rand)"/><rect x="1" y="1" width="518" height="40" rx="10" fill="var(--leiste)"/><rect x="1" y="30" width="518" height="11" fill="var(--leiste)"/><text x="18" y="27" class="t">Me-Goos-ta-Deutsch.zip – Eigenschaften</text><text x="492" y="27" class="t">✕</text><rect x="12" y="52" width="80.60000000000001" height="28" rx="4" fill="var(--fenster)" stroke="var(--rand)"/><text x="18" y="71" class="k">Allgemein</text><text x="102.60000000000001" y="71" class="k">Sicherheit</text><text x="194.60000000000002" y="71" class="k">Details</text><text x="264.40000000000003" y="71" class="k">Vorgängerversionen</text><line x1="12" y1="80" x2="508" y2="80" stroke="var(--rand)"/><text x="24" y="112" class="k">Dateityp:</text><text x="150" y="112" class="k">ZIP-komprimierter Ordner (.zip)</text><text x="24" y="142" class="k">Öffnen mit:</text><text x="150" y="142" class="k">Windows-Explorer</text><text x="24" y="172" class="k">Ort:</text><text x="150" y="172" class="k">C:\Users\…\Downloads</text><text x="24" y="202" class="k">Größe:</text><text x="150" y="202" class="k">7,1 MB</text><line x1="24" y1="220" x2="496" y2="220" stroke="var(--rand)"/><text x="24" y="244" class="k">Sicherheit:</text><text x="150" y="244" class="k">Die Datei stammt von einem anderen</text><text x="150" y="264" class="k">Computer. Der Zugriff wurde aus Sicherheits-</text><text x="150" y="284" class="k">gründen eventuell blockiert.</text><rect x="138" y="304" width="124" height="34" rx="17" fill="none" stroke="#D7263D" stroke-width="3"/><rect x="150" y="313" width="16" height="16" rx="3" fill="#0067C0"/><path d="M153 321 l4 4 l7 -8" stroke="#fff" stroke-width="2.4" fill="none"/><text x="174" y="326" class="k b">Zulassen</text><text x="278" y="326" class="h">← 1. Häkchen setzen</text><rect x="214" y="388" width="92" height="30" rx="5" fill="#0067C0"/><text x="260" y="408" class="k m w">OK</text><rect x="314" y="388" width="92" height="30" rx="5" fill="var(--fenster)" stroke="var(--rand)"/><text x="360" y="408" class="k m">Abbrechen</text><rect x="414" y="388" width="92" height="30" rx="5" fill="var(--fenster)" stroke="var(--rand)"/><text x="460" y="408" class="k m">Übernehmen</text><text x="260" y="380" class="h m">2. OK ↓</text></svg>
+<p class="klein">Warum? Windows markiert Dateien aus dem Internet. Die <b>„Intelligente App-Steuerung“</b> (Smart App Control) blockiert markierte Startdateien. Gibt es kein Kästchen „Zulassen“, ist die Datei nicht markiert – dann einfach weiter.</p></li>
+<li><h3>Entpacken</h3>
+<p>Rechtsklick auf die ZIP-Datei → <b>„Alle extrahieren …“</b> → <b>„Extrahieren“</b>. Tipp: als Ziel z. B. „Dokumente“ wählen – der Ordner ist dein Arbeitsordner mit Bildern und PDFs.</p></li>
+<li><h3>Starten</h3>
+<p>Im entpackten Ordner doppelklicken auf <b>„Me Goos-ta Deutsch - Windows“</b> (Typ „Windows-Befehlsskript“).</p>
+<p>Beim <b>ersten Start</b> richtet sich alles selbst ein – Fenster offen lassen, etwa 3–10 Minuten, ca. 90 MB Download: eigenes Python, Pakete, Desktop-Symbol. Danach öffnet sich die Oberfläche im Browser.</p>
+<p>Ab dann: Doppelklick auf das Desktop-Symbol <b>„Me Goos-ta Deutsch“</b> (oder im Startmenü) – startet in Sekunden, ohne schwarzes Fenster.</p></li>
+</ol>
+<div class="kasten"><b>Erscheint eine Warnung?</b><br>
+„Der Computer wurde durch Windows geschützt“ → <b>„Weitere Informationen“</b> → <b>„Trotzdem ausführen“</b>.<br>
+„Intelligente App-Steuerung … blockiert“ → Schritt 1 wurde ausgelassen: Rechtsklick auf „Me Goos-ta Deutsch - Windows“ → „Eigenschaften“ → <b>„Zulassen“</b> → „OK“, dann erneut doppelklicken.</div>
+</div>
+<div class="os" data-os-inhalt="mac">
+<ol class="schritte">
+<li><h3>Entpacken</h3><p>Doppelklick auf die ZIP-Datei (Safari entpackt oft schon selbst). Den Ordner am besten nach „Dokumente“ ziehen.</p></li>
+<li><h3>Starten</h3><p>Doppelklick auf <b>„Me Goos-ta Deutsch - Mac“</b>.</p>
+<p>Meldet macOS, dass die Datei nicht geöffnet werden kann („Apple konnte nicht überprüfen …“):</p>
+<ul><li><b>macOS 15 und neuer:</b> Hinweis schließen → <b>Systemeinstellungen → Datenschutz &amp; Sicherheit</b> → ganz unten bei „Me Goos-ta Deutsch - Mac“ auf <b>„Dennoch öffnen“</b> → bestätigen.</li>
+<li><b>macOS 14 und älter:</b> Control-Taste halten, auf die Datei klicken → <b>„Öffnen“</b> → <b>„Öffnen“</b>.</li>
+<li><b>Klappt immer:</b> Programm „Terminal“ öffnen, <code>sh</code> und ein Leerzeichen tippen, die Datei ins Terminal-Fenster ziehen, Eingabetaste.</li></ul>
+<p>Fragt macOS nach Zugriff auf „Downloads“ oder „Dokumente“: <b>„Erlauben“</b>.</p></li>
+<li><h3>Erster Start und danach</h3><p>Beim ersten Start richtet sich alles selbst ein (Terminal-Fenster offen lassen, 3–10 Minuten, ca. 90 MB). Danach öffnet sich die Oberfläche im Browser.</p>
+<p>Ab dann: <b>„Me Goos-ta Deutsch“</b> im Launchpad bzw. im Ordner „Programme“ deines Benutzerordners – gern ins Dock ziehen.</p></li>
+</ol></div>
+<div class="os" data-os-inhalt="linux">
+<ol class="schritte">
+<li><h3>Entpacken</h3><p>Die ZIP-Datei im Dateimanager entpacken (Rechtsklick → „Hier entpacken“). Den Ordner am besten nach „Dokumente“ legen.</p></li>
+<li><h3>Starten</h3><p>Im entpackten Ordner ein Terminal öffnen (Rechtsklick → „Im Terminal öffnen“) und eingeben:<br><code>sh "Me Goos-ta Deutsch - Linux.sh"</code></p>
+<p>Oder: Rechtsklick auf <b>„Me Goos-ta Deutsch - Linux“</b> → <b>„Als Programm ausführen“</b> – das Terminal öffnet sich dann von selbst.</p></li>
+<li><h3>Erster Start und danach</h3><p>Beim ersten Start richtet sich alles selbst ein (Terminal offen lassen, 3–10 Minuten, ca. 90 MB). Danach öffnet sich die Oberfläche im Browser.</p>
+<p>Ab dann: <b>„Me Goos-ta Deutsch“</b> im Anwendungsmenü.</p>
+<p class="klein">Läuft auf den üblichen Linux-Systemen mit Intel/AMD- oder ARM-Prozessor (z. B. Ubuntu, Debian, Mint, Fedora, openSUSE, Arch). Gebraucht werden nur <code>curl</code> oder <code>wget</code> und <code>tar</code> – die sind fast immer schon da.</p></li>
+</ol></div>
+<h2>Auch aufs Handy: Android, iPhone, Google Pixel</h2>
+<p>Die Gans gibt es auch als <b>App fürs Handy</b> – dasselbe Programm, ganz ohne Rechner und auch offline. Öffne am Handy <a href="https://lukasdiegans.github.io/me-goos-ta-deutsch/">lukasdiegans.github.io/me-goos-ta-deutsch</a> und installiere sie dort. Schritt für Schritt mit Skizzen und QR-Code:</p>
+<ul><li><a href="Me%20Goos-ta%20Deutsch%20-%20Android.html#de">Me Goos-ta Deutsch - Android.html</a></li><li><a href="Me%20Goos-ta%20Deutsch%20-%20iPhone.html#de">Me Goos-ta Deutsch - iPhone.html</a> (iPhone/iPad ab iOS 16.4)</li><li><a href="Me%20Goos-ta%20Deutsch%20-%20Google%20Pixel.html#de">Me Goos-ta Deutsch - Google Pixel.html</a></li></ul>
+<p class="klein">Am Rechner öffnen und den QR-Code mit der Handy-Kamera scannen – oder die Datei per Mail oder Cloud aufs Handy schicken. Deine Daten bleiben auf dem Handy; Karten holst du mit einer Komplettsicherung vom Rechner hinüber.</p>
+<h2>Schon eine ältere Version? So klappt das Update</h2>
+<p>Die neueste Version gibt es immer auf der Download-Seite: <a href="https://lukasdiegans.github.io/me-goos-ta-deutsch/download/#de">lukasdiegans.github.io/me-goos-ta-deutsch/download</a> – ein Paket für Windows, macOS und Linux.</p>
+<p>Deine Karten, Bilder und PDFs bleiben erhalten – die neue Version bringt davon nichts mit außer ihren Beispielkarten.</p>
+<ol>
+<li>Die laufende Oberfläche beenden (⏻ oben rechts).</li>
+<li>Die neue ZIP-Datei freigeben (Windows: Schritt 1) und in einen <b>neuen Ordner</b> entpacken – „Alle extrahieren …“ schlägt selbst einen vor, der Mac legt ohnehin einen neuen an.</li>
+<li>Im neuen Ordner die Startdatei doppelklicken. Sie findet den bisherigen Ordner und fragt, ob deine Karten übernommen werden sollen: <b>„Ja“</b> bzw. im Startfenster einfach <b>Enter</b>. Kopiert werden Karten, Bilder, schon verbesserte Bilder, Einstellungen und ein eigenes Gänse-Bild – nichts muss neu geladen werden.</li>
+<li>Das Symbol startet ab jetzt die neue Version. Der alte Ordner bleibt unverändert und kann weg, sobald alles passt.</li>
+</ol>
+<p class="klein">Auch möglich: über den alten Ordner entpacken und „Dateien im Ziel ersetzen“ wählen – ersetzt werden nur Programmdateien, nie deine Karten oder Bilder.</p>
+<h2>Was beim ersten Start passiert</h2><ul>
+<li><b>Eigenes Python</b> – offiziell von python.org (Windows) bzw. python-build-standalone (Mac und Linux), mit Prüfsumme kontrolliert. Es liegt im Benutzerordner, braucht <b>keine Administratorrechte</b> und lässt andere Python-Installationen unberührt.<br><span class="pfad">Windows: %LOCALAPPDATA%\Me-Goos-ta-Deutsch · Mac: ~/Library/Application Support/Me-Goos-ta-Deutsch · Linux: ~/.local/share/me-goos-ta-deutsch</span></li>
+<li><b>Pakete</b> Pillow, NumPy, ReportLab, pypdfium2 (von pypi.org). Größere Extras – die <b>Tools</b> Bildverbesserung (Real-ESRGAN), automatische Übersetzung, KI-Bilder und weitere Sprachen für die Rückseite – sind nicht vorinstalliert: Du wählst sie beim ersten Öffnen oder später unter „Werkzeuge“. Mit dem Tool <b>„Karten lernen“</b> übst du deine Karten direkt im Programm wie mit Anki (Reiter „🎓 Lernen“).</li>
+<li><b>Symbol</b> auf dem Desktop und im Startmenü (Windows), App im Ordner „Programme“ (Mac) bzw. Eintrag im Anwendungsmenü (Linux).</li>
+<li>Die Download-Markierung wird von den eigenen Dateien entfernt, damit spätere Starts nicht wieder blockiert werden.</li>
+</ul>
+<p>Bei jedem weiteren Start prüft das Startprogramm in Sekunden, ob alles da ist. Läuft die Oberfläche schon, öffnet es nur den Browser. Fehlt etwas oder ist etwas beschädigt, repariert es das selbst.</p>
+<h2>Wo liegt was?</h2><p><b>Programm/</b> enthält das Programm und deine Arbeit: <b>bilder/</b> (deine Fotos), <b>karten.csv</b> (die Wörter), <b>ausgabe/</b> (die fertigen PDFs). In der Oberfläche öffnet „Werkzeuge“ alle Ordner direkt. Anleitung zum Kartenmachen: Oberfläche → „Hilfe“ oder <b>Programm/LEITFADEN.md</b>.</p>
+<h2>Probleme und Lösungen</h2>
+<table class="probleme"><thead><tr><th>Was passiert?</th><th>Was tun?</th></tr></thead><tbody><tr><td>„Intelligente App-Steuerung hat … blockiert“</td><td>Schritt 1 („Zulassen“) bei der ZIP-Datei vor dem Entpacken – oder direkt bei der Startdatei: Rechtsklick → Eigenschaften → Zulassen → OK.</td></tr><tr><td>„Der Computer wurde durch Windows geschützt“</td><td>„Weitere Informationen“ → „Trotzdem ausführen“.</td></tr><tr><td>Fenster: „Bitte zuerst die ZIP-Datei entpacken“</td><td>Die Startdatei wurde direkt in der ZIP geöffnet. Erst entpacken (Schritt 2), dann im neuen Ordner starten.</td></tr><tr><td>„Keine Verbindung zum Internet“</td><td>Nur der erste Start braucht Internet (ca. 90 MB). WLAN prüfen und erneut starten – bereits Geladenes wird weiterverwendet.</td></tr><tr><td>„Windows blockiert eine Datei der Bildbibliothek“</td><td>Die Intelligente App-Steuerung lässt die (nicht von Microsoft signierten) Bildbibliotheken nicht zu. Das Startprogramm probiert dann selbst ältere, weit verbreitete Fassungen. Hilft das nicht, stehen im Fenster die Möglichkeiten.</td></tr><tr><td>Der Virenschutz meldet etwas</td><td>Meist ein Fehlalarm bei neu geladenen Dateien: in „Windows-Sicherheit → Schutzverlauf“ zulassen, dann erneut starten.</td></tr><tr><td>Beim Klick auf das Symbol passiert nichts</td><td>Einmal die Startdatei im Programmordner doppelklicken – sie prüft und repariert alles. Details stehen in protokoll.txt im Datenordner (siehe oben).</td></tr><tr><td>Der Browser öffnet sich nicht</td><td>Die Adresse steht im Startfenster (http://127.0.0.1:…) – in den Browser kopieren.</td></tr><tr><td>Programmordner verschoben oder neue Version entpackt</td><td>Einmal die Startdatei im neuen Ordner doppelklicken. Sie bietet an, deine Karten aus dem bisherigen Ordner zu übernehmen; Python und Pakete werden weiterverwendet, das Symbol zeigt danach auf den neuen Ordner.</td></tr><tr><td>Mac: „kann nicht geöffnet werden“ / „keine Berechtigung“</td><td>Siehe Mac-Schritt 2 – die Terminal-Methode (sh + Datei hineinziehen) klappt immer.</td></tr></tbody></table>
+<h2>Entfernen</h2><p>Am einfachsten geht es in der Oberfläche im letzten Reiter <b>„Deinstallieren“</b> – dort kannst du vorher auch alle Karten und Ideen als Datei sichern. Von Hand:</p>
+<p><b>Windows:</b> Desktop-Symbol löschen · Ordner <span class="pfad">%LOCALAPPDATA%\Me-Goos-ta-Deutsch</span> löschen (Windows-Taste + R, <code>%LOCALAPPDATA%</code> eingeben, Enter) · Programmordner löschen (Achtung: darin liegen deine Bilder und PDFs).<br>
+<b>Mac:</b> „Me Goos-ta Deutsch“ aus „Programme“ löschen · im Finder „Gehe zu → Gehe zum Ordner …“: <span class="pfad">~/Library/Application Support/Me-Goos-ta-Deutsch</span> löschen · Programmordner löschen.<br>
+<b>Linux:</b> <span class="pfad">~/.local/share/applications/me-goos-ta-deutsch.desktop</span> und <span class="pfad">~/.local/share/me-goos-ta-deutsch</span> löschen · Programmordner löschen.</p>
+<p class="klein schutz">Datenschutz: Alles bleibt auf deinem Rechner. Internet wird nur für die Einrichtung genutzt (python.org, pypi.org, github.com), für Tools, die du selbst installierst (Modelle und Schriften von github.com bzw. huggingface.co, mit Prüfsumme), und – nur wenn du die automatische Übersetzung einschaltest – für Übersetzungsvorschläge (Wiktionary, MyMemory oder DeepL); gesendet wird dann nur das zu übersetzende Wort. Die Oberfläche ist nur auf diesem Rechner erreichbar, außer du schaltest den Handy-Zugang (WLAN, mit PIN) ein.</p>
+</section>
+<section class="sprache" lang="en" data-lang="en">
+<h1>Me Goos-ta Deutsch – how to start</h1>
+<p class="lead">Printable flashcards: a goose-pun picture on the front, the word in Spanish on the back (always meaning Spanish as spoken in Mexico).Everything runs on your computer – internet is only needed once for the setup and, if you like, for automatic translation.</p>
+<div class="kasten"><b>New in version 2.1:</b> <b>Download for every system</b> – one ZIP for Windows, macOS and Linux, easy to get from the friendly download page (detects your system, three illustrated steps, help for SmartScreen and Gatekeeper) · <b>everything before the setup starts in English</b> – afterwards the language you pick in the program counts · <b>a new goose on the back side</b>: the word sits on a calm, plain background while the program’s goose paddles in a little pond in the bottom corner and lets the word go first · the “Faster ×2” button in Tools is neatly laid out · updates without losing data, as always (see below).</div>
+<div class="os-wahl" role="tablist"><button type="button" data-os="win">Windows</button><button type="button" data-os="mac">Mac</button><button type="button" data-os="linux">Linux</button></div>
+<div class="os" data-os-inhalt="win">
+<ol class="schritte">
+<li><h3>Unblock the ZIP file <span class="marke">important on Windows 11</span></h3>
+<p>Right-click the downloaded ZIP file → <b>“Properties”</b> → at the bottom under “Security” tick <b>“Unblock”</b> → <b>“OK”</b>.</p>
+<svg class="dialog" viewBox="0 0 520 436" role="img" aria-label="Me-Goos-ta-Deutsch.zip Properties"><rect x="1" y="1" width="518" height="434" rx="10" fill="var(--fenster)" stroke="var(--rand)"/><rect x="1" y="1" width="518" height="40" rx="10" fill="var(--leiste)"/><rect x="1" y="30" width="518" height="11" fill="var(--leiste)"/><text x="18" y="27" class="t">Me-Goos-ta-Deutsch.zip Properties</text><text x="492" y="27" class="t">✕</text><rect x="12" y="52" width="65.80000000000001" height="28" rx="4" fill="var(--fenster)" stroke="var(--rand)"/><text x="18" y="71" class="k">General</text><text x="87.80000000000001" y="71" class="k">Security</text><text x="165.0" y="71" class="k">Details</text><text x="234.8" y="71" class="k">Previous Versions</text><line x1="12" y1="80" x2="508" y2="80" stroke="var(--rand)"/><text x="24" y="112" class="k">Type of file:</text><text x="150" y="112" class="k">Compressed (zipped) Folder (.zip)</text><text x="24" y="142" class="k">Opens with:</text><text x="150" y="142" class="k">Windows Explorer</text><text x="24" y="172" class="k">Location:</text><text x="150" y="172" class="k">C:\Users\…\Downloads</text><text x="24" y="202" class="k">Size:</text><text x="150" y="202" class="k">7.1 MB</text><line x1="24" y1="220" x2="496" y2="220" stroke="var(--rand)"/><text x="24" y="244" class="k">Security:</text><text x="150" y="244" class="k">This file came from another computer</text><text x="150" y="264" class="k">and might be blocked to help protect</text><text x="150" y="284" class="k">this computer.</text><rect x="138" y="304" width="116" height="34" rx="17" fill="none" stroke="#D7263D" stroke-width="3"/><rect x="150" y="313" width="16" height="16" rx="3" fill="#0067C0"/><path d="M153 321 l4 4 l7 -8" stroke="#fff" stroke-width="2.4" fill="none"/><text x="174" y="326" class="k b">Unblock</text><text x="270" y="326" class="h">← 1. Tick the box</text><rect x="214" y="388" width="92" height="30" rx="5" fill="#0067C0"/><text x="260" y="408" class="k m w">OK</text><rect x="314" y="388" width="92" height="30" rx="5" fill="var(--fenster)" stroke="var(--rand)"/><text x="360" y="408" class="k m">Cancel</text><rect x="414" y="388" width="92" height="30" rx="5" fill="var(--fenster)" stroke="var(--rand)"/><text x="460" y="408" class="k m">Apply</text><text x="260" y="380" class="h m">2. OK ↓</text></svg>
+<p class="klein">Why? Windows marks files from the internet, and <b>Smart App Control</b> blocks marked start files. If there is no “Unblock” box, the file is not marked – just continue.</p></li>
+<li><h3>Extract</h3>
+<p>Right-click the ZIP file → <b>“Extract All …”</b> → <b>“Extract”</b>. Tip: choose e.g. “Documents” – the folder is your working folder with pictures and PDFs.</p></li>
+<li><h3>Start</h3>
+<p>In the extracted folder, double-click <b>“Me Goos-ta Deutsch - Windows”</b> (type “Windows Command Script”).</p>
+<p>On the <b>first start</b> everything sets itself up – keep the window open, about 3–10 minutes, about 90 MB download: its own Python, packages, desktop icon. Then the interface opens in the browser.</p>
+<p>From then on: double-click the desktop icon <b>“Me Goos-ta Deutsch”</b> (or use the Start menu) – starts in seconds, without a black window.</p></li>
+</ol>
+<div class="kasten"><b>A warning appears?</b><br>
+“Windows protected your PC” → <b>“More info”</b> → <b>“Run anyway”</b>.<br>
+“Smart App Control … blocked” → step 1 was skipped: right-click “Me Goos-ta Deutsch - Windows” → “Properties” → <b>“Unblock”</b> → “OK”, then double-click again.</div>
+</div>
+<div class="os" data-os-inhalt="mac">
+<ol class="schritte">
+<li><h3>Extract</h3><p>Double-click the ZIP file (Safari often extracts it by itself). Best move the folder to “Documents”.</p></li>
+<li><h3>Start</h3><p>Double-click <b>“Me Goos-ta Deutsch - Mac”</b>.</p>
+<p>If macOS says the file cannot be opened (“Apple could not verify …”):</p>
+<ul><li><b>macOS 15 and later:</b> close the message → <b>System Settings → Privacy &amp; Security</b> → at the bottom next to “Me Goos-ta Deutsch - Mac” click <b>“Open Anyway”</b> → confirm.</li>
+<li><b>macOS 14 and earlier:</b> hold the Control key, click the file → <b>“Open”</b> → <b>“Open”</b>.</li>
+<li><b>Always works:</b> open the “Terminal” app, type <code>sh</code> and a space, drag the file into the Terminal window, press Return.</li></ul>
+<p>If macOS asks for access to “Downloads” or “Documents”: <b>“Allow”</b>.</p></li>
+<li><h3>First start and afterwards</h3><p>On the first start everything sets itself up (keep the Terminal window open, 3–10 minutes, about 90 MB). Then the interface opens in the browser.</p>
+<p>From then on: <b>“Me Goos-ta Deutsch”</b> in Launchpad or in the “Applications” folder of your home folder – feel free to drag it to the Dock.</p></li>
+</ol></div>
+<div class="os" data-os-inhalt="linux">
+<ol class="schritte">
+<li><h3>Extract</h3><p>Extract the ZIP file in your file manager (right-click → “Extract Here”). Best move the folder to “Documents”.</p></li>
+<li><h3>Start</h3><p>Open a terminal in the extracted folder (right-click → “Open in Terminal”) and type:<br><code>sh "Me Goos-ta Deutsch - Linux.sh"</code></p>
+<p>Or: right-click <b>“Me Goos-ta Deutsch - Linux”</b> → <b>“Run as a Program”</b> – a terminal then opens by itself.</p></li>
+<li><h3>First start and afterwards</h3><p>On the first start everything sets itself up (keep the terminal open, 3–10 minutes, about 90 MB). Then the interface opens in the browser.</p>
+<p>From then on: <b>“Me Goos-ta Deutsch”</b> in the application menu.</p>
+<p class="klein">Runs on the usual Linux systems with Intel/AMD or ARM processors (e.g. Ubuntu, Debian, Mint, Fedora, openSUSE, Arch). All it needs is <code>curl</code> or <code>wget</code> and <code>tar</code> – they are almost always there already.</p></li>
+</ol></div>
+<h2>On your phone too: Android, iPhone, Google Pixel</h2>
+<p>The goose also comes as a <b>phone app</b> – the same program, entirely without the computer and offline too. Open <a href="https://lukasdiegans.github.io/me-goos-ta-deutsch/">lukasdiegans.github.io/me-goos-ta-deutsch</a> on your phone and install it there. Step by step with sketches and a QR code:</p>
+<ul><li><a href="Me%20Goos-ta%20Deutsch%20-%20Android.html#en">Me Goos-ta Deutsch - Android.html</a></li><li><a href="Me%20Goos-ta%20Deutsch%20-%20iPhone.html#en">Me Goos-ta Deutsch - iPhone.html</a> (iPhone/iPad with iOS 16.4 or later)</li><li><a href="Me%20Goos-ta%20Deutsch%20-%20Google%20Pixel.html#en">Me Goos-ta Deutsch - Google Pixel.html</a></li></ul>
+<p class="klein">Open one on the computer and scan the QR code with your phone’s camera – or send the file to your phone by e-mail or cloud. Your data stays on the phone; bring your cards over with a full backup from the computer.</p>
+<h2>Already have an older version? How to update</h2>
+<p>The latest version is always on the download page: <a href="https://lukasdiegans.github.io/me-goos-ta-deutsch/download/#en">lukasdiegans.github.io/me-goos-ta-deutsch/download</a> – one package for Windows, macOS and Linux.</p>
+<p>Your cards, pictures and PDFs are kept – the new version brings none of them, only its example cards.</p>
+<ol>
+<li>Quit the running interface (⏻ at the top right).</li>
+<li>Unblock the new ZIP file (Windows: step 1) and extract it into a <b>new folder</b> – “Extract All …” suggests one by itself, and the Mac always creates a new one.</li>
+<li>Double-click the start file in the new folder. It finds the previous folder and asks whether your cards should be taken over: <b>“Yes”</b>, or in the start window simply <b>Enter</b>. Cards, pictures, already enhanced images, settings and your own goose image are copied – nothing needs to be downloaded again.</li>
+<li>From now on the icon starts the new version. The old folder stays unchanged and can go once everything is fine.</li>
+</ol>
+<p class="klein">Also possible: extract over the old folder and choose “Replace the files in the destination” – only program files are replaced, never your cards or pictures.</p>
+<h2>What happens on the first start</h2><ul>
+<li><b>Its own Python</b> – official from python.org (Windows) or python-build-standalone (Mac and Linux), checksum verified. It lives in your user folder, needs <b>no administrator rights</b> and leaves other Python installations alone.<br><span class="pfad">Windows: %LOCALAPPDATA%\Me-Goos-ta-Deutsch · Mac: ~/Library/Application Support/Me-Goos-ta-Deutsch · Linux: ~/.local/share/me-goos-ta-deutsch</span></li>
+<li><b>Packages</b> Pillow, NumPy, ReportLab, pypdfium2 (from pypi.org). Bigger extras – the <b>tools</b> image enhancement (Real-ESRGAN), automatic translation, AI images and more languages for the back – aren’t preinstalled: you choose them when you first open the program or later under “Tools”. With the <b>“Learn cards”</b> tool you practise your cards right in the program, like in Anki (tab “🎓 Learn”).</li>
+<li><b>Icon</b> on the desktop and in the Start menu (Windows), an app in “Applications” (Mac) or an entry in the application menu (Linux).</li>
+<li>The download mark is removed from the program's own files so later starts are not blocked again.</li>
+</ul>
+<p>On every later start the start program checks within seconds that everything is there. If the interface is already running, it just opens the browser. If something is missing or damaged, it repairs it by itself.</p>
+<h2>Where is what?</h2><p><b>Programm/</b> holds the program and your work: <b>bilder/</b> (your photos), <b>karten.csv</b> (the words), <b>ausgabe/</b> (the finished PDFs). In the interface, “Tools” opens all folders directly. How to make cards: interface → “Help” or <b>Programm/LEITFADEN_en.md</b>.</p>
+<h2>Problems and solutions</h2>
+<table class="probleme"><thead><tr><th>What happens?</th><th>What to do?</th></tr></thead><tbody><tr><td>“Smart App Control … blocked”</td><td>Step 1 (“Unblock”) on the ZIP file before extracting – or directly on the start file: right-click → Properties → Unblock → OK.</td></tr><tr><td>“Windows protected your PC”</td><td>“More info” → “Run anyway”.</td></tr><tr><td>Window: “Please extract the ZIP file first”</td><td>The start file was opened inside the ZIP. Extract first (step 2), then start in the new folder.</td></tr><tr><td>“No internet connection”</td><td>Only the first start needs internet (about 90 MB). Check Wi-Fi and start again – what was downloaded is reused.</td></tr><tr><td>“Windows blocks a file of the image library”</td><td>Smart App Control does not allow the image libraries (not signed by Microsoft). The start program then tries older, widely used versions itself. If that does not help, the window lists the options.</td></tr><tr><td>The antivirus reports something</td><td>Usually a false alarm for newly downloaded files: allow it in “Windows Security → Protection history”, then start again.</td></tr><tr><td>Clicking the icon does nothing</td><td>Double-click the start file in the program folder once – it checks and repairs everything. Details are in protokoll.txt in the data folder (see above).</td></tr><tr><td>The browser does not open</td><td>The address is shown in the start window (http://127.0.0.1:…) – copy it into the browser.</td></tr><tr><td>Program folder moved or new version extracted</td><td>Double-click the start file in the new folder once. It offers to take over your cards from the previous folder; Python and packages are reused, and afterwards the icon points to the new folder.</td></tr><tr><td>Mac: “cannot be opened” / “no permission”</td><td>See Mac step 2 – the Terminal method (sh + drag the file in) always works.</td></tr></tbody></table>
+<h2>Uninstall</h2><p>The easiest way is the last tab <b>“Uninstall”</b> in the interface – there you can also save all cards and ideas to a file first. By hand:</p>
+<p><b>Windows:</b> delete the desktop icon · delete the folder <span class="pfad">%LOCALAPPDATA%\Me-Goos-ta-Deutsch</span> (Windows key + R, type <code>%LOCALAPPDATA%</code>, Enter) · delete the program folder (careful: it holds your pictures and PDFs).<br>
+<b>Mac:</b> delete “Me Goos-ta Deutsch” from “Applications” · in Finder “Go → Go to Folder …”: delete <span class="pfad">~/Library/Application Support/Me-Goos-ta-Deutsch</span> · delete the program folder.<br>
+<b>Linux:</b> delete <span class="pfad">~/.local/share/applications/me-goos-ta-deutsch.desktop</span> and <span class="pfad">~/.local/share/me-goos-ta-deutsch</span> · delete the program folder.</p>
+<p class="klein schutz">Privacy: everything stays on your computer. The internet is only used for the setup (python.org, pypi.org, github.com), for tools you install yourself (models and fonts from github.com or huggingface.co, checked by checksum) and – only if you switch on automatic translation – for translation suggestions (Wiktionary, MyMemory or DeepL); then only the word to be translated is sent. The interface can only be reached from this computer unless you switch on phone access (Wi-Fi, with PIN).</p>
+</section>
+<section class="sprache" lang="es" data-lang="es">
+<h1>Me Goos-ta Deutsch – cómo iniciarlo</h1>
+<p class="lead">Tarjetas para imprimir: al frente una imagen con un juego de palabras de ganso, atrás la palabra en español (siempre el español que se habla en México).Todo funciona en tu computadora; internet solo se necesita una vez para la instalación y, si quieres, para la traducción automática.</p>
+<div class="kasten"><b>Novedades de la versión 2.1:</b> <b>Descarga para todos los sistemas</b> – un ZIP para Windows, macOS y Linux, fácil de bajar desde la amable página de descarga (detecta tu sistema, tres pasos con imágenes, ayuda para SmartScreen y Gatekeeper) · <b>todo lo anterior a la instalación empieza en inglés</b> – después cuenta el idioma que elijas en el programa · <b>un ganso nuevo en el reverso</b>: la palabra queda sobre un fondo tranquilo de un solo color y el ganso del ícono del programa nada pequeñito en su estanque abajo a la derecha, dejando el protagonismo a la palabra · el botón «Más rápido ×2» en Herramientas ahora se ve impecable · actualizar sin perder datos, como siempre (ver abajo).</div>
+<div class="os-wahl" role="tablist"><button type="button" data-os="win">Windows</button><button type="button" data-os="mac">Mac</button><button type="button" data-os="linux">Linux</button></div>
+<div class="os" data-os-inhalt="win">
+<ol class="schritte">
+<li><h3>Desbloquear el archivo ZIP <span class="marke">importante en Windows 11</span></h3>
+<p>Clic derecho en el archivo ZIP descargado → <b>«Propiedades»</b> → abajo, en «Seguridad», marca <b>«Desbloquear»</b> → <b>«Aceptar»</b>.</p>
+<svg class="dialog" viewBox="0 0 520 436" role="img" aria-label="Propiedades: Me-Goos-ta-Deutsch.zip"><rect x="1" y="1" width="518" height="434" rx="10" fill="var(--fenster)" stroke="var(--rand)"/><rect x="1" y="1" width="518" height="40" rx="10" fill="var(--leiste)"/><rect x="1" y="30" width="518" height="11" fill="var(--leiste)"/><text x="18" y="27" class="t">Propiedades: Me-Goos-ta-Deutsch.zip</text><text x="492" y="27" class="t">✕</text><rect x="12" y="52" width="65.80000000000001" height="28" rx="4" fill="var(--fenster)" stroke="var(--rand)"/><text x="18" y="71" class="k">General</text><text x="87.80000000000001" y="71" class="k">Seguridad</text><text x="172.40000000000003" y="71" class="k">Detalles</text><text x="249.60000000000002" y="71" class="k">Versiones anteriores</text><line x1="12" y1="80" x2="508" y2="80" stroke="var(--rand)"/><text x="24" y="112" class="k">Tipo de archivo:</text><text x="150" y="112" class="k">Carpeta comprimida (en zip)</text><text x="24" y="142" class="k">Se abre con:</text><text x="150" y="142" class="k">Explorador de Windows</text><text x="24" y="172" class="k">Ubicación:</text><text x="150" y="172" class="k">C:\Users\…\Downloads</text><text x="24" y="202" class="k">Tamaño:</text><text x="150" y="202" class="k">7,1 MB</text><line x1="24" y1="220" x2="496" y2="220" stroke="var(--rand)"/><text x="24" y="244" class="k">Seguridad:</text><text x="150" y="244" class="k">Este archivo procede de otro equipo y</text><text x="150" y="264" class="k">podría bloquearse para ayudar a proteger</text><text x="150" y="284" class="k">el equipo.</text><rect x="138" y="304" width="148" height="34" rx="17" fill="none" stroke="#D7263D" stroke-width="3"/><rect x="150" y="313" width="16" height="16" rx="3" fill="#0067C0"/><path d="M153 321 l4 4 l7 -8" stroke="#fff" stroke-width="2.4" fill="none"/><text x="174" y="326" class="k b">Desbloquear</text><text x="302" y="326" class="h">← 1. Marca la casilla</text><rect x="214" y="388" width="92" height="30" rx="5" fill="#0067C0"/><text x="260" y="408" class="k m w">Aceptar</text><rect x="314" y="388" width="92" height="30" rx="5" fill="var(--fenster)" stroke="var(--rand)"/><text x="360" y="408" class="k m">Cancelar</text><rect x="414" y="388" width="92" height="30" rx="5" fill="var(--fenster)" stroke="var(--rand)"/><text x="460" y="408" class="k m">Aplicar</text><text x="260" y="380" class="h m">2. Aceptar ↓</text></svg>
+<p class="klein">¿Por qué? Windows marca los archivos de internet y el <b>Control inteligente de aplicaciones</b> (Smart App Control) bloquea los archivos de inicio marcados. Si no aparece la casilla «Desbloquear», el archivo no está marcado: sigue adelante.</p></li>
+<li><h3>Descomprimir</h3>
+<p>Clic derecho en el archivo ZIP → <b>«Extraer todo …»</b> → <b>«Extraer»</b>. Consejo: elige por ejemplo «Documentos»; esa carpeta será tu carpeta de trabajo con imágenes y PDF.</p></li>
+<li><h3>Iniciar</h3>
+<p>En la carpeta extraída, haz doble clic en <b>«Me Goos-ta Deutsch - Windows»</b> (tipo «Script de comandos de Windows»).</p>
+<p>En el <b>primer inicio</b> todo se instala solo: deja la ventana abierta, unos 3–10 minutos, unos 90 MB de descarga (Python propio, paquetes, icono del escritorio). Luego la interfaz se abre en el navegador.</p>
+<p>Desde entonces: doble clic en el icono <b>«Me Goos-ta Deutsch»</b> del escritorio (o en el menú Inicio); arranca en segundos, sin ventana negra.</p></li>
+</ol>
+<div class="kasten"><b>¿Aparece una advertencia?</b><br>
+«Windows protegió su PC» → <b>«Más información»</b> → <b>«Ejecutar de todas formas»</b>.<br>
+«Control inteligente de aplicaciones … bloqueó» → se omitió el paso 1: clic derecho en «Me Goos-ta Deutsch - Windows» → «Propiedades» → <b>«Desbloquear»</b> → «Aceptar», y vuelve a hacer doble clic.</div>
+</div>
+<div class="os" data-os-inhalt="mac">
+<ol class="schritte">
+<li><h3>Descomprimir</h3><p>Doble clic en el archivo ZIP (Safari a menudo lo descomprime solo). Lo mejor es mover la carpeta a «Documentos».</p></li>
+<li><h3>Iniciar</h3><p>Doble clic en <b>«Me Goos-ta Deutsch - Mac»</b>.</p>
+<p>Si macOS dice que no se puede abrir el archivo («Apple no pudo verificar …»):</p>
+<ul><li><b>macOS 15 o posterior:</b> cierra el aviso → <b>Configuración del Sistema → Privacidad y seguridad</b> → abajo, junto a «Me Goos-ta Deutsch - Mac», haz clic en <b>«Abrir igualmente»</b> → confirma.</li>
+<li><b>macOS 14 o anterior:</b> mantén pulsada la tecla Control, haz clic en el archivo → <b>«Abrir»</b> → <b>«Abrir»</b>.</li>
+<li><b>Siempre funciona:</b> abre la app «Terminal», escribe <code>sh</code> y un espacio, arrastra el archivo a la ventana de Terminal y pulsa Intro.</li></ul>
+<p>Si macOS pide acceso a «Descargas» o «Documentos»: <b>«Permitir»</b>.</p></li>
+<li><h3>Primer inicio y después</h3><p>En el primer inicio todo se instala solo (deja la ventana de Terminal abierta, 3–10 minutos, unos 90 MB). Luego la interfaz se abre en el navegador.</p>
+<p>Desde entonces: <b>«Me Goos-ta Deutsch»</b> en Launchpad o en la carpeta «Aplicaciones» de tu carpeta de usuario; puedes arrastrarlo al Dock.</p></li>
+</ol></div>
+<div class="os" data-os-inhalt="linux">
+<ol class="schritte">
+<li><h3>Descomprimir</h3><p>Descomprime el archivo ZIP en el administrador de archivos (clic derecho → «Extraer aquí»). Lo mejor es mover la carpeta a «Documentos».</p></li>
+<li><h3>Iniciar</h3><p>Abre una terminal en la carpeta descomprimida (clic derecho → «Abrir en una terminal») y escribe:<br><code>sh "Me Goos-ta Deutsch - Linux.sh"</code></p>
+<p>O bien: clic derecho en <b>«Me Goos-ta Deutsch - Linux»</b> → <b>«Ejecutar como un programa»</b>; la terminal se abre sola.</p></li>
+<li><h3>Primer inicio y después</h3><p>En el primer inicio todo se instala solo (deja la terminal abierta, 3–10 minutos, unos 90 MB). Luego la interfaz se abre en el navegador.</p>
+<p>Desde entonces: <b>«Me Goos-ta Deutsch»</b> en el menú de aplicaciones.</p>
+<p class="klein">Funciona en los sistemas Linux habituales con procesador Intel/AMD o ARM (p. ej. Ubuntu, Debian, Mint, Fedora, openSUSE, Arch). Solo necesita <code>curl</code> o <code>wget</code> y <code>tar</code>, que casi siempre ya están.</p></li>
+</ol></div>
+<h2>También en el celular: Android, iPhone, Google Pixel</h2>
+<p>El ganso también existe como <b>app para el celular</b>: el mismo programa, sin computadora e incluso sin conexión. Abre <a href="https://lukasdiegans.github.io/me-goos-ta-deutsch/">lukasdiegans.github.io/me-goos-ta-deutsch</a> en el celular e instálala ahí. Paso a paso con dibujos y código QR:</p>
+<ul><li><a href="Me%20Goos-ta%20Deutsch%20-%20Android.html#es">Me Goos-ta Deutsch - Android.html</a></li><li><a href="Me%20Goos-ta%20Deutsch%20-%20iPhone.html#es">Me Goos-ta Deutsch - iPhone.html</a> (iPhone/iPad desde iOS 16.4)</li><li><a href="Me%20Goos-ta%20Deutsch%20-%20Google%20Pixel.html#es">Me Goos-ta Deutsch - Google Pixel.html</a></li></ul>
+<p class="klein">Abre uno en la computadora y escanea el código QR con la cámara del celular, o envía el archivo al celular por correo o la nube. Tus datos se quedan en el celular; tus cartas las pasas con una copia de seguridad completa desde la computadora.</p>
+<h2>¿Ya tienes una versión anterior? Así se actualiza</h2>
+<p>La versión más reciente siempre está en la página de descarga: <a href="https://lukasdiegans.github.io/me-goos-ta-deutsch/download/#es">lukasdiegans.github.io/me-goos-ta-deutsch/download</a>, un solo paquete para Windows, macOS y Linux.</p>
+<p>Tus cartas, imágenes y PDF se conservan: la versión nueva no trae nada de eso, solo sus cartas de ejemplo.</p>
+<ol>
+<li>Cierra la interfaz que esté abierta (⏻ arriba a la derecha).</li>
+<li>Desbloquea el ZIP nuevo (Windows: paso 1) y descomprímelo en una <b>carpeta nueva</b>; «Extraer todo …» propone una sola, y la Mac siempre crea una nueva.</li>
+<li>Haz doble clic en el archivo de inicio de la carpeta nueva. Encuentra la carpeta anterior y pregunta si quieres pasar tus cartas: <b>«Sí»</b>, o en la ventana de inicio simplemente <b>Intro</b>. Se copian cartas, imágenes, imágenes ya mejoradas, ajustes y tu imagen de ganso; no hay que descargar nada de nuevo.</li>
+<li>Desde ahora el icono abre la versión nueva. La carpeta anterior queda sin cambios y puedes borrarla cuando todo esté bien.</li>
+</ol>
+<p class="klein">También se puede: descomprimir sobre la carpeta anterior y elegir «Reemplazar los archivos en el destino»; solo se reemplazan archivos del programa, nunca tus cartas ni tus imágenes.</p>
+<h2>Qué pasa en el primer inicio</h2><ul>
+<li><b>Python propio</b>: oficial de python.org (Windows) o python-build-standalone (Mac y Linux), con suma de verificación. Se guarda en tu carpeta de usuario, <b>no necesita permisos de administrador</b> y no toca otras instalaciones de Python.<br><span class="pfad">Windows: %LOCALAPPDATA%\Me-Goos-ta-Deutsch · Mac: ~/Library/Application Support/Me-Goos-ta-Deutsch · Linux: ~/.local/share/me-goos-ta-deutsch</span></li>
+<li><b>Paquetes</b> Pillow, NumPy, ReportLab, pypdfium2 (de pypi.org). Los extras más grandes, las <b>herramientas</b> mejora de imagen (Real-ESRGAN), traducción automática, imágenes IA y más idiomas para el reverso, no vienen preinstalados: los eliges al abrir el programa por primera vez o después en «Herramientas». Con la herramienta <b>«Aprender cartas»</b> practicas tus cartas dentro del programa, como en Anki (pestaña «🎓 Aprender»).</li>
+<li><b>Icono</b> en el escritorio y en el menú Inicio (Windows), una app en «Aplicaciones» (Mac) o una entrada en el menú de aplicaciones (Linux).</li>
+<li>Se quita la marca de descarga de los archivos del programa para que los siguientes inicios no se bloqueen.</li>
+</ul>
+<p>En cada inicio posterior, el programa de inicio revisa en segundos que todo esté. Si la interfaz ya está abierta, solo abre el navegador. Si falta algo o algo está dañado, lo repara solo.</p>
+<h2>¿Dónde está cada cosa?</h2><p><b>Programm/</b> contiene el programa y tu trabajo: <b>bilder/</b> (tus fotos), <b>karten.csv</b> (las palabras), <b>ausgabe/</b> (los PDF terminados). En la interfaz, «Herramientas» abre todas las carpetas. Cómo hacer tarjetas: interfaz → «Ayuda» o <b>Programm/LEITFADEN_es.md</b>.</p>
+<h2>Problemas y soluciones</h2>
+<table class="probleme"><thead><tr><th>¿Qué pasa?</th><th>¿Qué hacer?</th></tr></thead><tbody><tr><td>«Control inteligente de aplicaciones … bloqueó»</td><td>Paso 1 («Desbloquear») en el ZIP antes de descomprimir, o directamente en el archivo de inicio: clic derecho → Propiedades → Desbloquear → Aceptar.</td></tr><tr><td>«Windows protegió su PC»</td><td>«Más información» → «Ejecutar de todas formas».</td></tr><tr><td>Ventana: «Primero descomprime el archivo ZIP»</td><td>El archivo de inicio se abrió dentro del ZIP. Primero descomprime (paso 2) y luego inicia en la carpeta nueva.</td></tr><tr><td>«No hay conexión a internet»</td><td>Solo el primer inicio necesita internet (unos 90 MB). Revisa el wifi e inicia de nuevo; lo ya descargado se reutiliza.</td></tr><tr><td>«Windows bloquea un archivo de la biblioteca de imágenes»</td><td>El Control inteligente de aplicaciones no permite las bibliotecas de imágenes (no firmadas por Microsoft). El programa de inicio prueba solo versiones anteriores y muy usadas. Si no ayuda, la ventana muestra las opciones.</td></tr><tr><td>El antivirus avisa algo</td><td>Casi siempre es una falsa alarma con archivos recién descargados: permítelo en «Seguridad de Windows → Historial de protección» e inicia de nuevo.</td></tr><tr><td>Al hacer clic en el icono no pasa nada</td><td>Haz doble clic una vez en el archivo de inicio de la carpeta del programa: revisa y repara todo. Los detalles están en protokoll.txt, en la carpeta de datos (ver arriba).</td></tr><tr><td>No se abre el navegador</td><td>La dirección aparece en la ventana de inicio (http://127.0.0.1:…): cópiala en el navegador.</td></tr><tr><td>Carpeta movida o versión nueva descomprimida</td><td>Haz doble clic una vez en el archivo de inicio de la carpeta nueva. Ofrece pasar tus cartas de la carpeta anterior; Python y los paquetes se reutilizan y después el icono apunta a la carpeta nueva.</td></tr><tr><td>Mac: «no se puede abrir» / «sin permiso»</td><td>Mira el paso 2 de Mac: el método de Terminal (sh + arrastrar el archivo) siempre funciona.</td></tr></tbody></table>
+<h2>Desinstalar</h2><p>Lo más fácil es la última pestaña <b>«Desinstalar»</b> de la interfaz; ahí también puedes guardar antes todas las cartas e ideas en un archivo. A mano:</p>
+<p><b>Windows:</b> borra el icono del escritorio · borra la carpeta <span class="pfad">%LOCALAPPDATA%\Me-Goos-ta-Deutsch</span> (tecla Windows + R, escribe <code>%LOCALAPPDATA%</code>, Intro) · borra la carpeta del programa (cuidado: contiene tus imágenes y PDF).<br>
+<b>Mac:</b> borra «Me Goos-ta Deutsch» de «Aplicaciones» · en Finder «Ir → Ir a la carpeta …»: borra <span class="pfad">~/Library/Application Support/Me-Goos-ta-Deutsch</span> · borra la carpeta del programa.<br>
+<b>Linux:</b> borra <span class="pfad">~/.local/share/applications/me-goos-ta-deutsch.desktop</span> y <span class="pfad">~/.local/share/me-goos-ta-deutsch</span> · borra la carpeta del programa.</p>
+<p class="klein schutz">Privacidad: todo se queda en tu computadora. Internet solo se usa para la instalación (python.org, pypi.org, github.com), para las herramientas que tú instales (modelos y fuentes de github.com o huggingface.co, con suma de verificación) y, solo si activas la traducción automática, para sugerencias de traducción (Wiktionary, MyMemory o DeepL); en ese caso solo se envía la palabra a traducir. La interfaz solo es accesible desde esta computadora, salvo que actives el acceso desde el celular (wifi, con PIN).</p>
+</section>
+</main>
+<script>
+(function () {
+  // Always starts in English; German/Spanish only via the buttons or the anchor #de / #es / #en.
+  var b = document.body, sprache = "en", os = "win";
+  var titel = { de: "Lies mich zuerst", en: "Read me first", es: "Léeme primero" };
+  function ausAnker() {
+    var a = (location.hash || "").slice(1).toLowerCase();
+    if (titel[a]) sprache = a;
+  }
+  ausAnker();
+  if (/Mac|iPhone|iPad/.test(navigator.userAgent)) os = "mac";
+  else if (/Linux|X11|CrOS/.test(navigator.userAgent) && !/Android/.test(navigator.userAgent)) os = "linux";
+  function zeige() {
+    b.className = sprache + " " + os;
+    document.documentElement.lang = sprache;
+    document.title = "Me Goos-ta Deutsch – " + titel[sprache];
+    document.querySelectorAll("[data-l]").forEach(function (k) { k.setAttribute("aria-pressed", k.dataset.l === sprache); });
+    document.querySelectorAll("[data-os]").forEach(function (k) { k.setAttribute("aria-pressed", k.dataset.os === os); });
+  }
+  document.addEventListener("click", function (ev) {
+    var k = ev.target.closest("button");
+    if (!k) return;
+    if (k.dataset.l) sprache = k.dataset.l;
+    if (k.dataset.os) os = k.dataset.os;
+    zeige();
+  });
+  window.addEventListener("hashchange", function () { ausAnker(); zeige(); });
+  zeige();
+})();
+</script>
+</body>
+</html>
