@@ -29,8 +29,9 @@
       speicher: "Guardar en el dispositivo no funciona ahora: ¿está lleno el almacenamiento? Mejor haz una copia ya (Más → Copia)." },
   };
   const merke = (k, v) => { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (f) { /* privat */ } return null; };
-  let sprache = merke("mgd-sprache") || (navigator.languages || [navigator.language || "en"]).map(l => String(l).slice(0, 2).toLowerCase())
-    .find(l => TEXTE[l]) || "en";
+  // Ladebildschirm: Englisch, bis im Programm eine Sprache gewählt ist (dann die zuletzt gemerkte – nie die Gerätesprache)
+  let sprache = TEXTE[merke("mgd-sprache")] ? merke("mgd-sprache") : "en";
+  const spracheAnSW = () => { try { const c = navigator.serviceWorker && navigator.serviceWorker.controller; if (c) c.postMessage({ typ: "sprache", sprache }); } catch (f) { /* egal */ } };
   const tt = (k, ...a) => { const v = (TEXTE[sprache] || TEXTE.en)[k]; return typeof v === "function" ? v(...a) : v; };
   const $ = id => document.getElementById(id);
   const mb = n => (n / 1048576).toFixed(1).replace(".", sprache === "en" ? "." : ",");
@@ -104,7 +105,7 @@
     }
     if (!a) { await bereit; a = await anPython(m); }
     if (m.methode === "POST" && m.weg === "/api/sprache" && a.status === 200) {
-      try { sprache = JSON.parse(new TextDecoder().decode(a.inhalt)).sprache || sprache; merke("mgd-sprache", sprache); } catch (f) { /* egal */ }
+      try { sprache = JSON.parse(new TextDecoder().decode(a.inhalt)).sprache || sprache; merke("mgd-sprache", sprache); spracheAnSW(); } catch (f) { /* egal */ }
     }
     if (m.methode === "POST" && m.weg === "/api/farben" && a.status === 200) {
       try { const d = JSON.parse(new TextDecoder().decode(a.inhalt)); if (d.css != null) merke("mgd-farben", d.css); } catch (f) { /* egal */ }
@@ -123,7 +124,7 @@
     if (m.typ === "bereit") oberflaeche(m.info);
   }
   function oberflaeche(info) {
-    sprache = info.sprache || sprache; merke("mgd-sprache", sprache);
+    sprache = info.sprache || sprache; merke("mgd-sprache", sprache); spracheAnSW();
     document.documentElement.lang = sprache;
     $("farben-vars").textContent = info.farben.css || ""; merke("mgd-farben", info.farben.css || "");
     document.querySelectorAll('meta[name="theme-color"]').forEach(x => x.remove());
@@ -241,7 +242,7 @@
     worker = new Worker("worker.js", { type: "module" });
     worker.onmessage = workerNachricht;
     worker.onerror = e => fehler(tt("fehler", (e && e.message) || "worker.js"));
-    worker.postMessage({ typ: "start", unterbrechen, sprache });
+    worker.postMessage({ typ: "start", unterbrechen });
   }
   los();
 })();

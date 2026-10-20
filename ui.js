@@ -86,6 +86,7 @@ de: {
   tab_leitfaden: "Leitfaden", tab_spec: "Spezifikation", tab_ueber: "Über dieses Programm",
   u_generator: "Generator", u_oberflaeche: "Oberfläche", u_python: "Python", u_projekt: "Projektordner", u_schrift: "Schrift",
   u_ki: "Bildverbesserung", u_vorschau: "Vorschau", u_vorschau_ok: "vollständig", u_vorschau_nein: "nur Vorderseite – für die Rückseiten-Vorschau „pip install pypdfium2“ ausführen",
+  u_download: "Download für den Rechner", u_download_text: "Neueste Version für Windows, macOS und Linux",
   u_letzter: "Letzter Lauf", u_keiner: "noch keiner", u_erweitern: "Neue Funktionen ergänzen",
   u_erweitern_text: "Neue Schalter werden in gans_lernkarten.py in baue_parser() eingetragen und erscheinen in Schritt 3 automatisch. Eine neue Auswahl bei --nur wird automatisch zu einem Startknopf, neue Werkzeuge entstehen in gans_ui.py mit @werkzeug(…).",
   fuss_version: v => `Version ${v}`, fuss_ki: m => `KI: ${m}`, fuss_vorschau_ok: "Vorschau bereit", fuss_vorschau_nein: "Vorschau eingeschränkt",
@@ -243,6 +244,7 @@ en: {
   tab_leitfaden: "Guide", tab_spec: "Specification (German)", tab_ueber: "About this program",
   u_generator: "Generator", u_oberflaeche: "Interface", u_python: "Python", u_projekt: "Project folder", u_schrift: "Font",
   u_ki: "Image enhancement", u_vorschau: "Preview", u_vorschau_ok: "complete", u_vorschau_nein: "front only – run “pip install pypdfium2” for the back preview",
+  u_download: "Download for computers", u_download_text: "Latest version for Windows, macOS and Linux",
   u_letzter: "Last run", u_keiner: "none yet", u_erweitern: "Adding new features",
   u_erweitern_text: "New switches are added in gans_lernkarten.py in baue_parser() and appear in step 3 automatically. A new choice for --nur automatically becomes a start button; new tools are created in gans_ui.py with @werkzeug(…).",
   fuss_version: v => `Version ${v}`, fuss_ki: m => `AI: ${m}`, fuss_vorschau_ok: "Preview ready", fuss_vorschau_nein: "Preview limited",
@@ -400,6 +402,7 @@ es: {
   tab_leitfaden: "Guía", tab_spec: "Especificación (alemán)", tab_ueber: "Acerca del programa",
   u_generator: "Generador", u_oberflaeche: "Interfaz", u_python: "Python", u_projekt: "Carpeta del proyecto", u_schrift: "Fuente",
   u_ki: "Mejora de imagen", u_vorschau: "Vista previa", u_vorschau_ok: "completa", u_vorschau_nein: "solo anverso; ejecuta «pip install pypdfium2» para ver el reverso",
+  u_download: "Descarga para la computadora", u_download_text: "Versión más reciente para Windows, macOS y Linux",
   u_letzter: "Última ejecución", u_keiner: "ninguna", u_erweitern: "Agregar funciones",
   u_erweitern_text: "Los interruptores nuevos se agregan en gans_lernkarten.py en baue_parser() y aparecen solos en el paso 3. Una opción nueva en --nur se convierte en un botón; las herramientas nuevas se crean en gans_ui.py con @werkzeug(…).",
   fuss_version: v => `Versión ${v}`, fuss_ki: m => `IA: ${m}`, fuss_vorschau_ok: "Vista previa lista", fuss_vorschau_nein: "Vista previa limitada",
@@ -1112,7 +1115,7 @@ Object.assign(TXT.de, {
   tool_brauchen_hinweis: "Der Download läuft über die Warteschlange, du kannst nebenbei weiterarbeiten. Danach geht es automatisch weiter.",
   tool_installieren_weiter: "Installieren und weitermachen", tool_ohne: "Ohne Tool weiter",
   verb_tool_titel: "Tool „Bildverbesserung“ ist noch nicht installiert", verb_tool_text: "Mit Real-ESRGAN werden deine Vorderseiten gestochen scharf. Ohne Tool vergrößert das eingebaute FSRCNN – etwas schlichter, aber gans ordentlich.",
-  verb_tool_knopf: g => `Installieren (ca. ${g})`, verb_tool_x2: g => `Schnellere Variante ×2 (ca. ${g})`, verb_ohne_tool: "Einfach vergrößern (ohne Tool)",
+  verb_tool_knopf: g => `Installieren (ca. ${g})`, verb_tool_x2: g => `Schneller ×2 · ca. ${g}`, verb_ohne_tool: "Einfach vergrößern (ohne Tool)",
   tool_ram_wenig: g => `Achtung: Dieser Rechner hat ${g} GB Arbeitsspeicher, empfohlen sind 8 GB. Es klappt meist trotzdem – nur gemächlicher.`,
   tool_platz_knapp: (frei, noetig) => `Achtung: Auf dem Laufwerk sind nur noch ${frei} frei, gebraucht werden etwa ${noetig}. Bitte zuerst etwas Platz schaffen.`, u_tools: "Tools",
   tool_kommt: n => `„${n}“ wird gerade geladen – danach geht es automatisch weiter.`,
@@ -1143,7 +1146,7 @@ Object.assign(TXT.en, {
   tool_brauchen_hinweis: "The download runs through the queue, so you can keep working meanwhile. Afterwards it carries on by itself.",
   tool_installieren_weiter: "Install and carry on", tool_ohne: "Continue without the tool",
   verb_tool_titel: "The “Image enhancement” tool isn’t installed yet", verb_tool_text: "With Real-ESRGAN your fronts come out razor-sharp. Without the tool, the built-in FSRCNN upscales – a little simpler, but in fine feather.",
-  verb_tool_knopf: g => `Install (about ${g})`, verb_tool_x2: g => `Faster ×2 version (about ${g})`, verb_ohne_tool: "Just upscale (without the tool)",
+  verb_tool_knopf: g => `Install (about ${g})`, verb_tool_x2: g => `Faster ×2 · about ${g}`, verb_ohne_tool: "Just upscale (without the tool)",
   tool_ram_wenig: g => `Heads-up: this computer has ${g} GB of memory, 8 GB are recommended. It usually works anyway – just at a gentler waddle.`,
   tool_platz_knapp: (frei, noetig) => `Heads-up: only ${frei} are free on the drive, about ${noetig} are needed. Please make some room first.`, u_tools: "Tools",
   tool_kommt: n => `“${n}” is downloading right now – afterwards it carries on by itself.`,
@@ -1174,7 +1177,7 @@ Object.assign(TXT.es, {
   tool_brauchen_hinweis: "La descarga pasa por la fila de espera, así que puedes seguir trabajando. Después todo sigue solo.",
   tool_installieren_weiter: "Instalar y seguir", tool_ohne: "Seguir sin la herramienta",
   verb_tool_titel: "La herramienta «Mejora de imagen» aún no está instalada", verb_tool_text: "Con Real-ESRGAN tus anversos quedan nítidos. Sin la herramienta, el FSRCNN integrado amplía: un poco más sencillo, pero muy decente.",
-  verb_tool_knopf: g => `Instalar (unos ${g})`, verb_tool_x2: g => `Versión más rápida ×2 (unos ${g})`, verb_ohne_tool: "Solo ampliar (sin la herramienta)",
+  verb_tool_knopf: g => `Instalar (unos ${g})`, verb_tool_x2: g => `Más rápido ×2 · unos ${g}`, verb_ohne_tool: "Solo ampliar (sin la herramienta)",
   tool_ram_wenig: g => `Atención: esta computadora tiene ${g} GB de memoria; se recomiendan 8 GB. Casi siempre funciona igual, solo más despacio.`,
   tool_platz_knapp: (frei, noetig) => `Atención: en la unidad solo quedan ${frei} libres y hacen falta unos ${noetig}. Primero libera algo de espacio.`, u_tools: "Herramientas",
   tool_kommt: n => `«${n}» se está descargando; después todo sigue solo.`,
@@ -1736,7 +1739,7 @@ Object.assign(TXT.de, {
   app_and_2: "Tippe auf „App installieren“ bzw. „Zum Startbildschirm hinzufügen“.",
   app_and_3: "Bestätige mit „Installieren“ – die Gans erscheint bei deinen Apps.",
   app_and_hinweis: "Am besten mit einem aktuellen Chrome (Android, Google Pixel) – dann wird es eine echte App im App-Menü.",
-  app_sicherung: "Sicherung & Speicher",
+  app_sicherung: "Sicherung & Speicher", app_rechner: "Auch für den Rechner holen",
   app_sicherung_text: "Deine Karten, Bilder, Ideen und der Lernstand liegen nur auf diesem Gerät. Eine Sicherung packt alles in eine Datei – zum Aufheben oder für ein neues Handy.",
   app_sichern: "Alles sichern", app_einspielen: "Sicherung einspielen",
   app_einspielen_text: "Einspielen ersetzt alles auf diesem Gerät durch den Stand der Sicherung.",
@@ -1774,7 +1777,7 @@ Object.assign(TXT.en, {
   app_and_2: "Tap “Install app” or “Add to Home screen”.",
   app_and_3: "Confirm with “Install” – the goose shows up with your apps.",
   app_and_hinweis: "Best with an up-to-date Chrome (Android, Google Pixel) – then it becomes a real app in your app drawer.",
-  app_sicherung: "Backup & storage",
+  app_sicherung: "Backup & storage", app_rechner: "Get it for your computer",
   app_sicherung_text: "Your cards, images, ideas and learning progress live only on this device. A backup packs everything into one file – to keep safe or for a new phone.",
   app_sichern: "Back up everything", app_einspielen: "Restore backup",
   app_einspielen_text: "Restoring replaces everything on this device with the state of the backup.",
@@ -1812,7 +1815,7 @@ Object.assign(TXT.es, {
   app_and_2: "Toca «Instalar app» o «Agregar a la pantalla principal».",
   app_and_3: "Confirma con «Instalar»: el ganso aparece junto a tus apps.",
   app_and_hinweis: "Mejor con un Chrome actualizado (Android, Google Pixel): así se vuelve una app de verdad en tu menú de apps.",
-  app_sicherung: "Copia y almacenamiento",
+  app_sicherung: "Copia y almacenamiento", app_rechner: "Descárgalo para tu computadora",
   app_sicherung_text: "Tus cartas, imágenes, ideas y tu avance de aprendizaje están solo en este dispositivo. Una copia lo guarda todo en un archivo, para conservarlo o para un celular nuevo.",
   app_sichern: "Respaldar todo", app_einspielen: "Restaurar copia",
   app_einspielen_text: "Restaurar reemplaza todo en este dispositivo con el contenido de la copia.",
@@ -3296,8 +3299,9 @@ function sprachListeHTML(x, besch) {                      // Tool „Sprachen“
 function toolKarte(x) {
   const besch = toolBeschaeftigt(x), groesse = x.art === "download" && x.groesse > 0 ? t("tool_download", toolGroesse(x.groesse)) : t("tool_ohne_download");
   const balken = x.zustand === "laeuft" ? `<div class="fortschritt" aria-hidden="true"><span style="width:${x.prozent || 0}%"></span></div>` : "";
-  const teile = x.id === "sprachen" ? "" : x.installiert && !besch ? (x.teile || []).filter(p => !p.installiert).map(p => `<button class="knopf klein" data-tool-aktion="installieren"
-    data-tool="${esc(x.id)}" data-teil="${esc(p.id)}" title="${esc(t("h_tool_teil"))}">+ ${esc(p.titel)}${p.groesse > 0 ? ` (${esc(toolGroesse(p.groesse))})` : ""}</button>`).join("") : "";
+  const teile = x.id === "sprachen" ? "" : x.installiert && !besch ? (x.teile || []).filter(p => !p.installiert).map(p => `<button class="knopf klein teil" data-tool-aktion="installieren"
+    data-tool="${esc(x.id)}" data-teil="${esc(p.id)}" title="${esc(t("h_tool_teil"))}"><b>+ ${esc(p.titel)}</b>${p.hinweis || p.groesse > 0
+      ? `<small>${esc([p.hinweis, p.groesse > 0 ? toolGroesse(p.groesse) : ""].filter(Boolean).join(" · "))}</small>` : ""}</button>`).join("") : "";
   let knoepfe = besch ? `<button class="knopf" type="button" data-ws-oeffnen title="${esc(t("h_ws_knopf"))}">⏳ ${esc(t("ws_titel"))}</button>` : "";
   if (!x.installiert && !besch && x.id !== "sprachen") knoepfe += `<button class="knopf haupt" data-tool-aktion="installieren" data-tool="${esc(x.id)}" title="${esc(t("h_tool_installieren"))}">${esc(t(x.zustand === "angefangen" ? "tool_fortsetzen" : "tool_installieren"))}</button>`;
   if ((x.installiert || x.belegt > 0) && !besch) knoepfe += `<button class="knopf leise gefahr" data-tool-aktion="deinstallieren-frage" data-tool="${esc(x.id)}" title="${esc(t("h_tool_deinstallieren"))}">${esc(t("tool_deinstallieren"))}</button>`;
@@ -3521,6 +3525,7 @@ async function ladeHilfe() {
       <dt>${esc(t("u_kartensprache"))}</dt><dd>${esc(t("u_kartensprache_wert"))}${zsMehrere() ? " · " + esc(ZS.installiert.map(c => zsInfo(c).kurz).join(" ")) : ""}</dd>
       ${s.tools && Object.keys(s.tools).length ? `<dt>${esc(t("u_tools"))}</dt><dd>${Object.entries(s.tools).map(([id, da]) =>
         esc(`${(toolInfo(id) || {}).titel || id}: ${t(da ? "tool_installiert" : "tool_nicht")}`)).join("<br>")}</dd>` : ""}
+      ${downloadAdresse() ? `<dt>${esc(t("u_download"))}</dt><dd><a href="${esc(downloadAdresse())}" target="_blank" rel="noopener">${esc(t("u_download_text"))}</a></dd>` : ""}
       <dt>${esc(t("u_letzter"))}</dt><dd>${esc(s.letzter_lauf ? datum(s.letzter_lauf) : t("u_keiner"))}</dd></dl>
       <h3 style="margin-top:24px">${esc(t("u_erweitern"))}</h3><p>${esc(t("u_erweitern_text"))}</p>`;
     return;
@@ -5477,6 +5482,8 @@ function appNaviZahlen() {
   const mehr = $("#app-zahl-mehr"); if (mehr) mehr.hidden = !(APP_UPDATE || wert("zahl-tabelle") || wert("zahl-ideen"));
 }
 function appAdresse() { return (S.status && S.status.web_adresse) || ""; }
+// Download-Seite für den Rechner (GitHub Pages, gleiche Adresse + download/), in der gewählten Sprache
+function downloadAdresse() { const a = appAdresse(); return a ? a + "download/#" + S.sprache : ""; }
 function appTipp() {                                            // Prüfen & drucken: Hinweis auf die Handy-App (am Rechner/Handy-Zugang)
   return !AM_APP && appAdresse() ? `<div class="knopfzeile abstand app-tipp"><span class="klein">📲 ${esc(t("pr_app_tipp"))}</span>
     <button class="knopf" type="button" data-app-aktion="zur-app">${esc(t("app_als_app"))}</button></div>` : "";
@@ -5493,6 +5500,7 @@ function zeichneMehr() {
   if (appInstallierbar()) app.push(`<button class="knopf${APP_UPDATE ? "" : " haupt"}" type="button" data-app-aktion="installieren">📲 ${esc(t("app_installieren"))}</button>`);
   if (AM_APP) app.push(`<button class="knopf" type="button" data-app-aktion="sicherung">💾 ${esc(t("app_sicherung"))}</button>`);
   if (!AM_APP && AM_HANDY && appAdresse()) app.push(`<button class="knopf" type="button" data-app-aktion="zur-app">📲 ${esc(t("app_als_app"))}</button>`);
+  if (AM_APP && downloadAdresse()) app.push(`<a class="knopf" href="${esc(downloadAdresse())}" target="_blank" rel="noopener">💻 ${esc(t("app_rechner"))}</a>`);
   $("#mehr-inhalt").innerHTML = `<nav class="mehr-liste" aria-label="${esc(t("bereiche"))}">${liste}</nav>${app.length ? `<div class="mehr-app">${app.join("")}</div>` : ""}`;
 }
 function oeffneMehr() { zeichneMehr(); $("#mehr-fenster").hidden = false; }

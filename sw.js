@@ -4,11 +4,12 @@
    Version lädt im Hintergrund nur geänderte Dateien und wartet, bis die Seite „neu laden“ sagt. Die Antworten tragen
    COOP/COEP, damit die Seite „cross-origin isolated“ ist (Abbrechen laufender Aufträge über SharedArrayBuffer). */
 "use strict";
-const VERSION = "2.0-103f9ed502";
-const DATEIEN = [["app.js",16187,"0e0adfef1a8944dc"],["favicon.ico",40985,"2cb3006f8b565df5"],["index.html",100952,"ca5da3048103e1d4"],["lizenzen/DRITTLIZENZEN.md",9437,"3d005949f5cd090c"],["lizenzen/LICENSE.txt",1185,"fe55b58ad3a4a533"],["lizenzen/OFL-Poppins.txt",4332,"517d8225b8532f9b"],["lizenzen/PYODIDE.txt",518,"13e95a263de6d42a"],["manifest.webmanifest",1361,"5dee8c89e8e71c12"],["modelle/modelle.json",136,"96d6d4a69f194dde"],["py/programm.zip",1653382,"db7e34c5876d509e"],["pyodide/charset_normalizer-3.4.7-py3-none-any.whl",61958,"9e437ef92fa51f06"],["pyodide/numpy-2.4.6-cp314-cp314-pyemscripten_2026_0_wasm32.whl",2960568,"a292c1f5d7d8a220"],["pyodide/pillow-12.2.0-cp314-cp314-pyemscripten_2026_0_wasm32.whl",1037806,"e29838b7a756e4ee"],["pyodide/pyodide-lock.json",119077,"5dc2fc119108bc14"],["pyodide/pyodide.asm.mjs",1250344,"f7cdc8ece80678ce"],["pyodide/pyodide.asm.wasm",9598218,"cc36e3cab04fdfc9"],["pyodide/pyodide.mjs",17931,"6f1d60f7bf529beb"],["pyodide/python_stdlib.zip",2545637,"fa1957e5777068fc"],["pyodide/reportlab-5.0.1-py3-none-any.whl",1957258,"1c36e6bb0e71780c"],["schrift/Poppins-Bold.ttf",155996,"983676516167748b"],["schrift/Poppins-Medium.ttf",158576,"90373e7d838d3246"],["schrift/Poppins-Regular.ttf",160316,"7e65201e9b79159e"],["symbol.svg",3963,"40dbfb773a098ac0"],["symbole/apple-touch-icon.png",13539,"1ebca13522114513"],["symbole/symbol-192.png",19314,"9c14d93230b0fb4c"],["symbole/symbol-512.png",32692,"4c554ee03dc11e8f"],["symbole/symbol-maskable-512.png",45608,"4f17b9bd81143e98"],["ui.js",484536,"4c41c76f2ecba987"],["worker.js",4893,"55c7230998d17eee"]];                                   // [[Pfad, Größe, SHA-256 (16 Zeichen)], …]
+const VERSION = "2.1-9b77aa5e9e";
+const DATEIEN = [["app.js",16427,"3188bfea6e26b17f"],["favicon.ico",40985,"2cb3006f8b565df5"],["index.html",101215,"4ff31501c1497ba2"],["lizenzen/DRITTLIZENZEN.md",9437,"3d005949f5cd090c"],["lizenzen/LICENSE.txt",1185,"fe55b58ad3a4a533"],["lizenzen/OFL-Poppins.txt",4332,"517d8225b8532f9b"],["lizenzen/PYODIDE.txt",518,"13e95a263de6d42a"],["manifest.webmanifest",1361,"e467a6c7e0589463"],["modelle/modelle.json",136,"96d6d4a69f194dde"],["py/programm.zip",1658011,"d7ec06cc8fbd4a6c"],["pyodide/charset_normalizer-3.4.7-py3-none-any.whl",61958,"9e437ef92fa51f06"],["pyodide/numpy-2.4.6-cp314-cp314-pyemscripten_2026_0_wasm32.whl",2960568,"a292c1f5d7d8a220"],["pyodide/pillow-12.2.0-cp314-cp314-pyemscripten_2026_0_wasm32.whl",1037806,"e29838b7a756e4ee"],["pyodide/pyodide-lock.json",119077,"5dc2fc119108bc14"],["pyodide/pyodide.asm.mjs",1250344,"f7cdc8ece80678ce"],["pyodide/pyodide.asm.wasm",9598218,"cc36e3cab04fdfc9"],["pyodide/pyodide.mjs",17931,"6f1d60f7bf529beb"],["pyodide/python_stdlib.zip",2545637,"fa1957e5777068fc"],["pyodide/reportlab-5.0.1-py3-none-any.whl",1957258,"1c36e6bb0e71780c"],["schrift/Poppins-Bold.ttf",155996,"983676516167748b"],["schrift/Poppins-Medium.ttf",158576,"90373e7d838d3246"],["schrift/Poppins-Regular.ttf",160316,"7e65201e9b79159e"],["symbol.svg",3963,"40dbfb773a098ac0"],["symbole/apple-touch-icon.png",13539,"1ebca13522114513"],["symbole/symbol-192.png",19314,"9c14d93230b0fb4c"],["symbole/symbol-512.png",32692,"4c554ee03dc11e8f"],["symbole/symbol-maskable-512.png",45608,"4f17b9bd81143e98"],["ui.js",485628,"ff1c4afbb79ea004"],["worker.js",4688,"675c0beeb75bbb51"]];                                   // [[Pfad, Größe, SHA-256 (16 Zeichen)], …]
 const CACHE = "mgd-app-" + VERSION;
 const BASIS = new URL("./", self.location).pathname;           // z. B. /me-goos-ta-deutsch/
 const APP_WEGE = /^(api|bild|datei)\//;
+const EIGENE_SEITEN = /^download(\/|$)/;                       // Download-Seite (für den Rechner): nie die App, nie aus dem Vorrat
 const ISOLIERT = { "Cross-Origin-Opener-Policy": "same-origin", "Cross-Origin-Embedder-Policy": "require-corp",
   "Cross-Origin-Resource-Policy": "same-origin" };
 const TYPEN = { html: "text/html; charset=utf-8", js: "text/javascript; charset=utf-8", mjs: "text/javascript; charset=utf-8",
@@ -16,7 +17,16 @@ const TYPEN = { html: "text/html; charset=utf-8", js: "text/javascript; charset=
   whl: "application/zip", png: "image/png", svg: "image/svg+xml", ico: "image/x-icon", ttf: "font/ttf",
   md: "text/markdown; charset=utf-8", txt: "text/plain; charset=utf-8", css: "text/css; charset=utf-8" };
 const typ = pfad => TYPEN[pfad.split(".").pop().toLowerCase()] || "application/octet-stream";
-const sprache = () => String((self.navigator && self.navigator.language) || "en").slice(0, 2).toLowerCase();
+// Sprache der eigenen Meldung: Englisch, bis die Seite die im Programm gewählte meldet (im Cache gemerkt – der Service
+// Worker wird zwischendurch beendet). Die Gerätesprache zählt nicht.
+const SPRACHE_CACHE = "mgd-einstellungen", SPRACHE_URL = BASIS + "__mgd-sprache__";
+let gewaehlt = null;
+async function sprache() {
+  if (!gewaehlt) {
+    try { const r = await (await caches.open(SPRACHE_CACHE)).match(SPRACHE_URL); gewaehlt = r ? await r.text() : "en"; } catch (f) { gewaehlt = "en"; }
+  }
+  return gewaehlt;
+}
 const TEXT_KEIN_FENSTER = { de: "Die App startet gerade – einen Moment, dann klappt es.",
   en: "The app is just starting – give it a moment, then it works.", es: "La app está iniciando; espera un momento y funcionará." };
 
@@ -65,12 +75,19 @@ self.addEventListener("activate", e => {
   })());
 });
 
-self.addEventListener("message", e => { if (e.data === "weiter") self.skipWaiting(); });
+self.addEventListener("message", e => {
+  if (e.data === "weiter") self.skipWaiting();
+  if (e.data && e.data.typ === "sprache" && TEXT_KEIN_FENSTER[e.data.sprache] && e.data.sprache !== gewaehlt) {
+    gewaehlt = e.data.sprache;
+    e.waitUntil(caches.open(SPRACHE_CACHE).then(c => c.put(SPRACHE_URL, new Response(gewaehlt))).catch(() => {}));
+  }
+});
 
 self.addEventListener("fetch", e => {
   const url = new URL(e.request.url);
   if (url.origin !== self.location.origin) return;            // fremde Adressen (Übersetzung): wie gewohnt übers Netz
   const rel = url.pathname.startsWith(BASIS) ? url.pathname.slice(BASIS.length) : url.pathname.replace(/^\//, "");
+  if (EIGENE_SEITEN.test(rel)) return;                         // wie ohne Service Worker übers Netz
   if (APP_WEGE.test(rel)) e.respondWith(anPython(e, "/" + decodeURIComponent(rel), url.search.slice(1)));
   else e.respondWith(ausCache(e.request, rel));
 });
@@ -122,6 +139,6 @@ async function anPython(e, weg, abfrage) {
       return new Response(leer ? null : r.inhalt, { status: r.status, headers: { ...r.kopf, ...ISOLIERT } });
     }
   }
-  const text = TEXT_KEIN_FENSTER[sprache()] || TEXT_KEIN_FENSTER.en;
+  const text = TEXT_KEIN_FENSTER[await sprache()] || TEXT_KEIN_FENSTER.en;
   return new Response(JSON.stringify({ fehler: text }), { status: 503, headers: { "Content-Type": "application/json; charset=utf-8", ...ISOLIERT } });
 }

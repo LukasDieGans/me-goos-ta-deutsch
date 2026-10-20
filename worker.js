@@ -5,7 +5,7 @@
    WEB_MELDER, damit die Seite ihn zeigen kann, während der Worker rechnet. */
 import { loadPyodide } from "./pyodide/pyodide.mjs";
 
-const PROGRAMM = "py/programm.zip", PROGRAMM_HASH = "db7e34c5876d509e", REPORTLAB = "pyodide/reportlab-5.0.1-py3-none-any.whl";
+const PROGRAMM = "py/programm.zip", PROGRAMM_HASH = "d7ec06cc8fbd4a6c", REPORTLAB = "pyodide/reportlab-5.0.1-py3-none-any.whl";
 const PAKETE = ["numpy", "pillow", "charset-normalizer"];
 const ORDNER = "/mgd";
 let py = null, gans = null, dreckig = false, uhr = null, schreibt = Promise.resolve(), unterbrechen = null;
@@ -52,11 +52,7 @@ if "${ORDNER}" not in sys.path:
 os.chdir("${ORDNER}")`);
     gans = py.pyimport("gans_ui");
     gans.WEB_MELDER = text => self.postMessage({ typ: "lauf", json: text });
-    let info = JSON.parse(py.runPython("import json, gans_ui; json.dumps(gans_ui.web_info())"));
-    if (!info.sprache_gewaehlt && ["de", "en", "es"].includes(m.sprache)) {   // erster Start: Sprache des Geräts
-      gans.speichere_sprache(m.sprache);
-      info = JSON.parse(py.runPython("json.dumps(gans_ui.web_info())"));
-    }
+    const info = JSON.parse(py.runPython("import json, gans_ui; json.dumps(gans_ui.web_info())"));   // erster Start: Englisch
     sichernSpaeter();
     self.postMessage({ typ: "bereit", info, isoliert: !!unterbrechen });
   } catch (f) {
