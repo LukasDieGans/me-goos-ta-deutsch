@@ -31,7 +31,7 @@ voices of your system) · **word lists in Ideas** – “📋 Word list …” t
 at once, with a preview (nothing gets cut quietly, undo with one click), and “🌐 Translate all” suggests the missing
 words · **“🔎 Check for a new version”** in Help → About this program – only when you click · for developers: every
 version is tested automatically on Windows, macOS and Linux (x64 and ARM) and in WebKit, Firefox and Chromium before
-it is released, and the published version is checked again every week. Updating keeps your cards, settings and
+it is released, and the published version is checked again as soon as it is online. Updating keeps your cards, settings and
 learning progress.
 
 ## New in 2.1

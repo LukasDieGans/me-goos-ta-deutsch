@@ -39,7 +39,7 @@ La interfaz habla inglés, alemán y español; cámbiala arriba a la derecha (EN
 
 No tienes que instalar nada antes, ni siquiera Python. En el primer inicio, el archivo de inicio prepara todo solo: un Python propio en tu carpeta de usuario (**sin permisos de administrador**; otras instalaciones de Python no se tocan), los paquetes y un icono para iniciar. Tarda de 3 a 10 minutos y necesita internet una sola vez (unos 90 MB): tiempo perfecto para un café. Los extras más grandes, como la mejora de imagen con IA, son **herramientas**: solo descargas lo que de verdad quieres (ver «Herramientas opcionales»). El archivo **«LIES MICH ZUERST»** (léeme primero) del paquete lo muestra todo otra vez con imágenes.
 
-**¿Dónde se descarga?** La página de descarga https://lukasdiegans.github.io/me-goos-ta-deutsch/download/ tiene un solo ZIP para Windows, macOS y Linux (gratis, desde GitHub Releases), con los pasos para tu sistema y la suma de verificación SHA-256. Después también encuentras el enlace en el programa, en **Ayuda → «Acerca del programa»** (en la app para celular: **Más → «Descárgalo para tu computadora»**).
+**¿Dónde se descarga?** La página de descarga https://lukasdiegans.github.io/me-goos-ta-deutsch/download/ tiene un solo ZIP para Windows, macOS y Linux (gratis, desde GitHub Releases), con los pasos para tu sistema y la suma de verificación SHA-256. Si por un momento solo muestra el símbolo del ganso (una app para celular más antigua en el mismo navegador), la versión antigua de la app se va contoneando sola y la página se abre en unos segundos. Después también encuentras el enlace en el programa, en **Ayuda → «Acerca del programa»** (en la app para celular: **Más → «Descárgalo para tu computadora»**).
 
 **Windows 11 y 10**
 

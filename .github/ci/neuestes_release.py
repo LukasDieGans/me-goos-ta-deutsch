@@ -1,13 +1,18 @@
 #!/usr/bin/env python3
-"""Lädt das neueste veröffentlichte Release von Me Goos-ta Deutsch (seit 2.2, für den wöchentlichen Lauf): ZIP und
+"""Lädt das neueste veröffentlichte Release von Me Goos-ta Deutsch (seit 2.2, für die Release-Prüfung): ZIP und
 SHA256SUMS.txt über die öffentlichen Adressen …/releases/latest/download/… (ohne Anmeldung, ohne API-Grenze), vergleicht
 die Prüfsumme und entpackt mit den Unix-Rechten aus dem ZIP (Startdateien 0755). Nur Standardbibliothek.
-    python neuestes_release.py [--ziel <Ordner>] [--repo <konto/repo>]   → Zeile „#release {json}“, Exit-Code 0/1
+    python neuestes_release.py [--ziel <Ordner>] [--repo <konto/repo>] [--passend <min>]
+                                                                        → Zeile „#release {json}“, Exit-Code 0/1
+--passend <min>  (Push auf main) höchstens so lange warten, bis das Release genau den Inhalt des Checkouts hat (jede Datei
+                 gleich, keine fehlt oder ist zu viel; .github/ und .gitattributes gehören nur zum Branch) und die
+                 Download-Seite seine Prüfsumme nennt – main wird vor dem Release-Asset und der Seite gepusht.
 Konto/Repository: --repo, sonst GITHUB_REPOSITORY (GitHub Actions), sonst Programm/web_adresse.txt im Checkout."""
 import hashlib
 import json
 import os
 import re
+import shutil
 import sys
 import time
 import urllib.error
@@ -68,13 +73,74 @@ def laden(ziel, repo):
     return dict(ordner=str(ordner), version=version, name=name, sha256=sha, groesse=len(daten), adresse=basis + name)
 
 
+def abweichungen(zip_pfad, wurzel, ohne=()):
+    """Release-ZIP gegen den Checkout: → Liste der Unterschiede (leer = gleicher Inhalt). Im Checkout zählen .git/,
+    .github/, .gitattributes und die Ordner in `ohne` (z. B. das Ziel zum Entpacken) nicht mit."""
+    wurzel = Path(wurzel).resolve()
+    weg = [Path(o).resolve() for o in ohne]
+    hier = {}
+    for p in wurzel.rglob("*"):
+        rel = p.relative_to(wurzel)
+        if (not p.is_file() or rel.parts[0] in (".git", ".github") or rel.as_posix() == ".gitattributes"
+                or any(p.resolve().is_relative_to(w) for w in weg)):
+            continue
+        hier[rel.as_posix()] = p
+    aus = []
+    with zipfile.ZipFile(zip_pfad) as z:
+        drin = {i.filename[len("Me-Goos-ta-Deutsch/"):]: i for i in z.infolist()
+                if not i.is_dir() and i.filename.startswith("Me-Goos-ta-Deutsch/")}
+        for n in sorted(set(drin) | set(hier)):
+            if n not in hier:
+                aus.append(f"nur im Release: {n}")
+            elif n not in drin:
+                aus.append(f"nur auf main: {n}")
+            elif z.read(drin[n]) != hier[n].read_bytes():
+                aus.append(f"anders: {n}")
+    return aus
+
+
+def seite_nennt(wurzel, sha):
+    """Nennt die Download-Seite (web_adresse.txt + download/) die Prüfsumme? Ohne Adresse: ja (nichts zu prüfen)."""
+    pfad = Path(wurzel) / "Programm" / "web_adresse.txt"
+    adresse = pfad.read_text(encoding="utf-8").strip().splitlines()[0].strip() if pfad.is_file() else ""
+    if not adresse.startswith("https://"):
+        return True
+    return sha.encode("ascii") in holen(f"{adresse}download/?v={int(time.time())}")
+
+
+def passend_laden(ziel, repo, wurzel, minuten):
+    """Wie laden(), aber wartet (alle 60 s), bis das Release dem Checkout entspricht und die Download-Seite es nennt."""
+    ende, grund = time.time() + minuten * 60, ""
+    while True:
+        shutil.rmtree(ziel, ignore_errors=True)
+        try:
+            r = laden(ziel, repo)
+            unterschiede = abweichungen(Path(ziel) / r["name"], wurzel, ohne=[ziel])
+            if unterschiede:
+                grund = f"Release {r['version']} ≠ main ({len(unterschiede)}: {', '.join(unterschiede[:3])})"
+            elif not seite_nennt(wurzel, r["sha256"]):
+                grund = f"Download-Seite nennt SHA-256 {r['sha256'][:16]}… noch nicht"
+            else:
+                return r
+        except (OSError, ValueError, KeyError, AttributeError) as f:
+            grund = f"Release nicht geladen: {f}"
+        if time.time() + 60 > ende:
+            raise ValueError(f"nach {minuten:g} min nicht passend – {grund}")
+        print(f"  … wartet: {grund}", flush=True)
+        time.sleep(60)
+
+
 def main(argv):
     def wert(n, standard=None):
         return argv[argv.index(n) + 1] if n in argv and argv.index(n) + 1 < len(argv) else standard
     wurzel = Path(__file__).resolve().parents[2]
     t0, r, grund = time.time(), None, ""
+    passend = wert("--passend")
     try:
-        r = laden(wert("--ziel", "release"), repo_von(wurzel, wert("--repo")))
+        if passend:
+            r = passend_laden(wert("--ziel", "release"), repo_von(wurzel, wert("--repo")), wurzel, float(passend))
+        else:
+            r = laden(wert("--ziel", "release"), repo_von(wurzel, wert("--repo")))
     except (OSError, ValueError, KeyError, AttributeError) as f:
         grund = f"Release nicht geladen: {f}"
         print(f"✗ {grund}", flush=True)
@@ -85,6 +151,8 @@ def main(argv):
     if wert("--ergebnis"):                                      # wie frischtest.py: ergebnis.json für ci_lauf.py
         name = (f"Neuestes Release {r['version']} geladen, SHA-256 = SHA256SUMS.txt, entpackt mit Unix-Rechten" if r
                 else "Neuestes Release laden und gegen SHA256SUMS.txt prüfen")
+        if passend:
+            name += " · Inhalt = main, Download-Seite nennt die Prüfsumme"
         Path(wert("--ergebnis")).write_text(json.dumps(dict(
             system="release", ok=bool(r), version=r and r["version"], release=r, pruefungen=[dict(
                 name=name, ok=bool(r), grund=grund[:600], dauer=round(time.time() - t0, 1))]), ensure_ascii=False, indent=1),

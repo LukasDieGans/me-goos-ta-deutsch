@@ -4107,7 +4107,7 @@ def test_ci(tmp):
     subprocess.run([sys.executable, str(rel_bau), str(HIER.parent), str(rel)], env=env, capture_output=True, timeout=300)
     summe = cl.inhalt_pruefsumme(rel / HIER.parent.name) if (rel / HIER.parent.name).is_dir() else ""
     pruefe("ci_lauf.py --probe: Plan für Branch ci (Release-Inhalt + tests.yml + frischtest.py, Prüfsumme = Release-Ordner), ohne Netz, schreibt nichts",
-           pr.returncode == 0 and plan.get("branch") == "ci" and plan.get("workflows") == ["tests.yml", "woechentlich.yml"]
+           pr.returncode == 0 and plan.get("branch") == "ci" and plan.get("workflows") == ["release_pruefung.yml", "tests.yml"]
            and {".github/workflows/tests.yml", ".github/ci/frischtest.py"} <= set(plan.get("github", []))
            and plan.get("pruefsumme") == summe and len(summe) == 64 and plan.get("dateien", 0) > 60 and vorher == nachher,
            (pr.stdout + pr.stderr)[-500:])
@@ -4150,17 +4150,17 @@ def test_ci(tmp):
 
 
 def test_ci_browser(tmp):
-    """E39 (2.2): Browser-Test, wöchentlicher Lauf und Release-Schranke – browser_test.py statisch (Abläufe A/B1/B2 in drei
-    Engines, keine festen Wartezeiten > 30 s, keine Schlüssel, Playwright nie im Programm), woechentlich.yml und Browser-Job
-    in tests.yml statisch, ci_lauf.py legt web-app/ bzw. (--woechentlich) nur den Wochen-Workflow mit push-Auslöser in den
-    Branch ci, veroeffentliche_release.py --probe nur mit grünem CI-Ergebnis für genau diesen Inhalt (.github/ im Plan, im
+    """E39 (2.2): Browser-Test, Release-Prüfung und Release-Schranke – browser_test.py statisch (Abläufe A/B1/B2 in drei
+    Engines, keine festen Wartezeiten > 30 s, keine Schlüssel, Playwright nie im Programm), release_pruefung.yml (nach jedem
+    Push auf main, seit dem Fix vom 21.10.2026 statt wöchentlich) und Browser-Job in tests.yml statisch, ci_lauf.py legt
+    web-app/ bzw. (--release-pruefung) nur diesen Workflow mit push-Auslöser auf ci in den Branch ci, veroeffentliche_release.py --probe nur mit grünem CI-Ergebnis für genau diesen Inhalt (.github/ im Plan, im
     Ordner ignoriert, --ohne-ci nur mit Begründung), gleiche Prüfsumme wie ci_lauf.py, neuestes_release.py ohne Netz sauber.
     Ohne die Dateien des Arbeitsordners entfallen alle 7."""
-    print("\n[E39] Browser-Test, wöchentlicher Lauf, Release-Schranke (CI)")
+    print("\n[E39] Browser-Test, Release-Prüfung, Release-Schranke (CI)")
     import importlib.util
     arbeit = HIER.parent.parent
     ci = arbeit / "ci" / "github"
-    bt, nr, woche, wf = ci / "ci" / "browser_test.py", ci / "ci" / "neuestes_release.py", ci / "workflows" / "woechentlich.yml", \
+    bt, nr, woche, wf = ci / "ci" / "browser_test.py", ci / "ci" / "neuestes_release.py", ci / "workflows" / "release_pruefung.yml", \
         ci / "workflows" / "tests.yml"
     ci_lauf, vr, rel_bau = arbeit / "ci_lauf.py", arbeit / "veroeffentliche_release.py", arbeit / "bau_release.py"
     if not all(x.is_file() for x in (bt, nr, woche, wf, ci_lauf, vr, rel_bau, arbeit / "bau_webapp.py")):
@@ -4200,15 +4200,19 @@ def test_ci_browser(tmp):
            and all(w <= 30 for w in warten) and m.ZEIT_GESAMT <= 28 * 60 and not schluessel and not imp
            and "playwright" not in req.lower() and falsch.returncode != 0 and "Traceback" not in falsch.stderr
            and m.UNTERORDNER == "/me-goos-ta-deutsch/", f"{sorted(stufen)} {warten} {schluessel} {imp} {falsch.stderr[-200:]}")
-    # 2) woechentlich.yml statisch
+    # 2) release_pruefung.yml statisch
     y = woche.read_text(encoding="utf-8")
     uses = re.findall(r"^\s*-?\s*uses:\s*(\S+)", y, re.M)
     jobs = re.findall(r"^  ([a-z][a-z0-9_-]*):\s*$", y.split("\njobs:", 1)[1], re.M) if "\njobs:" in y else []
     zeiten = [int(z) for z in re.findall(r"^\s+timeout-minutes:\s*(\d+)", y, re.M)]
-    pruefe("woechentlich.yml: Montag 05:00 UTC + workflow_dispatch (kein push/pull_request), nur Lesen, Actions per SHA, "
-           "Prüfsummen-Schritt, Frischtest mit dem veröffentlichten Release auf 7 Systemen, Browser live",
-           re.search(r'^on:\n  schedule:\n    - cron: "0 5 \* \* 1"\n  workflow_dispatch:\n\n', y, re.M)
-           and "pull_request" not in y and "push:" not in y and re.search(r"^permissions:\n  contents: read\n", y, re.M)
+    pruefe("release_pruefung.yml: nach jedem Push auf main + workflow_dispatch (kein Zeitplan, kein pull_request), nur Lesen, "
+           "Actions per SHA, Prüfsummen-Schritt wartet auf main auf das passende Release (--passend), Frischtest mit dem "
+           "veröffentlichten Release auf 7 Systemen, Browser live, Playwright-Download mit Wiederholung",
+           re.search(r'^on:\n  push:\n    branches: \[main\]\n  workflow_dispatch:\n\n', y, re.M)
+           and "schedule" not in y and "cron" not in y and "pull_request" not in y and y.count("push:") == 1
+           and "${{ github.ref == 'refs/heads/main' && '--passend 40' || '' }}" in y
+           and y.count("for i in 1 2 3; do python -m playwright install") == 1
+           and re.search(r"^permissions:\n  contents: read\n", y, re.M)
            and "write" not in y and "secrets." not in y and uses and all(re.fullmatch(r"actions/[a-z-]+@[0-9a-f]{40}", u) for u in uses)
            and re.search(r"name: Prüfsumme[^\n]*SHA256SUMS[^\n]*\n\s+run: python \.github/ci/neuestes_release\.py", y)
            and y.count("frischtest.py --neuestes-release") == 2 and "browser_test.py --live --neuestes-release" in y
@@ -4223,8 +4227,8 @@ def test_ci_browser(tmp):
            "browser-linux, os: ubuntu-latest, engines: \"chromium,firefox,webkit\"" in job
            and "browser-macos, os: macos-15-intel, engines: \"webkit\"" in job and "playwright==1.63.0" in job
            and "python .github/ci/browser_test.py --system ${{ matrix.name }}" in job and "name: ergebnis-${{ matrix.name }}" in job
-           and "--live" not in job, job[:200])
-    # 4) ci_lauf.py: web-app/ im Branch ci; --woechentlich nur der Wochen-Workflow mit push-Auslöser
+           and "--live" not in job and "for i in 1 2 3; do python -m playwright install" in job, job[:200])
+    # 4) ci_lauf.py: web-app/ im Branch ci; --release-pruefung nur die Release-Prüfung mit push-Auslöser auf ci
     cl = modul(ci_lauf, "ci_lauf_e39")
     pr = lauf(ci_lauf, HIER.parent, "--probe")
     mp = re.search(r"^#plan (.*)$", pr.stdout, re.M)
@@ -4235,14 +4239,15 @@ def test_ci_browser(tmp):
     ordner = rel / HIER.parent.name
     zips = sorted(rel.glob("Me-Goos-ta-Deutsch-*.zip"))
     w = tmp / "e39-woche"
-    liste = cl.branch_inhalt(ordner, w, woechentlich=True) if ordner.is_dir() else []
-    wy = (w / ".github" / "workflows" / "woechentlich.yml").read_text(encoding="utf-8") if liste else ""
-    pruefe("ci_lauf.py: Branch ci mit web-app/ (Handy-App + Download-Seite); --woechentlich: nur woechentlich.yml, Auslöser "
-           "push auf ci statt Zeitplan, ohne web-app/",
-           pr.returncode == 0 and plan.get("web_app", 0) >= 10 and plan.get("woechentlich") is False
+    liste = cl.branch_inhalt(ordner, w, release_pruefung=True) if ordner.is_dir() else []
+    wy = (w / ".github" / "workflows" / "release_pruefung.yml").read_text(encoding="utf-8") if liste else ""
+    pruefe("ci_lauf.py: Branch ci mit web-app/ (Handy-App + Download-Seite); --release-pruefung: nur release_pruefung.yml, "
+           "Auslöser push auf ci statt auf main, ohne web-app/",
+           pr.returncode == 0 and plan.get("web_app", 0) >= 10 and plan.get("release_pruefung") is False
            and ".github/ci/browser_test.py" in plan.get("github", []) and liste
            and not (w / ".github" / "workflows" / "tests.yml").exists() and not (w / "web-app").exists()
-           and wy.startswith(y.split("\non:", 1)[0]) and cl.WOCHE_PROBE in wy and "schedule" not in wy,
+           and wy.startswith(y.split("\non:", 1)[0]) and cl.RP_PROBE in wy and cl.RP_AUSLOESER not in wy
+           and "branches: [main]" not in wy,
            f"{(pr.stdout + pr.stderr)[-300:]} · {len(liste)}")
     # 5) veroeffentliche_release.py --probe: CI-Schranke
     vrm = modul(vr, "veroeffentliche_release_e39")
@@ -4263,7 +4268,7 @@ def test_ci_browser(tmp):
     pruefe("veroeffentliche_release.py --probe: ohne / roter / fremder CI-Lauf → Abbruch vor dem Plan; grün für genau diesen "
            "Inhalt → Plan mit .github/ (Workflows), Ordner = ZIP trotz .github/ im Ordner",
            all(x.returncode != 0 and "CI-Schranke" in x.stderr and "#plan" not in x.stdout for x in (ohne, anders, rot))
-           and gut.returncode == 0 and ".github/workflows/woechentlich.yml" in pg.get("github", [])
+           and gut.returncode == 0 and ".github/workflows/release_pruefung.yml" in pg.get("github", [])
            and ".github/ci/browser_test.py" in pg.get("github", []) and pg.get("ci", {}).get("pruefsumme") == summe
            and "zufall.txt" not in gut.stdout, (ohne.stderr + anders.stderr + rot.stderr + gut.stderr)[-400:])
     leer = lauf(vr, ordner, z, "--probe", "--ci-ergebnis", tmp / "e39-fehlt.json", "--ohne-ci", "kurz")
@@ -4955,6 +4960,80 @@ def test_wortliste_oberflaeche(p, tmp):
         pruefe(name, gut, detail)
 
 
+def test_fix_download_release(tmp):
+    """E44 (Fix 2.2, 21.10.2026): Download-Seite bei alter App – ein Service Worker der App 2.0 kennt download/ nicht und
+    liefert dort den Startbildschirm der App, dessen relatives app.js er übers Netz holt → download/app.js (Rettung:
+    neue Version übernehmen bzw. alten abmelden, neu laden; Texte de/en/es, nie Gerätesprache, keine Endlosschleife);
+    Release-Prüfung: neuestes_release.abweichungen() erkennt gleich/anders/fehlt/zu viel. Ohne die Dateien des
+    Arbeitsordners entfallen alle 3."""
+    print("\n[E44] Fix 2.2: Download-Seite bei alter App, Release-Prüfung nach Push auf main")
+    import importlib.util
+    from urllib.parse import urljoin
+    oben, arbeit = HIER.parent, HIER.parent.parent
+    bau, sw_q, nr = arbeit / "bau_webapp.py", arbeit / "web-app-quelle" / "sw.js", arbeit / "ci" / "github" / "ci" / "neuestes_release.py"
+    if not all(x.is_file() for x in (bau, sw_q, nr)):
+        print("  (bau_webapp.py, web-app-quelle/ und ci/ liegen nur im Arbeitsordner – Prüfungen entfallen)")
+        return
+    env = dict(os.environ, PYTHONIOENCODING="utf-8", PYTHONDONTWRITEBYTECODE="1")
+    ziel = tmp / "e44-web"
+    b = subprocess.run([sys.executable, str(bau), str(oben), str(ziel), "--ohne-pyodide", "--ohne-modelle"], env=env,
+                       capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=600)
+    out = ziel / "web-app"
+    lies = lambda p: p.read_text(encoding="utf-8") if p.is_file() else ""   # noqa: E731
+    app_index, sw, ret = lies(out / "index.html"), lies(out / "sw.js"), lies(out / "download" / "app.js")
+    seite, seite_js = lies(out / "download" / "index.html"), lies(out / "download" / "seite.js")
+    texte = re.search(r"var TEXT = \{ en: \"([^\"]+)\",\s*de: \"([^\"]+)\",\s*es: \"([^\"]+)\" \};", ret)
+    pruefe("Download-Seite: download/app.js rettet eine App von vor 2.1 – übergibt an den wartenden Service Worker "
+           "(„weiter“), sonst abmelden + neu laden (höchstens 3-mal), Texte de/en/es positiv, Sprache = Anker/Wahl/Englisch",
+           b.returncode == 0 and texte and all(texte.groups()) and len(set(texte.groups())) == 3
+           and 'w.postMessage("weiter")' in ret and 'if (e.data === "weiter") self.skipWaiting();' in sw
+           and ret.count("reg.unregister()") >= 2 and '"controllerchange"' in ret and "versuche < 3" in ret
+           and 'localStorage.getItem("mgd-download-sprache")' in ret and "navigator.language" not in ret
+           and not re.search(r"\bfetch\(|XMLHttpRequest|Warn|Warning", ret) and 'bild.src = "../symbol.svg"' in ret
+           and 'sessionStorage.removeItem("mgd-download-rettung")' in seite_js and '"mgd-download-rettung"' in ret
+           and "app.js" not in seite, (b.stdout + b.stderr)[-300:])
+    # Weg wie der Service Worker 2.0 (ohne EIGENE_SEITEN): Navigation download/ → index.html der App aus dem Vorrat; dessen
+    # Skript relativ → download/app.js, nicht im Vorrat → Netz → diese Datei. Elemente, die die Rettung braucht, gibt es dort.
+    liste = {x[0] for x in json.loads(re.search(r"^const DATEIEN = (\[.*?\]);", sw, re.M).group(1))} if sw else set()
+    basis = "https://beispiel.github.io/me-goos-ta-deutsch/"
+    skripte = re.findall(r'<script src="([^"]+)"', app_index)
+    weg = [urljoin(basis + "download/", s)[len(basis):] for s in skripte]
+    pruefe("Weg der alten App: Startbildschirm unter download/ lädt download/app.js übers Netz (nicht im Vorrat), "
+           "#app-start-text und Symbol vorhanden; die neue App lässt download/ durch",
+           skripte == ["app.js"] and weg == ["download/app.js"] and "download/app.js" not in liste and "index.html" in liste
+           and (out / "download" / "app.js").is_file() and 'id="app-start-text"' in app_index
+           and '<img src="symbol.svg" alt="">' in app_index and "if (EIGENE_SEITEN.test(rel)) return;" in sw, f"{skripte} {weg}")
+    # neuestes_release.abweichungen: Release-ZIP gegen den Checkout von main
+    spec = importlib.util.spec_from_file_location("neuestes_release_e44", nr)
+    m = importlib.util.module_from_spec(spec)
+    sys.dont_write_bytecode, vorher = True, sys.dont_write_bytecode
+    try:
+        spec.loader.exec_module(m)
+    finally:
+        sys.dont_write_bytecode = vorher
+    co = tmp / "e44-main"
+    for n, d in (("README.md", b"Gans"), ("Programm/a.py", b"x = 1\r\n"), (".github/workflows/w.yml", b"on: push"),
+                 (".gitattributes", b"* -text\n"), ("release/alt.zip", b"egal")):
+        (co / n).parent.mkdir(parents=True, exist_ok=True)
+        (co / n).write_bytes(d)
+
+    def zip_mit(name, inhalt):
+        z = tmp / name
+        with zipfile.ZipFile(z, "w") as f:
+            for n, d in inhalt.items():
+                f.writestr("Me-Goos-ta-Deutsch/" + n, d)
+        return z
+    gleich = m.abweichungen(zip_mit("e44-g.zip", {"README.md": b"Gans", "Programm/a.py": b"x = 1\r\n"}), co, ohne=[co / "release"])
+    anders = m.abweichungen(zip_mit("e44-a.zip", {"README.md": b"Gans", "Programm/a.py": b"x = 1\n"}), co, ohne=[co / "release"])
+    fehlt = m.abweichungen(zip_mit("e44-f.zip", {"README.md": b"Gans"}), co, ohne=[co / "release"])
+    mehr = m.abweichungen(zip_mit("e44-m.zip", {"README.md": b"Gans", "Programm/a.py": b"x = 1\r\n", "neu.txt": b"!"}), co,
+                          ohne=[co / "release"])
+    pruefe("Release-Prüfung: Release-ZIP = main Datei für Datei (Bytes, auch Zeilenenden), .github/ + .gitattributes + "
+           "Zielordner zählen nicht; anders / fehlt / zu viel werden genannt",
+           gleich == [] and anders == ["anders: Programm/a.py"] and fehlt == ["nur auf main: Programm/a.py"]
+           and mehr == ["nur im Release: neu.txt"], f"{gleich} {anders} {fehlt} {mehr}")
+
+
 def main():
     global ECHTES_KI_BILD, ECHT_DA
     t0 = time.time()
@@ -5010,6 +5089,7 @@ def main():
         test_neue_version(p, Path(tmp))
         test_wortliste(p, Path(tmp))
         test_wortliste_oberflaeche(p, Path(tmp))
+        test_fix_download_release(Path(tmp))
     ok =sum(1 for e in tg.ergebnisse if e[1])
     print(f"\n{ok} von {len(tg.ergebnisse)} Prüfungen bestanden ({time.time() - t0:.0f} s).")
     if ok == len(tg.ergebnisse):

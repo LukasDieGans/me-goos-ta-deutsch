@@ -39,7 +39,7 @@ Die Oberfläche spricht Englisch, Deutsch und Spanisch – Umschalten oben recht
 
 Vorher musst du nichts installieren – auch kein Python. Die Startdatei richtet beim ersten Start alles selbst ein: ein eigenes Python im Benutzerordner (**ohne Administratorrechte**; andere Python-Installationen bleiben unberührt), die Pakete und ein Symbol zum Starten. Das dauert 3–10 Minuten und braucht einmalig Internet (ca. 90 MB) – Zeit für einen Tee. Größere Extras wie die KI-Bildverbesserung sind **Tools**: Du lädst nur, was du wirklich willst (siehe „Tools“). Die Datei **„LIES MICH ZUERST“** im Download zeigt alles noch einmal mit Bildern.
 
-**Woher?** Die Download-Seite https://lukasdiegans.github.io/me-goos-ta-deutsch/download/ hat eine ZIP-Datei für Windows, macOS und Linux (kostenlos, über GitHub Releases), dazu die Schritte für dein System und die SHA-256-Prüfsumme. Später steht der Link auch im Programm unter **Hilfe → „Über dieses Programm“** (in der Handy-App: **Mehr → „Auch für den Rechner holen“**).
+**Woher?** Die Download-Seite https://lukasdiegans.github.io/me-goos-ta-deutsch/download/ hat eine ZIP-Datei für Windows, macOS und Linux (kostenlos, über GitHub Releases), dazu die Schritte für dein System und die SHA-256-Prüfsumme. Zeigt sie kurz nur das Gänse-Symbol (eine ältere Handy-App im selben Browser), watschelt die alte App-Version von selbst hinaus und die Seite öffnet sich nach ein paar Sekunden. Später steht der Link auch im Programm unter **Hilfe → „Über dieses Programm“** (in der Handy-App: **Mehr → „Auch für den Rechner holen“**).
 
 **Windows 11 und 10**
 

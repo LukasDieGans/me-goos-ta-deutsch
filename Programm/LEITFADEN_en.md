@@ -39,7 +39,7 @@ The interface speaks English, German and Spanish – switch at the top right (EN
 
 You don’t need to install anything beforehand – not even Python. On the first start the start file sets everything up by itself: its own Python in your user folder (**no administrator rights**; other Python installations stay untouched), the packages and an icon to start with. This takes 3–10 minutes and needs internet once (about 90 MB) – time for a cup of tea. Bigger extras such as the AI image enhancement are **tools**: you only download what you really want (see “Optional tools”). The file **“LIES MICH ZUERST”** (read me first) in the download shows everything again with pictures.
 
-**Where to get it:** the download page https://lukasdiegans.github.io/me-goos-ta-deutsch/download/ has one ZIP for Windows, macOS and Linux (free, via GitHub Releases), with the steps for your system and the SHA-256 checksum. Later you’ll also find the link in the program under **Help → “About this program”** (in the phone app: **More → “Get it for your computer”**).
+**Where to get it:** the download page https://lukasdiegans.github.io/me-goos-ta-deutsch/download/ has one ZIP for Windows, macOS and Linux (free, via GitHub Releases), with the steps for your system and the SHA-256 checksum. If it briefly shows only the goose symbol (an older phone app in the same browser), the old app version waddles out by itself and the page opens after a few seconds. Later you’ll also find the link in the program under **Help → “About this program”** (in the phone app: **More → “Get it for your computer”**).
 
 **Windows 11 and 10**
 

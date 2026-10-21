@@ -5,7 +5,7 @@ Python des Runners als „Dirigent“ (das Programm richtet wie beim Nutzer sein
 
 GitHub Actions (Branch ci; Wegwerf-Rechner → echte Startdatei, echte Symbole, echter Datenordner):
     python .github/ci/frischtest.py --system <name> [--ergebnis ergebnis.json] [--neuestes-release]
-    (--neuestes-release: wöchentlicher Lauf – statt des Checkouts das veröffentlichte Release-ZIP, gegen SHA256SUMS.txt geprüft)
+    (--neuestes-release: Release-Prüfung nach dem Push auf main – statt des Checkouts das veröffentlichte Release-ZIP, gegen SHA256SUMS.txt geprüft)
 Lokal (nur Windows – der bisherige Frischtest aus UEBERGABE §5: LOCALAPPDATA umgelenkt, Symbole im Testordner, keine
 Programm-Deinstallation; Desktop-Symbol und Datenordner dieses Rechners bleiben unberührt):
     python frischtest.py --lokal <kurzer Testordner außerhalb von Temp> --quelle <Release-Ordner> [--ohne-tests]
@@ -339,7 +339,7 @@ class Frischtest:
         s, nv = self.ui.post("/api/neue-version", {})
         if s == 200 and nv.get("code") == "nv_grenze":
             pruefe("Nach neuer Version suchen (echter Abruf): Abfrage-Grenze von GitHub erreicht – übersprungen", True, t0=t1)
-        elif s == 404 and self.version in ("2.0", "2.1"):              # Wochenlauf gegen ein Release vor 2.2
+        elif s == 404 and self.version in ("2.0", "2.1"):              # Release-Prüfung gegen ein Release vor 2.2
             pruefe(f"Nach neuer Version suchen: gibt es in {self.version} noch nicht – übersprungen", True, t0=t1)
         else:
             pruefe("Nach neuer Version suchen (echter Abruf bei api.github.com): Antwort neuer/aktuell/voraus mit Versionsnummer",
@@ -656,7 +656,7 @@ def main(argv):
             sys.exit("✗ Verweigert: Die echte Startdatei läuft nur auf GitHub-Rechnern (GITHUB_ACTIONS=true). "
                      "Lokal: --lokal <Testordner> --quelle <Release-Ordner>.")
         quelle = Path(__file__).resolve().parents[2]
-        if "--neuestes-release" in argv:                        # wöchentlich: das veröffentlichte Release (Prüfsumme)
+        if "--neuestes-release" in argv:                        # Release-Prüfung: das veröffentlichte Release (Prüfsumme)
             sys.path.insert(0, str(Path(__file__).resolve().parent))
             import neuestes_release
             try:

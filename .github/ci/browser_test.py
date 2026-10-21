@@ -5,7 +5,7 @@ Keine Person nötig, nichts zum Anklicken. Playwright (Apache-2.0) gibt es nur h
 
 GitHub Actions (Branch ci, Job browser; Release-Ordner + web-app/ im Checkout):
     python .github/ci/browser_test.py --system browser-linux --engines chromium,firefox,webkit [--ergebnis ergebnis.json]
-Wöchentlich gegen das veröffentlichte Release (woechentlich.yml; Stufe A + B2 gegen die Live-Adressen; das Release-ZIP
+Nach jedem Push auf main gegen das veröffentlichte Release (release_pruefung.yml; Stufe A + B2 gegen die Live-Adressen; das Release-ZIP
 wird geladen und gegen SHA256SUMS.txt geprüft – bzw. --quelle <entpacktes Release>):
     python .github/ci/browser_test.py --live --neuestes-release --engines … [--stufen A,B2]
 Lokal (Fehlersuche, mit dem installierten Chrome; Playwright nur in einem Wegwerf-Ordner): --engines chromium --kanal chrome
@@ -982,7 +982,7 @@ def main(argv):
     engines = [e for e in wert("--engines", ",".join(ENGINES)).split(",") if e]
     stufen = wert("--stufen", "A,B2" if live else "A,B1,B2").split(",")
     quelle = Path(wert("--quelle") or WURZEL).resolve()
-    if "--neuestes-release" in argv:                            # wöchentlich: das veröffentlichte Release (Prüfsumme)
+    if "--neuestes-release" in argv:                            # Release-Prüfung: das veröffentlichte Release (Prüfsumme)
         sys.path.insert(0, str(Path(__file__).resolve().parent))
         import neuestes_release
         try:
