@@ -124,6 +124,7 @@ h2 { font-size: 18px; margin: 0 0 12px; font-weight: 700; }
 h3 { font-size: 15px; margin: 0 0 8px; font-weight: 700; }
 .unter { color: var(--nacht-2); margin: 0; max-width: 70ch; }
 .klein { font-size: 13px; color: var(--nacht-3); }
+.umbruch { overflow-wrap: anywhere; }   /* lange Pfade (z. B. Datenordner) brechen um statt am Handy überzustehen */
 
 /* ---------- Knöpfe ---------- */
 .knopf { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 40px; padding: 8px 16px;
@@ -563,6 +564,31 @@ table.kompakt { width: 100%; border-collapse: collapse; table-layout: fixed; fon
 .chip-s { display: inline-block; font-size: 11.5px; font-weight: 700; padding: 1px 8px; border-radius: 10px; white-space: nowrap; }
 .chip-s.neu { background: var(--gut-flaeche); color: var(--gut); } .chip-s.konflikt { background: var(--warn-flaeche); color: var(--warn); }
 .chip-s.gleich { background: var(--himmel); color: var(--nacht-2); } .chip-s.fehler { background: var(--fehler-flaeche); color: var(--schlecht); }
+/* Wortliste (Ideen): Eingabe, Optionen, Vorschau – am Handy (≤ 600 px) als Liste statt Tabelle */
+.wl-start { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; }
+.wl-start textarea.eingabe { min-height: 120px; resize: vertical; font-family: ui-monospace, Consolas, monospace; font-size: 13px; }
+.wl-beispiele code { background: var(--himmel); border-radius: 4px; padding: 0 4px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.wl-optionen { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; margin: 10px 0; }
+.wl-optionen label.feld { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; }
+.wl-optionen select.eingabe { width: auto; min-height: 34px; padding: 4px 8px; }
+.wl-zahlen { display: flex; flex-wrap: wrap; gap: 6px 12px; font-size: 13px; margin: 6px 0; }
+.wl-rollen { max-height: min(52vh, 520px); }
+.wl-tabelle th:nth-child(1), .wl-tabelle td:nth-child(1) { width: 38px; } .wl-tabelle th:nth-child(2), .wl-tabelle td:nth-child(2) { width: 44px; }
+.wl-tabelle th:nth-child(6), .wl-tabelle td:nth-child(6) { width: 28%; }
+.wl-tabelle tr.fehler td { color: var(--nacht-3); }
+.wl-tabelle .wl-hinweis { display: block; font-size: 12px; color: var(--warn); margin-top: 2px; }
+.wl-haken { display: inline-grid; place-items: center; min-width: 30px; min-height: 30px; cursor: pointer; }
+.wl-haken input[type="checkbox"] { width: 18px; height: 18px; margin: 0; }
+@media (max-width: 860px) { .wl-start { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 600px) {
+  .wl-tabelle thead { display: none; }
+  .wl-tabelle, .wl-tabelle tbody { display: block; }
+  .wl-tabelle tr { display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 0 6px; padding: 6px 4px; border-bottom: 1px solid var(--linie); }
+  .wl-tabelle td { display: block; width: auto !important; border: 0; padding: 1px 0; grid-column: 2; }
+  .wl-tabelle td:nth-child(1) { grid-column: 1; grid-row: 1 / span 5; }
+  .wl-tabelle td:nth-child(2) { font-size: 11px; color: var(--nacht-3); }
+  .wl-tabelle td[data-label]:not(:empty)::before { content: attr(data-label) ": "; font-size: 11px; color: var(--nacht-3); }
+}
 .gw-raster { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(260px, 1fr); gap: 20px; align-items: start; }
 .gw-buehne { position: relative; border-radius: var(--radius-gross); overflow: hidden; background: var(--buehne); display: grid; place-items: center; }
 .gw-buehne canvas { display: block; max-width: 100%; max-height: 62vh; width: auto; height: auto; touch-action: none; cursor: grab; }
@@ -797,6 +823,8 @@ table.kompakt { width: 100%; border-collapse: collapse; table-layout: fixed; fon
   input:not([type="checkbox"]):not([type="radio"]):not([type="color"]):not([type="file"]), select, .f select, .eingabe { min-height: 44px; }
   .geprueft { min-height: 44px; }
   .verb-karte .wahl { width: 44px; height: 44px; }
+  .wl-haken { min-width: 44px; min-height: 44px; }
+  .wl-optionen select.eingabe { min-height: 44px; }
   details > summary { min-height: 44px; padding-top: 10px; padding-bottom: 10px; box-sizing: border-box; }
   button.sprach-chip { position: relative; }
   button.sprach-chip::after { content: ""; position: absolute; inset: -4px 0; }   /* Tippfläche 44 px, Chip bleibt klein */
@@ -889,6 +917,10 @@ button.sprach-chip[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--schnabel);
 .lern-hinten::before { content: ""; display: block; width: 60%; border-top: 2px dashed var(--linie); margin-bottom: 6px; }
 .lern-kopf-chip { display: flex; align-items: center; gap: 8px; justify-content: center; }
 .lern-de { font-size: 16px; color: var(--nacht-2); }
+.lern-de .lern-de-ton { margin-left: 6px; vertical-align: middle; }
+.ueber .nv-hinweis { margin: 6px 0 0; color: var(--nacht-2); }
+.ueber .nv-ergebnis:not(:empty) { margin-top: 8px; }
+.ueber .nv-ergebnis p { margin: 4px 0; }
 .lern-notiz { max-width: 520px; }
 .lern-problem { display: flex; align-items: center; gap: 8px 12px; flex-wrap: wrap; padding: 10px 12px; border-radius: var(--radius);
   background: var(--warn-flaeche); color: var(--warn); text-align: left; }
@@ -1171,7 +1203,9 @@ label.knopf input[type="file"] { display: none; }
     <section class="ansicht" id="v-ideen" hidden>
       <div class="titelzeile">
         <div class="text"><h1 data-t="ideen_titel"></h1><p class="unter" data-t="ideen_unter"></p></div>
-        <div class="knopfzeile"><button class="knopf" type="button" data-dialog="import-export" data-vorwahl="ideen" data-t="ie_knopf" data-t-attr="title:ie_ideen_titel"></button>
+        <div class="knopfzeile"><button class="knopf" type="button" id="ideen-uebersetzen" hidden data-t="alle_uebersetzen" data-t-attr="title:h_ideen_uebersetzen"></button>
+          <button class="knopf" type="button" data-dialog="wortliste" data-t="wl_knopf" data-t-attr="title:h_wl_knopf"></button>
+          <button class="knopf" type="button" data-dialog="import-export" data-vorwahl="ideen" data-t="ie_knopf" data-t-attr="title:ie_ideen_titel"></button>
           <button class="knopf" type="button" data-dialog="gans-werkzeug" data-t="gw_knopf" data-t-attr="title:gw_knopf_unter"></button>
           <button class="knopf haupt" type="button" id="idee-neu" data-t="idee_neu" data-t-attr="title:h_idee_neu"></button></div>
       </div>
@@ -1284,6 +1318,12 @@ label.knopf input[type="file"] { display: none; }
   <div class="fenster" role="dialog" aria-modal="true" aria-labelledby="ie-titel">
     <div class="fenster-kopf"><h2 id="ie-titel" data-t="ie_titel"></h2><button class="knopf klein leise" data-zu data-t="schliessen"></button></div>
     <div id="ie-inhalt"></div>
+  </div>
+</div>
+<div class="overlay" id="wl-fenster" hidden data-dialogfenster>
+  <div class="fenster breit" role="dialog" aria-modal="true" aria-labelledby="wl-titel">
+    <div class="fenster-kopf"><h2 id="wl-titel" data-t="wl_titel"></h2><button class="knopf klein leise" data-zu data-t="schliessen"></button></div>
+    <div id="wl-inhalt"></div>
   </div>
 </div>
 <div class="overlay" id="gw-fenster" hidden data-dialogfenster>
