@@ -49,4 +49,5 @@
     } else os(z.getAttribute("data-os-wahl"));
   });
   window.addEventListener("hashchange", function () { var l = anker(); if (l) { sprache(l); merken(l); } });
+  try { sessionStorage.removeItem("mgd-download-rettung"); } catch (e) { /* egal */ }   // Seite ist da: Rettung fertig
 })();
