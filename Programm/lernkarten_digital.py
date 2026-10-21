@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-ME GOOS-TA DEUTSCH – Digitale Lernkarten                            Version 2.1 (20.10.2026)
+ME GOOS-TA DEUTSCH – Digitale Lernkarten                            Version 2.2 (21.10.2026)
 =============================================================================================
 Macht aus den fertigen Karten (verbesserte Vorderseiten aus dem Zwischenspeicher + Wort auf Spanisch) Dateien
 zum digitalen Lernen – am Rechner und auf dem Handy. Aufgerufen vom Generator mit `--nur digital`.
@@ -228,15 +228,15 @@ def schreibe_apkg(karten, ziel: Path, deck: str, code: str = "es") -> Path:
 LERNSEITE_TEXTE = {
     "de": dict(titel="Lernkarten", umdrehen="Tippen zum Umdrehen", gewusst="Gewusst ✓", nochmal="Nochmal ↺",
                richtung1="Bild → Spanisch", richtung2="Spanisch → Bild", mischen="Mischen", neu="Von vorn",
-               fertig="Alles gewusst – großartig! 🎉", stand="{g} von {n} sitzen schon – weiter so!", vorlesen="Vorlesen",
+               fertig="Alles gewusst – großartig! 🎉", stand="{g} von {n} sitzen schon – weiter so!", vorlesen="Deutsch vorlesen",
                neu_frage="Lernstand zurücksetzen?", tipp="Leertaste = umdrehen · → gewusst · ← nochmal"),
     "en": dict(titel="Flashcards", umdrehen="Tap to flip", gewusst="Got it ✓", nochmal="Again ↺",
                richtung1="Picture → Spanish", richtung2="Spanish → picture", mischen="Shuffle", neu="Start over",
-               fertig="You know them all – brilliant! 🎉", stand="{g} of {n} mastered – keep it up!", vorlesen="Read aloud",
+               fertig="You know them all – brilliant! 🎉", stand="{g} of {n} mastered – keep it up!", vorlesen="Read the German aloud",
                neu_frage="Reset your progress?", tipp="Space = flip · → got it · ← again"),
     "es": dict(titel="Tarjetas", umdrehen="Toca para voltear", gewusst="¡La sé! ✓", nochmal="Otra vez ↺",
                richtung1="Imagen → español", richtung2="Español → imagen", mischen="Mezclar", neu="Empezar de nuevo",
-               fertig="¡Las sabes todas, increíble! 🎉", stand="{g} de {n} dominadas. ¡Sigue así!", vorlesen="Leer en voz alta",
+               fertig="¡Las sabes todas, increíble! 🎉", stand="{g} de {n} dominadas. ¡Sigue así!", vorlesen="Leer el alemán en voz alta",
                neu_frage="¿Reiniciar tu progreso?", tipp="Espacio = voltear · → la sé · ← otra vez"),
 }
 
@@ -312,7 +312,7 @@ function zeige() {
   if (!reihe.length) neueReihe();
   aktuell = reihe[0] || null;
   $("knoepfe").style.visibility = aktuell ? "visible" : "hidden";
-  if (!aktuell) { b.append(text(document.createElement("div"), T.fertig)); b.firstChild.className = "fertig"; return; }
+  if (!aktuell) { b.append(text(document.createElement("div"), T.fertig)); b.firstChild.className = "fertig"; knopfStimme(); return; }
   const k = aktuell, karte = document.createElement("div"); karte.className = "karte"; karte.title = T.umdrehen;
   const innen = document.createElement("div"); innen.className = "innen";
   const vorn = rueckwaerts ? seiteWort(k) : seiteBild(k);
@@ -325,7 +325,8 @@ function zeige() {
   const de = text(document.createElement("div"), k.de); de.className = "de"; box.append(de);
   if (k.notiz) { const z = text(document.createElement("div"), k.notiz); z.className = "notiz"; box.append(z); }
   hinten.append(box); innen.append(vorn, hinten); karte.append(innen); b.append(karte);
-  karte.addEventListener("click", () => karte.classList.toggle("um"));
+  karte.addEventListener("click", () => { karte.classList.toggle("um"); knopfStimme(); });
+  knopfStimme();
 }
 function weiter(gewusst) {
   if (!aktuell) return;
@@ -333,20 +334,32 @@ function weiter(gewusst) {
   reihe.shift(); if (!gewusst) reihe.splice(Math.min(3, reihe.length), 0, aktuell);
   zeige();
 }
-function sprich() {
-  if (!aktuell || !window.speechSynthesis) return;
-  const u = new SpeechSynthesisUtterance(aktuell.de); u.lang = "de-DE"; speechSynthesis.cancel(); speechSynthesis.speak(u);
+// Deutsch vorlesen: nur mit einer Stimme des Systems (offline, localService), nur nach dem Umdrehen; ohne Stimme kein Knopf
+function deStimme() {
+  if (!window.speechSynthesis || !speechSynthesis.getVoices) return null;
+  const l = v => String(v.lang || "").toLowerCase().replace("_", "-");
+  const st = speechSynthesis.getVoices().filter(v => v.localService !== false && l(v).split("-")[0] === "de");
+  for (const r of ["de-de", "de-at", "de-ch"]) { const v = st.find(x => l(x) === r); if (v) return v; }
+  return st[0] || null;
 }
+let stimme = deStimme();
+function umgedreht() { const k = document.querySelector(".karte"); return !!(k && k.classList.contains("um")); }
+function knopfStimme() { $("sprechen").hidden = !(stimme && aktuell && umgedreht()); }
+function sprich() {
+  if (!aktuell || !stimme || !umgedreht()) return;
+  const u = new SpeechSynthesisUtterance(aktuell.de); u.voice = stimme; u.lang = stimme.lang; speechSynthesis.cancel(); speechSynthesis.speak(u);
+}
+if (window.speechSynthesis && speechSynthesis.addEventListener) speechSynthesis.addEventListener("voiceschanged", () => { stimme = deStimme(); knopfStimme(); });
 text($("titel"), D.titel); document.title = D.titel;
 text($("nochmal"), T.nochmal); text($("gewusst"), T.gewusst); text($("sprechen"), "🔊"); $("sprechen").title = T.vorlesen;
-$("sprechen").setAttribute("aria-label", T.vorlesen); if (!window.speechSynthesis) $("sprechen").hidden = true;
+$("sprechen").setAttribute("aria-label", T.vorlesen); $("sprechen").hidden = true;
 text($("richtung"), T.richtung1); text($("mischen"), T.mischen); text($("neu"), T.neu); text($("tipp"), T.tipp);
 $("gewusst").onclick = () => weiter(true); $("nochmal").onclick = () => weiter(false); $("sprechen").onclick = sprich;
 $("mischen").onclick = () => { neueReihe(); zeige(); };
 $("neu").onclick = () => { if (confirm(T.neu_frage)) { stand = {}; speichern(); neueReihe(); zeige(); } };
 $("richtung").onclick = () => { rueckwaerts = !rueckwaerts; text($("richtung"), rueckwaerts ? T.richtung2 : T.richtung1); zeige(); };
 document.addEventListener("keydown", e => {
-  if (e.key === " ") { e.preventDefault(); const k = document.querySelector(".karte"); if (k) k.classList.toggle("um"); }
+  if (e.key === " ") { e.preventDefault(); const k = document.querySelector(".karte"); if (k) { k.classList.toggle("um"); knopfStimme(); } }
   if (e.key === "ArrowRight") weiter(true); if (e.key === "ArrowLeft") weiter(false);
 });
 neueReihe(); zeige();

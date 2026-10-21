@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-ME GOOS-TA DEUTSCH – Automatische Übersetzung (Vorschläge)            Version 2.1 (20.10.2026)
+ME GOOS-TA DEUTSCH – Automatische Übersetzung (Vorschläge)            Version 2.2 (21.10.2026)
 =============================================================================================
 Schlägt für den Text einer Karte das Wort auf Spanisch vor (Deutsch → Spanisch, wie in Mexiko gesprochen) – bzw.
 in der gewählten Zielsprache (sprachen.py: 15 Sprachen, Dienst-Codes im Katalog; richtung="de-<code>" / "<code>-de").
@@ -48,8 +48,8 @@ import urllib.request
 from collections import deque
 from pathlib import Path
 
-VERSION = "2.1 (20.10.2026)"
-USER_AGENT = "Me-Goos-ta-Deutsch/2.1 (Lernkarten-Programm; privat)"
+VERSION = "2.2 (21.10.2026)"
+USER_AGENT = "Me-Goos-ta-Deutsch/2.2 (Lernkarten-Programm; privat)"
 ZEITLIMIT = 10                    # Sekunden je Anfrage
 MAX_ANTWORT = 1_500_000           # Bytes (eine Wiktionary-Seite hat selten mehr als 200 KB)
 MAX_QUELLE = 80                   # Zeichen, die höchstens gesendet werden
@@ -167,9 +167,9 @@ FEHLER_TEXTE = {
 
 
 class UebersetzungsFehler(Exception):
-    def __init__(self, code, **werte):
-        super().__init__(code)
-        self.code, self.werte = code, werte
+    def __init__(self, fehler_code, /, **werte):           # werte darf selbst „code“ (HTTP-Status) enthalten
+        super().__init__(fehler_code)
+        self.code, self.werte = fehler_code, werte
 
     def text(self, sprache="en"):
         t = FEHLER_TEXTE.get(self.code, FEHLER_TEXTE["format"])
@@ -437,9 +437,10 @@ def _takt(host):
         time.sleep(warten)
 
 
-def pruefe_adresse(url):
+def pruefe_adresse(url, hosts=None):
+    """hosts: eigene Liste erlaubter Hosts (z. B. Versionsprüfung) – sonst nur die Übersetzungsdienste."""
     teile = urllib.parse.urlsplit(url)
-    if teile.scheme != "https" or teile.hostname not in ERLAUBTE_HOSTS or teile.port not in (None, 443) \
+    if teile.scheme != "https" or teile.hostname not in (ERLAUBTE_HOSTS if hosts is None else frozenset(hosts)) or teile.port not in (None, 443) \
             or teile.username or teile.password or teile.fragment:
         raise UebersetzungsFehler("adresse")
     return teile.hostname
@@ -450,8 +451,8 @@ def im_browser():
     return sys.platform == "emscripten"
 
 
-def _json_pruefen(roh, art):
-    if len(roh) > MAX_ANTWORT or "json" not in (art or "").lower():
+def _json_pruefen(roh, art, max_antwort=MAX_ANTWORT):
+    if len(roh) > max_antwort or "json" not in (art or "").lower():
         raise UebersetzungsFehler("format")
     try:
         d = json.loads(roh.decode("utf-8"))
@@ -485,9 +486,10 @@ def _http_json_browser(url, daten=None):
     return _json_pruefen(str(x.responseText).encode("utf-8"), x.getResponseHeader("Content-Type"))
 
 
-def http_json(url, daten=None, kopf=None):
-    """Holt JSON von einem der fest eingetragenen Dienste. Wirft UebersetzungsFehler."""
-    host = pruefe_adresse(url)
+def http_json(url, daten=None, kopf=None, hosts=None, max_antwort=MAX_ANTWORT):
+    """Holt JSON von einem der fest eingetragenen Dienste (bzw. von `hosts`, getrennt von den Übersetzungsdiensten).
+    Wirft UebersetzungsFehler."""
+    host = pruefe_adresse(url, hosts)
     _takt(host)
     if im_browser():
         return _http_json_browser(url, daten)
@@ -500,7 +502,7 @@ def http_json(url, daten=None, kopf=None):
         oeffner = urllib.request.build_opener(urllib.request.HTTPSHandler(context=kontext), _KeineWeiterleitung())
         try:
             with oeffner.open(anfrage, timeout=ZEITLIMIT) as r:
-                return _json_pruefen(r.read(MAX_ANTWORT + 1), r.headers.get("Content-Type"))
+                return _json_pruefen(r.read(max_antwort + 1), r.headers.get("Content-Type"), max_antwort)
         except urllib.error.HTTPError as e:
             if e.code in (401, 403):
                 raise UebersetzungsFehler("schluessel" if "deepl" in host else "dienst", code=e.code) from None

@@ -1,6 +1,6 @@
 # Me Goos-ta Deutsch – Guide
 
-Updated: 20 Oct 2026 · program and interface version 2.1 · German: `LEITFADEN.md` · Spanish: `LEITFADEN_es.md`
+Updated: 21 Oct 2026 · program and interface version 2.2 · German: `LEITFADEN.md` · Spanish: `LEITFADEN_es.md`
 
 Great to have you here! This guide takes you from the first double-click to the finished card – step by step and without jargon. You don’t have to read it cover to cover: just jump to the part you need right now. And relax – no need to waddle along in single file; take every step at your own pace.
 
@@ -64,7 +64,7 @@ The interface keeps running in the background even when the browser tab is close
 
 Your work lives in the folder `Programm`: the card list `karten.csv`, the images in `bilder/`, your ideas in `ideen/`, print files and enhanced images in `ausgabe/`, the settings in `ui_einstellungen.json` and your own goose image in `assets/`. The download of a new version contains none of this – its example cards come as `beispiel-karten.csv` and `beispiel-bilder/` and are only used in a brand-new folder. So nothing gets lost during an update.
 
-**The new version** is always on the download page – in the program under **Help → “About this program”**, link “Latest version for Windows, macOS and Linux”.
+**The new version** is always on the download page – in the program under **Help → “About this program”**, link “Latest version for Windows, macOS and Linux”. Whether there is a new version, the **“🔎 Check for a new version”** button there tells you: only your click asks GitHub (api.github.com) once for the latest release – never on its own, never in the background, with no data about you or your cards, and nothing is stored. If a newer goose is out, a link takes you to the download page; “Goose up to date!” means you already have the newest one. The button exists only on the computer (not in the phone app and not via phone access).
 
 **Safest of all:** download a full backup under **Import / export** first. You can read it back in anywhere.
 
@@ -220,6 +220,25 @@ Good ideas often pop up in between – here they have their place. An idea only 
 - Once image, text on the image and {{Spanish}} word are there, **“Make it a card”** becomes active: the idea goes through the same checks as in steps 1 and 2 and then appears under **My cards**.
 - **“Discard”** can be undone with “Undo”.
 - Below are all **unfinished cards** from “New card” with “Continue →”.
+
+**Word list: many ideas at once.** Already have a vocabulary list? **“📋 Word list …”** turns it into ideas in one go – with or without translations.
+
+1. Choose a file (CSV, TSV or text) or drag it in – or simply paste the list into the field and press “Check”.
+2. The **preview** shows every line with a status: *new*, *twice in the list*, *already an idea*, *already a card* or *has errors* (with the reason). New lines are ticked, you decide on the rest; lines with errors are fixed in the list.
+3. If something looks off, the options above help: separator, first line as heading, a single column is German or {{Spanish}}, swap columns, “Gans” in front. Every change checks the list again.
+4. **“Create n ideas”** – done. The message afterwards has **“Undo”**: it takes the whole list back; ideas you have changed in the meantime stay.
+
+| In the list | Becomes |
+| --- | --- |
+| `alt;viejo` | Gans alt → viejo |
+| `müde` | Gans müde, the {{Spanish}} word follows later |
+| `German;Word;Note` (first line) | heading – sets the order of the columns |
+| `rot;rojo;Farbe` | third column = note |
+| `# Farben` | comment, skipped |
+
+Separators can be semicolon, tab, comma, “ = ” or “ – ”; at most 500 words and 1 MB per list, nothing is ever shortened silently. The word always belongs to the current card language – for another language, switch the card language first.
+
+**🌐 Translate all** appears as soon as ideas have German text but no {{Spanish}} word yet: one click fetches a suggestion for all of them (with the same consent as everywhere). Only fields that are still empty at that moment get filled, marked as “automatic – check”. If the service’s daily quota runs out, the program stops cleanly and tells you how many are done.
 
 ## Automatic translation
 
@@ -404,7 +423,7 @@ With the **“🎓 Learn cards”** tool you practise your cards right inside th
 | Settings | new cards and reviews per day, desired retention (80–95 %, default 90 %), direction (picture → word, word → picture, both), learning language, start of the learning day (default 4 am) |
 | Back up progress | export (JSON file), import (for each card the newer state wins), reset everything |
 
-**While learning:** space = show answer, keys **1–4** = rate, **Ctrl+Z** = undo, **Esc** = finish. On a phone you tap the card; the rating buttons sit at the bottom in thumb reach, swiping right means “Good”, left “Again” (↶ takes it back). You can stop at any time – every rating is saved immediately, even if you close the program. If your system has a voice for the language, 🔊 reads the word aloud.
+**While learning:** space = show answer, keys **1–4** = rate, **Ctrl+Z** = undo, **Esc** = finish. On a phone you tap the card; the rating buttons sit at the bottom in thumb reach, swiping right means “Good”, left “Again” (↶ takes it back). You can stop at any time – every rating is saved immediately, even if you close the program. If your system has a voice for the language, 🔊 reads the word aloud. After “Show answer” there is also a 🔊 next to the German text: it reads the German aloud exactly as it appears on the picture – in both directions, but only after revealing (otherwise it would give the answer away). It only uses a voice of your system that works without the internet (German from Germany first, then Austria, then Switzerland); without one there is no button. On Windows you can add a German voice in Settings under “Time & language → Language”.
 
 **In “My cards”** each card shows its progress (new, learning, young, mature; the hover says how often it was learned and when the next review is). Above the list you filter by due, new, mature or problem cards. With **“☑ Select”** you tick cards and **“Learn now”** or put them into a deck.
 
@@ -419,7 +438,7 @@ Fancy studying on the go? Choose **“Digital flashcards”** in Generate – th
 | Format | How to study with it |
 | --- | --- |
 | Anki package (`.apkg`) | open it in Anki on your computer (Windows, Mac, Linux) – or send it to your phone by mail, cloud or cable and import it in AnkiDroid (Android) or AnkiMobile (iPhone/iPad) |
-| Study page (`.html`) | a single file that runs offline in the browser on your computer. Flip, “Got it” or “Again”; your progress stays saved in that browser. On phones it only partly works (on the iPhone it usually won’t start from the Files app) – there, better use the Anki package or the screen PDF |
+| Study page (`.html`) | a single file that runs offline in the browser on your computer. Flip, “Got it” or “Again”; after flipping, 🔊 reads the German text aloud (only with an offline voice of your system, otherwise no button); your progress stays saved in that browser. On phones it only partly works (on the iPhone it usually won’t start from the Files app) – there, better use the Anki package or the screen PDF |
 | Screen PDF | flip through in any PDF app: front, back, next card |
 | Tables (CSV) | for Quizlet, Brainscape, Mochi & co. – choose “Tables for other apps” in fine-tuning |
 
@@ -480,6 +499,8 @@ Five freely available models were tested against the simpler FSRCNN on small, he
 - The interface can only be reached on your computer and only opened via the start program (secret start key) – unless you deliberately switch on phone access, then additionally with a PIN in your own Wi-Fi.
 - Other websites can’t remote-control it; files are only read and written in the project folders, and “Open” never starts programs or scripts.
 - Automatic translation only sends after your consent and only the word to translate (for AI images, on click, the short description), encrypted to three fixed services.
+- “Check for a new version” only asks when you click the button: one request to api.github.com, with no data about you or your cards. The program never looks for updates on its own.
+- Read aloud (🔊) only uses voices of your system that work offline – no text goes to the internet for it.
 - The AI image model runs entirely on your computer; descriptions and images never leave it.
 - Texts that Excel would treat as a formula (starting with = + - @) are rejected – also on import. Images are checked and saved without metadata.
 - AI models and Python are only downloaded from official sources and verified by checksum; model files can’t run code.
@@ -510,6 +531,9 @@ Don’t worry – almost everything has a quick fix:
 | Goose image is rejected | Use JPG, PNG or WEBP (no HEIC), at least 300 pixels, at most 40 MB |
 | Generating takes long | Real-ESRGAN needs 1–4 minutes per image the first time; after that it’s quick. Enhance images in advance in the “Image enhancement” tab or choose “FSRCNN (fast)” for trying things out |
 | Back preview only shows the word | Double-click the start file once (repairs it); the PDFs are correct in any case |
+| Word list: “looks like an Excel file” | in Excel “Save as” → “CSV UTF-8 (comma delimited)” – or copy the cells and paste them into the word list field |
+| Word list shows gibberish (Ã¤ instead of ä) | save as “CSV UTF-8” or as UTF-8 text; the preview names the detected encoding at the top |
+| Word list: “list too long – please split it” | at most 500 words and 1 MB per list: split it into several files and create them one after another |
 | ñ, á or ü show up as gibberish | Save `karten.csv` as “CSV UTF-8” |
 | Back upside down / print offset | “Rotate back by 180°” / “offset” in Generate |
 | Image cropped awkwardly | Switch the crop in step 1 |

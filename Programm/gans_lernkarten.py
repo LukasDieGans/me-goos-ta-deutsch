@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-ME GOOS-TA DEUTSCH – Kartengenerator                                Version 2.1 (20.10.2026)
+ME GOOS-TA DEUTSCH – Kartengenerator                                Version 2.2 (21.10.2026)
 =============================================================================================
 Erzeugt aus Bildern (Vorderseite) und karten.csv (Rückseite: Spanisch) druckfertige Lernkarten.
 
@@ -58,7 +58,7 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas as rl_canvas
 
-VERSION = "2.1 (20.10.2026)"
+VERSION = "2.2 (21.10.2026)"
 BILD_VERSION = "2.0"                 # ändert sich nur, wenn die Bildaufbereitung anders rechnet (Cache-Schlüssel)
 PRODUKT = "Me Goos-ta Deutsch"
 DATEI_PRAEFIX = "Me-Goos-ta-Deutsch"

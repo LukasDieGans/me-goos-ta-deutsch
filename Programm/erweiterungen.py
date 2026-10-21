@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-ME GOOS-TA DEUTSCH – Erweiterungen der Oberfläche                   Version 2.1 (20.10.2026)
+ME GOOS-TA DEUTSCH – Erweiterungen der Oberfläche                   Version 2.2 (21.10.2026)
 =============================================================================================
 Zusätzliche Funktionen, die gans_ui.py einbindet (verbinde(gans_ui)). Fehlt diese Datei, läuft die Oberfläche
 genau wie bisher – nur ohne diese Funktionen.
@@ -106,6 +106,78 @@ TEXTE = {
                              "and the {zs} word.",
                              "¡Casi lista! Para ser carta, a la idea le falta una imagen, el texto de la imagen y la "
                              "palabra en {zs}."),
+    "wl_dateiart": L("Das sieht nach einer {art}-Datei aus – die Wortliste mag es schlicht: bitte als „CSV UTF-8“ "
+                     "oder als Text (.txt) speichern und nochmal wählen.",
+                     "This looks like a {art} file – the word list likes it plain: please save it as “CSV UTF-8” "
+                     "or as text (.txt) and choose it again.",
+                     "Esto parece un archivo {art}; la lista de palabras lo prefiere sencillo: guárdalo como "
+                     "«CSV UTF-8» o como texto (.txt) y vuelve a elegirlo."),
+    "wl_gross": L("Die Wortliste ist größer als {mb} MB – teil sie einfach in kleinere Listen auf.",
+                  "The word list is larger than {mb} MB – just split it into smaller lists.",
+                  "La lista de palabras pesa más de {mb} MB; divídela en listas más pequeñas y listo."),
+    "wl_unlesbar": L("In dieser Datei steckt kein lesbarer Text – bitte als „CSV UTF-8“ oder Text (.txt) speichern.",
+                     "This file holds no readable text – please save it as “CSV UTF-8” or text (.txt).",
+                     "Este archivo no trae texto legible; guárdalo como «CSV UTF-8» o texto (.txt)."),
+    "wl_cp1252": L("Die Liste ist nicht als UTF-8 gespeichert (als Windows-1252 gelesen) – schau in der Vorschau kurz "
+                   "auf Umlaute und Akzente.",
+                   "The list is not saved as UTF-8 (read as Windows-1252) – take a quick look at umlauts and accents "
+                   "in the preview.",
+                   "La lista no está guardada en UTF-8 (leída como Windows-1252); revisa rápido diéresis y acentos "
+                   "en la vista previa."),
+    "wl_leer": L("Die Wortliste ist noch leer – schreib einfach ein Wort pro Zeile.",
+                 "The word list is still empty – just write one word per line.",
+                 "La lista de palabras aún está vacía; escribe una palabra por línea y listo."),
+    "wl_nur_kopf": L("In der Liste steht nur die Kopfzeile – darunter fehlen noch die Wörter.",
+                     "The list only has the header row – the words below it are still missing.",
+                     "La lista solo tiene la fila de encabezado; faltan las palabras debajo."),
+    "wl_zu_viele": L("Die Liste hat {n} Wörter – höchstens {max} gehen auf einmal. Teil sie bitte in mehrere Listen auf "
+                     "(abgeschnitten wird nichts).",
+                     "The list has {n} words – at most {max} fit at once. Please split it into several lists "
+                     "(nothing gets cut off).",
+                     "La lista tiene {n} palabras; caben {max} como máximo a la vez. Divídela en varias listas "
+                     "(no se recorta nada)."),
+    "wl_spalten": L("{n} Spalten – höchstens 3 gehen (Deutsch, {zs}, Notiz). Alternativen bitte mit „/“ trennen.",
+                    "{n} columns – at most 3 work (German, {zs}, note). Please separate alternatives with “/”.",
+                    "{n} columnas; caben 3 como máximo (alemán, {zs}, nota). Separa las alternativas con «/»."),
+    "wl_komma_alt": L("Einige Zeilen haben mit Komma 3 Spalten – war die 3. Spalte vielleicht eine Alternative? Dann "
+                      "„/“ statt Komma nehmen oder als Trennzeichen „;“ wählen.",
+                      "Some lines have 3 columns with commas – was the 3rd column maybe an alternative? Then use “/” "
+                      "instead of a comma or choose “;” as separator.",
+                      "Algunas líneas tienen 3 columnas con coma; ¿la 3.ª columna era quizá una alternativa? Entonces "
+                      "usa «/» en vez de coma o elige «;» como separador."),
+    "wl_kopf_sprache": L("Die Kopfzeile nennt {sprache}, die Karten sind gerade auf {zs} – die Spalte wird als {zs} "
+                         "übernommen. Für eine andere Sprache vorher die Kartensprache wechseln.",
+                         "The header names {sprache}, the cards are currently in {zs} – the column is taken as {zs}. "
+                         "For another language, switch the card language first.",
+                         "El encabezado dice {sprache} y las cartas están en {zs}; la columna se toma como {zs}. "
+                         "Para otro idioma, cambia antes el idioma de las cartas."),
+    "wl_lang": L("{feld} ist {n} Zeichen lang – höchstens {max} gehen. Bitte kürzen (still abgeschnitten wird nichts).",
+                 "{feld} is {n} characters long – at most {max} fit. Please shorten it (nothing is cut off silently).",
+                 "{feld} tiene {n} caracteres; caben {max} como máximo. Acórtalo, por favor (no se recorta nada "
+                 "a escondidas)."),
+    "wl_keine_buchstaben": L("Im deutschen Text steht noch kein Buchstabe – so wird daraus keine Karte.",
+                             "The German text has no letter yet – that can’t become a card.",
+                             "El texto en alemán aún no tiene letras; así no puede ser carta."),
+    "wl_nur_gans": L("Nur „Gans“ ist noch kein Wort – was macht die Gans denn?",
+                     "Just “Gans” isn’t a word yet – what is the goose up to?",
+                     "Solo «Gans» aún no es palabra; ¿qué hace el ganso?"),
+    "wl_zeichen": L("Ein paar Zeichen passen nicht zu {zs} – kurz prüfen, ob die Spalten stimmen.",
+                    "A few characters don’t fit {zs} – quickly check that the columns are right.",
+                    "Algunos caracteres no encajan con {zs}; revisa rápido que las columnas estén bien."),
+    "wl_neu": L("Neue Idee", "New idea", "Idea nueva"),
+    "wl_idee_da": L("Gibt es schon als Idee", "Already exists as an idea", "Ya existe como idea"),
+    "wl_doppelt": L("Steht schon in Zeile {nr}", "Already in line {nr}", "Ya está en la línea {nr}"),
+    "wl_doppelt_anders": L("Steht schon in Zeile {nr} (dort mit „{wort}“)", "Already in line {nr} (there with “{wort}”)",
+                           "Ya está en la línea {nr} (allí con «{wort}»)"),
+    "wl_zs_geaendert": L("Die Kartensprache wurde inzwischen gewechselt – prüf die Liste einfach noch einmal.",
+                         "The card language has changed in the meantime – just check the list once more.",
+                         "El idioma de las cartas cambió mientras tanto; revisa la lista otra vez y listo."),
+    "wl_nichts": L("Noch keine Zeile ausgewählt – wähl mindestens ein Wort aus.",
+                   "No line selected yet – pick at least one word.",
+                   "Aún no hay ninguna línea elegida; elige al menos una palabra."),
+    "wl_rueck_fehlt": L("Diese Wortliste ist schon ganz zurückgenommen – da gibt es nichts mehr rückgängig zu machen.",
+                        "This word list has already been fully undone – nothing left to undo.",
+                        "Esta lista ya se deshizo por completo; no queda nada por deshacer."),
     "start_gespeichert": L("Gespeichert ✓ – gilt ab dem nächsten Start.", "Saved ✓ – applies from the next start.",
                            "Guardado ✓; se aplica desde el próximo inicio."),
     "deinst_bestaetigen": L("Bitte das Deinstallieren ausdrücklich bestätigen.", "Please confirm the uninstall explicitly.",
@@ -731,6 +803,28 @@ def idee_speichern(daten):
     return dict(id=i["id"], **ideen_liste())
 
 
+def idee_wort_fuellen(daten):
+    """„🌐 Alle übersetzen“ in Ideen: Wort der Kartensprache nur eintragen, wenn es beim Speichern noch leer ist (die
+    Person kann inzwischen selbst etwas eingetragen haben) – als „automatisch – prüfen“ (es_auto). Eine unveränderte
+    Wortlisten-Idee bleibt dabei unverändert im Sinne von Rückgängig (Fingerabdruck wird mitgeführt)."""
+    es = _text(daten.get("es"))
+    if not es:
+        raise UI.Meldung("ungueltig")
+    if _formel(es):
+        raise ValueError(gl.pm("k_formel", "fehler")["text"])
+    with _ideen_lock:
+        d = _ideen_lesen()
+        i = _idee_finden(d, daten.get("id"))
+        gefuellt = not i.get("es")
+        if gefuellt:
+            unveraendert = bool(i.get("wl")) and i.get("fp") == _wl_fingerabdruck(i)
+            i.update(es=es, es_auto=es)
+            if unveraendert:
+                i["fp"] = _wl_fingerabdruck(i)
+            _ideen_schreiben(d)
+    return dict(id=i["id"], gefuellt=gefuellt, **ideen_liste())
+
+
 def idee_bild_setzen(iid, daten: bytes):
     """Bild einer Idee setzen (ohne id: neue Idee mit diesem Bild)."""
     fmt, _ = bild_pruefen(daten)
@@ -835,6 +929,421 @@ def idee_aufnehmen(daten):
         _ideen_schreiben(d)
     p.unlink(missing_ok=True)
     return dict(ok=True, name=fertig["name"], karten=UI.karten_daten(), **ideen_liste())
+
+
+# =============================================================================================
+# Wortliste: viele Ideen auf einmal (Datei oder eingefügter Text → Vorschau je Zeile → Anlegen → Rückgängig).
+# Grundsatz: nie still etwas Falsches anlegen – nichts wird gekürzt oder abgeschnitten, jede Zeile hat einen Status,
+# das Anlegen prüft jede Zeile erneut (die Vorschau kann veraltet sein).
+# =============================================================================================
+WL_MAX_BYTES = 1024 * 1024
+WL_MAX_ZEILEN = 500
+WL_LAENGE = dict(de=120, wort=300, notiz=300)
+WL_TRENNER = ("auto", "tab", "semikolon", "komma", "gleich", "strich", "keiner")
+_WL_DATEIARTEN = ((b"PK\x03\x04", "Excel/ZIP"), (b"%PDF", "PDF"), (b"\xD0\xCF\x11\xE0", "Excel/Word"),
+                  (b"{\\rtf", "RTF"), (b"\x89PNG", "PNG"), (b"\xFF\xD8\xFF", "JPG"), (b"GIF8", "GIF"))
+_WL_NULLBREITE = dict.fromkeys(map(ord, "​‌‍⁠﻿­"))
+_WL_LISTENZEICHEN = re.compile(r"^(?:[-*•–—·]|\d{1,3}[.)])\s+")
+_WL_STRICH = re.compile(r"\s+[-–—]\s+")
+_WL_GANS = re.compile(r"^(?:gans|ganz)(?:\s+|$)", re.I)
+_WL_ANFUEHRUNG = "„“”‚‘’«»‹›\"'"
+_WL_DE_NAMEN = {"deutsch", "german", "aleman", "de", "deu", "ger", "text", "textaufdembild"}
+_WL_NOTIZ_NAMEN = {"notiz", "notizen", "note", "notes", "nota", "notas", "anmerkung", "comment", "comentario"}
+_WL_ZS_NAMEN = {"ubersetzung", "uebersetzung", "translation", "traduccion", "wort", "word", "palabra"}
+
+
+class WortlisteFehler(ValueError):
+    """Die ganze Liste lässt sich nicht einlesen (Dateiart, Kodierung, Größe, leer) – Text für die Oberfläche."""
+    def __init__(self, code, **werte):
+        super().__init__(tx(code, **werte))
+        self.code = code
+
+
+def _wl_dateiart(roh: bytes):
+    """Stufe 1: Tabellen, PDF, Bilder … erkennen (Signatur am Anfang) → Name der Dateiart, sonst None."""
+    for kopf, art in _WL_DATEIARTEN:
+        if roh.startswith(kopf):
+            return art
+    if roh[:4] == b"RIFF" and roh[8:12] == b"WEBP":
+        return "WEBP"
+    if roh[4:12] in gl.HEIC_MARKEN:
+        return "HEIC"
+    return None
+
+
+def _wl_dekodieren(roh: bytes):
+    """Stufe 2: BOM (UTF-8, UTF-16 LE/BE – Excel „Unicode-Text“) → NUL-Muster (UTF-16 ohne BOM) → UTF-8 streng →
+    Windows-1252 mit Hinweis. → (Text, Kodierung, Hinweise)."""
+    if roh.startswith(b"\xef\xbb\xbf"):
+        kandidaten = [("utf-8", roh[3:])]
+    elif roh.startswith((b"\xff\xfe", b"\xfe\xff")):
+        kandidaten = [("utf-16-le" if roh[0] == 0xFF else "utf-16-be", roh[2:])]
+    else:
+        kandidaten = []
+        paare = len(roh) // 2
+        if paare and b"\x00" in roh:
+            ungerade, gerade = roh[1::2].count(0), roh[0::2].count(0)
+            if ungerade >= 0.3 * paare and gerade < 0.05 * paare:
+                kandidaten.append(("utf-16-le", roh))
+            elif gerade >= 0.3 * paare and ungerade < 0.05 * paare:
+                kandidaten.append(("utf-16-be", roh))
+        if b"\x00" not in roh:
+            kandidaten += [("utf-8", roh), ("cp1252", roh)]
+    for kodierung, daten in kandidaten:
+        try:
+            text = daten.decode(kodierung)
+        except UnicodeDecodeError:
+            continue
+        steuer = sum(1 for c in text if unicodedata.category(c) == "Cc" and c not in "\t\r\n")
+        if steuer > max(2, len(text) // 20):                   # Binärdaten, die zufällig dekodierbar sind
+            continue
+        return text, kodierung, ([tx("wl_cp1252")] if kodierung == "cp1252" else [])
+    raise WortlisteFehler("wl_unlesbar")
+
+
+def _wl_bereinigen(text):
+    """Stufe 3: NFC (macOS liefert NFD), alle Zeilenenden → \\n, Nullbreiten/weiches Trennzeichen weg, besondere
+    Leerzeichen → Leerzeichen, Steuerzeichen außer Tab weg."""
+    for alt in ("\r\n", "\r", " ", " ", "\x85"):
+        text = text.replace(alt, "\n")
+    text = text.translate(_WL_NULLBREITE)
+    aus = []
+    for c in text:
+        kat = unicodedata.category(c)
+        if c in "\t\n":
+            aus.append(c)
+        elif kat == "Zs":
+            aus.append(" ")
+        elif kat != "Cc":
+            aus.append(c)
+    return unicodedata.normalize("NFC", "".join(aus))
+
+
+def _wl_feld(wert):
+    """Stufe 8: trimmen, Leerraum zusammenfassen, typografische Anführungszeichen außen weg (/ und | bleiben)."""
+    t = " ".join(_wl_bereinigen(str(wert or "")).split())
+    while len(t) >= 2 and t[0] in _WL_ANFUEHRUNG and t[-1] in _WL_ANFUEHRUNG:
+        t = t[1:-1].strip()
+    return t
+
+
+def _wl_trenner_waehlen(zeilen):
+    """Stufe 5 (auto): Tab > ; > „ = “ > „ – “/„ - “ > , – das erste Zeichen, das in ≥ 60 % der Zeilen steht."""
+    pruefen = (("tab", lambda z: "\t" in z), ("semikolon", lambda z: ";" in z), ("gleich", lambda z: " = " in z),
+               ("strich", lambda z: bool(_WL_STRICH.search(z))), ("komma", lambda z: "," in z))
+    for name, hat in pruefen:
+        if zeilen and sum(1 for z in zeilen if hat(z)) >= 0.6 * len(zeilen):
+            return name
+    return "keiner"
+
+
+def _wl_zellen(zeile, trenner):
+    import csv
+    if trenner in ("tab", "semikolon", "komma"):
+        zeichen = {"tab": "\t", "semikolon": ";", "komma": ","}[trenner]
+        try:
+            zellen = next(csv.reader([zeile], delimiter=zeichen, skipinitialspace=True), [])
+        except csv.Error:
+            zellen = zeile.split(zeichen)
+    elif trenner == "gleich":
+        zellen = re.split(r"\s*=\s*", zeile, maxsplit=1)
+    elif trenner == "strich":
+        zellen = _WL_STRICH.split(zeile, maxsplit=1)
+    else:
+        zellen = [zeile]
+    zellen = [_wl_feld(z) for z in zellen]
+    while len(zellen) > 1 and not zellen[-1]:                       # „alt;viejo;;“
+        zellen.pop()
+    return zellen
+
+
+def _wl_name(t):
+    t = "".join(c for c in unicodedata.normalize("NFKD", str(t).casefold()) if not unicodedata.combining(c))
+    return re.sub(r"[\W_]+", "", t)
+
+
+def _wl_kopf_rolle(zelle):
+    """Stufe 6: Rolle einer Kopfzelle → "de" | "notiz" | ("zs", Code oder None) | None (kein bekannter Name)."""
+    n = _wl_name(zelle)
+    if not n:
+        return None
+    if n in _WL_DE_NAMEN:
+        return "de"
+    if n in _WL_NOTIZ_NAMEN:
+        return "notiz"
+    if n in _WL_ZS_NAMEN:
+        return ("zs", None)
+    try:
+        import sprachen
+        katalog = sprachen.SPRACHEN
+    except ImportError:
+        katalog = {"es": dict(name=L("Spanisch", "Spanish", "español"), eigenname="español")}
+    for code, s in katalog.items():
+        namen = {_wl_name(v) for v in s["name"].values()} | {_wl_name(s.get("eigenname", "")), _wl_name(code)}
+        if n in namen:
+            return ("zs", code)
+    if n in ("mexikanisch", "mexican", "mexicano"):
+        return ("zs", "es")
+    return None
+
+
+def wort_schluessel_zs(text, code="es"):
+    """Vergleichsschlüssel eines Worts der Kartensprache: lateinische Sprachen wie wort_schluessel(…, True), andere
+    Schriften NFKC + casefold ohne Satzzeichen/Symbole (sonst wären alle japanischen/russischen Wörter „leer“)."""
+    try:
+        import sprachen
+        schrift = sprachen.SPRACHEN.get(code, {}).get("schrift", "latein")
+    except ImportError:
+        schrift = "latein"
+    if schrift == "latein":
+        return wort_schluessel(text, True)
+    t = unicodedata.normalize("NFKC", str(text or "").split("/")[0].replace("|", " ")).casefold()
+    t = "".join(c if not unicodedata.category(c).startswith(("P", "S")) else " " for c in t)
+    return " ".join(t.split())
+
+
+def _wl_pruefe(de, wort, notiz, zs, roh_de=None):
+    """Stufe 10: Prüfen je Zeile (auch beim Anlegen). → (Fehlertext oder None, Hinweise)."""
+    import uebersetzer
+    zs_text = gl.zs_name(code=zs)
+    if _formel(roh_de if roh_de is not None else de, de, wort, notiz):
+        return gl.pm("k_formel", "fehler")["text"], []
+    for feld, wert, name in (("de", de, gl.text_in(L("Deutsch", "German", "Alemán"))), ("wort", wort, zs_text),
+                             ("notiz", notiz, gl.text_in(L("Notiz", "Note", "Nota")))):
+        if len(wert) > WL_LAENGE[feld]:
+            return tx("wl_lang", feld=name, n=len(wert), max=WL_LAENGE[feld]), []
+    if not (de or wort):
+        return tx("idee_leer", zs=zs_text), []
+    if de and _WL_GANS.sub("", de) == "":
+        return tx("wl_nur_gans"), []
+    if de and not any(c.isalpha() for c in _WL_GANS.sub("", de)):
+        return tx("wl_keine_buchstaben"), []
+    hinweise = []
+    if wort:
+        ohne = re.sub(r"[/|;:]", " ", wort)
+        if not uebersetzer.erlaubt(zs).fullmatch(ohne):
+            hinweise.append(tx("wl_zeichen", zs=zs_text))
+        fremd = sorted({c for c in wort if c in "äöÄÖß"})
+        if zs == "es" and fremd:
+            hinweise.append(gl.pm("k_umlaut", "warnung", zeichen=" ".join(fremd))["text"])
+    return None, hinweise
+
+
+def _wl_vorhanden_schluessel(vorhanden, zs):
+    """Schlüssel der vorhandenen Ideen und Karten (Deutsch + Wort der Kartensprache) → {schlüssel: Eintrag}."""
+    ideen, karten = {}, {}
+    for i in vorhanden.get("ideen") or []:
+        for s in (("de", wort_schluessel(i.get("de"))), ("zs", wort_schluessel_zs(i.get("es"), zs))):
+            if s[1]:
+                ideen.setdefault(s, i)
+    for k in vorhanden.get("karten") or []:
+        for s in (("de", wort_schluessel(k.get("de"))), ("zs", wort_schluessel_zs(k.get("es"), zs))):
+            if s[1]:
+                karten.setdefault(s, k)
+    return ideen, karten
+
+
+def _wl_doppelt(z, zs, ideen, karten, liste):
+    """Stufe 11: Status doppelt_liste | idee_da | karte_da (nicht vorausgewählt, aber wählbar) – merkt die Zeile in
+    liste ({schlüssel: Zeile}), damit spätere Zeilen sie finden."""
+    schluessel = [s for s in (("de", wort_schluessel(z["de"])), ("zs", wort_schluessel_zs(z["wort"], zs))) if s[1]]
+    karte = next((karten[s] for s in schluessel if s in karten), None)
+    idee = next((ideen[s] for s in schluessel if s in ideen), None)
+    frueher = next((liste[s] for s in schluessel if s in liste), None)
+    for s in schluessel:
+        liste.setdefault(s, z)
+    if karte is not None:
+        z.update(status="karte_da", text=tx("i_idee_als_karte", nr=karte.get("nr") or "–", bild=karte.get("bild", "")))
+    elif idee is not None:
+        z.update(status="idee_da", text=tx("wl_idee_da"))
+    elif frueher is not None:
+        anders = frueher["wort"] if frueher["wort"] and wort_schluessel_zs(frueher["wort"], zs) \
+            != wort_schluessel_zs(z["wort"], zs) else ""
+        z.update(status="doppelt_liste", text=tx("wl_doppelt_anders", nr=frueher["nr"], wort=anders) if anders
+                 else tx("wl_doppelt", nr=frueher["nr"]))
+    return z
+
+
+def wortliste_lesen(roh: bytes, optionen=None):
+    """Wortliste (Datei-Bytes oder eingefügter Text als UTF-8) → dict(zeilen, erkannt, hinweise, zahlen, zs).
+    optionen: trenner (WL_TRENNER), kopf (auto|ja|nein), tauschen, einspaltig (de|zs), gans (Standard an), zs
+    (Kartensprache), vorhanden={ideen, karten} für die Doppelt-Prüfung. Ganze Liste unbrauchbar → WortlisteFehler."""
+    o = dict(optionen or {})
+    zs = o.get("zs") or "es"
+    zs_text = gl.zs_name(code=zs)
+    roh = bytes(roh or b"")
+    if len(roh) > WL_MAX_BYTES:
+        raise WortlisteFehler("wl_gross", mb=WL_MAX_BYTES // (1024 * 1024))
+    if not roh.strip():
+        raise WortlisteFehler("wl_leer")
+    art = _wl_dateiart(roh)
+    if art:
+        raise WortlisteFehler("wl_dateiart", art=art)
+    text, kodierung, hinweise = _wl_dekodieren(roh)
+    text = _wl_bereinigen(text)
+    kommentare = leer = 0
+    inhalt = []                                                    # (Zeilennummer der Datei, Text)
+    for nr, zeile in enumerate(text.split("\n"), 1):
+        zeile = zeile.strip(" ")
+        if not zeile.strip():
+            leer += 1
+        elif zeile.lstrip().startswith("#"):
+            kommentare += 1
+        else:
+            inhalt.append((nr, _WL_LISTENZEICHEN.sub("", zeile.strip())))
+    if not inhalt:
+        raise WortlisteFehler("wl_leer")
+    trenner = o.get("trenner") if o.get("trenner") in WL_TRENNER else "auto"
+    if trenner == "auto":
+        trenner = _wl_trenner_waehlen([z for _, z in inhalt])
+    zellen = [(nr, _wl_zellen(z, trenner)) for nr, z in inhalt]
+    # Kopfzeile
+    kopf_wahl = o.get("kopf") if o.get("kopf") in ("ja", "nein") else "auto"
+    rollen = [_wl_kopf_rolle(c) for c in zellen[0][1]]
+    ist_kopf = kopf_wahl == "ja" or (kopf_wahl == "auto" and all(rollen) and any(zellen[0][1]))
+    einspaltig = "zs" if o.get("einspaltig") == "zs" else "de"
+    ordnung, kopf_sprache = None, None
+    if ist_kopf:
+        zellen = zellen[1:]
+        if all(rollen):
+            ordnung = ["de" if r == "de" else "notiz" if r == "notiz" else "wort" for r in rollen]
+            if len(set(ordnung)) != len(ordnung):
+                ordnung = None
+            codes = [r[1] for r in rollen if isinstance(r, tuple) and r[1]]
+            if codes and codes[0] != zs:
+                kopf_sprache = codes[0]
+        if not zellen:
+            raise WortlisteFehler("wl_nur_kopf")
+    if len(zellen) > WL_MAX_ZEILEN:
+        raise WortlisteFehler("wl_zu_viele", n=len(zellen), max=WL_MAX_ZEILEN)
+    getauscht = bool(ordnung and "wort" in ordnung and "de" in ordnung and ordnung.index("wort") < ordnung.index("de"))
+    if kopf_sprache:
+        hinweise.append(tx("wl_kopf_sprache", sprache=gl.zs_name(code=kopf_sprache), zs=zs_text))
+    tauschen = str(o.get("tauschen") or "") in ("1", "true", "ja")
+    gans = str(o.get("gans", "1")) not in ("0", "false", "nein")
+    ideen, karten = _wl_vorhanden_schluessel(o.get("vorhanden") or {}, zs)
+    liste, zeilen, komma3 = {}, [], 0
+    for nr, c in zellen:
+        z = dict(nr=nr, roh=" | ".join(c)[:300], de="", wort="", notiz="", status="neu", text=tx("wl_neu"),
+                 hinweise=[], wahl=True)
+        if len(c) > 3:
+            z.update(status="fehler", text=tx("wl_spalten", n=len(c), zs=zs_text), wahl=False)
+            zeilen.append(z)
+            continue
+        if trenner == "komma" and len(c) == 3:
+            komma3 += 1
+        if ordnung:
+            felder = ordnung + [f for f in ("de", "wort", "notiz") if f not in ordnung]
+        else:
+            felder = ["de" if einspaltig == "de" else "wort"] if len(c) == 1 else ["de", "wort", "notiz"]
+        werte = dict(zip(felder, c))
+        if tauschen:
+            werte["de"], werte["wort"] = werte.get("wort", ""), werte.get("de", "")
+        roh_de = werte.get("de", "")
+        de = roh_de
+        if gans and de:
+            de = _WL_GANS.sub("", de)
+            de = f"Gans {de}" if de else "Gans"
+        z.update(de=de, wort=werte.get("wort", ""), notiz=werte.get("notiz", ""))
+        fehler, z["hinweise"] = _wl_pruefe(z["de"], z["wort"], z["notiz"], zs, roh_de)
+        if fehler:
+            z.update(status="fehler", text=fehler, wahl=False)
+        else:
+            _wl_doppelt(z, zs, ideen, karten, liste)
+            z["wahl"] = z["status"] == "neu"
+        zeilen.append(z)
+    if komma3:
+        hinweise.append(tx("wl_komma_alt"))
+    zahlen = dict(zeilen=len(zeilen), neu=sum(1 for z in zeilen if z["status"] == "neu"),
+                  doppelt=sum(1 for z in zeilen if z["status"] in ("doppelt_liste", "idee_da", "karte_da")),
+                  fehler=sum(1 for z in zeilen if z["status"] == "fehler"),
+                  hinweise=sum(1 for z in zeilen if z["hinweise"]), kommentare=kommentare, leer=leer)
+    erkannt = dict(kodierung=kodierung, trenner=trenner, kopf=ist_kopf, getauscht=getauscht, tauschen=tauschen,
+                   einspaltig=einspaltig, gans=gans, kopf_sprache=kopf_sprache)
+    return dict(zeilen=zeilen, erkannt=erkannt, hinweise=hinweise, zahlen=zahlen, zs=zs, zs_name=zs_text)
+
+
+def _wl_vorhanden():
+    return dict(ideen=_ideen_lesen()["ideen"], karten=UI.karten_daten()["karten"])
+
+
+def wortliste_pruefen(roh: bytes, q):
+    eins = lambda k, d="": (q.get(k) or [d])[0]                     # noqa: E731
+    optionen = {k: eins(k) for k in ("trenner", "kopf", "tauschen", "einspaltig") if eins(k)}
+    optionen.update(gans=eins("gans", "1"), zs=UI.zielsprache(), vorhanden=_wl_vorhanden())
+    return wortliste_lesen(roh, optionen)
+
+
+def _wl_fingerabdruck(i):
+    roh = json.dumps([i.get("de", ""), i.get("es", ""), i.get("notiz", ""), i.get("bild", "")], ensure_ascii=False)
+    return hashlib.sha1(roh.encode("utf-8")).hexdigest()[:16]
+
+
+def wortliste_uebernehmen(daten):
+    """Ausgewählte Zeilen als Ideen anlegen – zustandslos: jede Zeile wird erneut geprüft (Stufe 10–11, gegen den
+    Stand jetzt), alles in einem Schreibvorgang unter _ideen_lock. Kartensprache gewechselt → 409."""
+    zs = UI.zielsprache()
+    if daten.get("zs") != zs:
+        e = UI.Meldung("ungueltig", status=409, extra={"code": "zs_geaendert"})
+        e.args = (tx("wl_zs_geaendert"),)
+        raise e
+    roh_zeilen = daten.get("zeilen")
+    if not isinstance(roh_zeilen, list) or len(roh_zeilen) > WL_MAX_ZEILEN \
+            or not all(isinstance(z, dict) for z in roh_zeilen):
+        raise UI.Meldung("ungueltig")
+    if not roh_zeilen:
+        raise ValueError(tx("wl_nichts"))
+    angelegt, uebersprungen = [], []
+    with _ideen_lock:
+        d = _ideen_lesen()
+        ideen, karten = _wl_vorhanden_schluessel(dict(ideen=d["ideen"], karten=UI.karten_daten()["karten"]), zs)
+        liste, wl, jetzt = {}, secrets.token_hex(6), time.time()
+        for n, r in enumerate(roh_zeilen):
+            nr = r.get("nr") if isinstance(r.get("nr"), int) else n + 1
+            z = dict(nr=nr, de=_wl_feld(r.get("de")), wort=_wl_feld(r.get("wort")), notiz=_wl_feld(r.get("notiz")),
+                     status="neu")
+            fehler, _ = _wl_pruefe(z["de"], z["wort"], z["notiz"], zs)
+            if not fehler:
+                _wl_doppelt(z, zs, ideen, karten, liste)
+            if fehler or z["status"] != "neu":
+                uebersprungen.append(dict(nr=nr, de=z["de"], wort=z["wort"], status=z["status"] if not fehler else "fehler",
+                                          text=fehler or z["text"]))
+                continue
+            i = dict(id=secrets.token_hex(6), zeit=jetzt - len(angelegt) * 0.001, bild="", de=z["de"], es=z["wort"],
+                     notiz=z["notiz"], es_auto="", wl=wl)
+            i["fp"] = _wl_fingerabdruck(i)
+            angelegt.append(i)
+        if angelegt:
+            d["ideen"][0:0] = angelegt                           # Reihenfolge wie in der Liste, ganz oben
+            d.setdefault("wortlisten", []).insert(0, dict(wl=wl, n=len(angelegt), zeit=jetzt))
+            d["wortlisten"] = d["wortlisten"][:20]
+            _ideen_schreiben(d)
+    return dict(angelegt=len(angelegt), uebersprungen=uebersprungen, wl=wl if angelegt else "", **ideen_liste())
+
+
+def wortliste_rueckgaengig(daten):
+    """Entfernt nur unveränderte Ideen dieser Wortliste (Fingerabdruck gleich, kein Bild); geänderte bleiben stehen,
+    inzwischen als Karte aufgenommene zählen als „schon Karte“."""
+    wl = str(daten.get("wl") or "")
+    if not re.fullmatch(r"[0-9a-f]{12}", wl):
+        raise UI.Meldung("ungueltig")
+    with _ideen_lock:
+        d = _ideen_lesen()
+        eintrag = next((w for w in d.get("wortlisten", []) if w.get("wl") == wl), None)
+        eigene = [i for i in d["ideen"] if i.get("wl") == wl]
+        if eintrag is None and not eigene:
+            raise ValueError(tx("wl_rueck_fehlt"))
+        weg = [i for i in eigene if not i.get("bild") and i.get("fp") == _wl_fingerabdruck(i)]
+        geblieben = len(eigene) - len(weg)
+        schon_karte = max(0, int((eintrag or {}).get("n", 0)) - len(eigene))
+        ids = {i["id"] for i in weg}
+        d["ideen"] = [i for i in d["ideen"] if i.get("id") not in ids]
+        if not geblieben:
+            d["wortlisten"] = [w for w in d.get("wortlisten", []) if w.get("wl") != wl]
+        elif eintrag is not None:
+            eintrag["n"] = geblieben
+        _ideen_schreiben(d)
+    return dict(entfernt=len(weg), geaendert=geblieben, schon_karte=schon_karte, **ideen_liste())
 
 
 # =============================================================================================
@@ -1007,7 +1516,8 @@ LAN_TEXTE = {
                          "Eso solo funciona en la computadora; todo lo demás es tuyo en el celular."),
 }
 # Was das Handy nicht darf: Programm beenden/deinstallieren, Dinge am Rechner öffnen, Start- und Handy-Einstellungen.
-LAN_GESPERRT = {"/api/deinstallieren", "/api/beenden", "/api/oeffnen", "/api/lan", "/api/start-einstellung"}
+LAN_GESPERRT = {"/api/deinstallieren", "/api/beenden", "/api/oeffnen", "/api/lan", "/api/start-einstellung",
+                "/api/neue-version"}
 
 
 def lan_gesperrt(h, weg):
@@ -1200,7 +1710,7 @@ def get(h, weg, q):
     return False
 
 
-ROH_WEGE = ("/api/import", "/api/idee-bild")
+ROH_WEGE = ("/api/import", "/api/idee-bild", "/api/wortliste-pruefen")
 
 
 def post_roh(h, weg, q):
@@ -1215,6 +1725,11 @@ def post_roh(h, weg, q):
             return True
         h._senden(200, idee_bild_setzen(q.get("id", [""])[0], h.rfile.read(n)))
         return True
+    if weg == "/api/wortliste-pruefen":
+        if n > WL_MAX_BYTES:
+            raise WortlisteFehler("wl_gross", mb=WL_MAX_BYTES // (1024 * 1024))
+        h._senden(200, wortliste_pruefen(h.rfile.read(n) if n > 0 else b"", q))
+        return True
     return False
 
 
@@ -1223,9 +1738,12 @@ POST_WEGE = {
     "/api/import-uebernehmen": import_uebernehmen,
     "/api/import-verwerfen": import_verwerfen,
     "/api/idee": idee_speichern,
+    "/api/idee-wort": idee_wort_fuellen,
     "/api/idee-weg": idee_weg,
     "/api/idee-zurueck": idee_zurueck,
     "/api/idee-aufnehmen": idee_aufnehmen,
+    "/api/wortliste-uebernehmen": wortliste_uebernehmen,
+    "/api/wortliste-rueckgaengig": wortliste_rueckgaengig,
     "/api/start-einstellung": start_setzen,
     "/api/deinstallieren": deinstallieren,
     "/api/uebersetzen-de": lambda d: uebersetzen_de(d),

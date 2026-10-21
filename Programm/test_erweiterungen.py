@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-ME GOOS-TA DEUTSCH – Selbsttest der Erweiterungen                   Version 2.1 (20.10.2026)
+ME GOOS-TA DEUTSCH – Selbsttest der Erweiterungen                   Version 2.2 (21.10.2026)
 Prüft Import/Export, Ideen, Programmstart-Wahl, die Schutzregeln des Deinstallierens und die Hilfe – wie der Selbsttest in
 einer Kopie des Projekts mit den Beispielkarten und einem eigenen Datenordner (nichts Eigenes wird berührt, nichts
 wird wirklich deinstalliert, kein Browser wird geöffnet). Ergänzt test_gans_lernkarten.py (der bleibt unverändert).
@@ -1195,21 +1195,24 @@ def test_mac(tmp):
                and letzte.startswith("exec ") and aufruf_aus(shlex.split(letzte)), letzte[:200])
     finally:
         starter.MAC_APP, subprocess.run, shutil.which, sys.executable, platform.machine = alt
-    chrome = tmp / "Applications" / "Google Chrome.app" / "Contents" / "MacOS" / "Google Chrome"
+    # Name, den es systemweit nicht gibt – auf einem echten Mac (CI) liegt Chrome sonst schon in /Applications
+    chrome = tmp / "Applications" / "MGD Test Chrome.app" / "Contents" / "MacOS" / "Google Chrome"
     chrome.parent.mkdir(parents=True)
     chrome.write_bytes(b"")
-    alt = (starter.WIN, starter.MAC, Path.__dict__.get("home"))
+    alt = (starter.WIN, starter.MAC, Path.__dict__.get("home"), starter.BROWSER)
     starter.WIN, starter.MAC = False, True
+    starter.BROWSER = [("chrome", "Google Chrome", True,
+                        dict(win=[], mac=["/Applications/MGD Test Chrome.app/Contents/MacOS/Google Chrome"], linux=[]))]
     Path.home = staticmethod(lambda: tmp)
     try:
         gefunden = {b["id"]: b["pfad"] for b in starter.finde_browser()}
     finally:
-        starter.WIN, starter.MAC = alt[:2]
+        starter.WIN, starter.MAC, starter.BROWSER = alt[0], alt[1], alt[3]
         if alt[2] is None:
             del Path.home
         else:
             Path.home = alt[2]
-    pruefe("Mac: Browser auch in ~/Applications gefunden", gefunden.get("chrome") == str(tmp) + "/Applications/Google Chrome.app"
+    pruefe("Mac: Browser auch in ~/Applications gefunden", gefunden.get("chrome") == str(tmp) + "/Applications/MGD Test Chrome.app"
            "/Contents/MacOS/Google Chrome", str(gefunden))
 
 
@@ -3000,9 +3003,13 @@ def direkt(methode, weg, koerper=b"", kopf=None):
     pfad, _, abfrage = weg.partition("?")
     s, k, i = ui.verarbeite(methode, pfad, abfrage, koerper, dict({"X-GL-Sprache": "de"}, **(kopf or {})))
     return s, k.get("Content-Type"), i
+def ohne_frei(x):                       # freier Speicherplatz („frei“) ändert sich zwischen zwei Abfragen (CI-Rechner)
+    if isinstance(x, dict):
+        return {k: ohne_frei(v) for k, v in x.items() if k != "frei"}
+    return [ohne_frei(v) for v in x] if isinstance(x, list) else x
 def inhalt(a):
     try:
-        return a[0], a[1], json.loads(a[2])
+        return a[0], a[1], ohne_frei(json.loads(a[2]))
     except ValueError:
         return a
 ui.setze_zielsprache("es")
@@ -4000,7 +4007,8 @@ def test_download_seite(tmp):
     pruefe("Ohne --release-zip: Knöpfe führen zum neuesten Release, ohne Größe und Prüfsumme",
            html2.count(f'href="https://github.com/{konto}/{repo}/releases/latest"') == 9 and zsha not in html2
            and "SHA256SUMS" not in html2, (b2.stdout + b2.stderr)[-400:])
-    pr = lauf(rel_skript, ordner, zip_pfad, "--probe")
+    OHNE_CI = "E36 prüft nur den Plan (CI-Schranke: E39)"
+    pr = lauf(rel_skript, ordner, zip_pfad, "--probe", "--ohne-ci", OHNE_CI)
     m = re.search(r"^#plan (.*)$", pr.stdout, re.M)
     plan = json.loads(m.group(1)) if m else {}
     pruefe("veroeffentliche_release.py --probe: Tag v<Version>, Assets ZIP + SHA256SUMS.txt (Format sha256sum), main, Latest, Adressen, Notizen EN/DE/ES",
@@ -4012,15 +4020,15 @@ def test_download_seite(tmp):
            (pr.stdout + pr.stderr)[-600:])
     karten = ordner / "Programm" / "karten.csv"
     karten.write_text("bild;de;es;notiz\n", encoding="utf-8")
-    nd = lauf(rel_skript, ordner, zip_pfad, "--probe")
+    nd = lauf(rel_skript, ordner, zip_pfad, "--probe", "--ohne-ci", OHNE_CI)
     karten.unlink()
     falsch = rel / "Me-Goos-ta-Deutsch-9.9.zip"
     shutil.copyfile(zip_pfad, falsch)
-    fv = lauf(rel_skript, ordner, falsch, "--probe")
+    fv = lauf(rel_skript, ordner, falsch, "--probe", "--ohne-ci", OHNE_CI)
     lm = ordner / "README.md"
     alt = lm.read_bytes()
     lm.write_bytes(alt + b"\n")
-    zm = lauf(rel_skript, ordner, zip_pfad, "--probe")
+    zm = lauf(rel_skript, ordner, zip_pfad, "--probe", "--ohne-ci", OHNE_CI)
     lm.write_bytes(alt)
     pruefe("--probe lehnt ab: Nutzerdaten im Ordner, falsche Version, ZIP ≠ Ordner – kein Plan",
            nd.returncode != 0 and "karten.csv" in nd.stderr and fv.returncode != 0 and zm.returncode != 0
@@ -4059,6 +4067,892 @@ def test_status_englisch(tmp):
            "Program folder:" in aus["ohne"] and "Set up:" in aus["ohne"] and "Programmordner" not in aus["ohne"]
            and "Programmordner:" in aus["de"] and "Carpeta del programa:" in aus["es"]
            and all(z.count("\n") == 7 for z in aus.values()), {k: v.splitlines()[1:2] for k, v in aus.items()})
+
+
+def test_ci(tmp):
+    """E38 (2.2): Automatische Tests auf GitHub-Rechnern – ci_lauf.py --probe zeigt den Plan (Branch ci, Release-Inhalt +
+    .github, Prüfsumme) ohne Netz und schreibt nichts, verweigert jeden anderen Branch; frischtest.py verweigert die echte
+    Startdatei ohne GITHUB_ACTIONS; tests.yml statisch (Actions per SHA, nur Lesen, kein pull_request, Zeitlimit,
+    fail-fast aus); Release-ZIP ohne .github. Ohne die Dateien des Arbeitsordners (ci_lauf.py, ci/) entfallen alle 5."""
+    print("\n[E38] Automatische Tests auf allen Systemen (CI)")
+    import hashlib
+    import importlib.util
+    arbeit = HIER.parent.parent
+    ci_lauf, frisch = arbeit / "ci_lauf.py", arbeit / "ci" / "github" / "ci" / "frischtest.py"
+    wf, rel_bau = arbeit / "ci" / "github" / "workflows" / "tests.yml", arbeit / "bau_release.py"
+    if not all(x.is_file() for x in (ci_lauf, frisch, wf, rel_bau, arbeit / "veroeffentliche_webapp.py")):
+        print("  (ci_lauf.py und ci/ liegen nur im Arbeitsordner – CI-Prüfungen entfallen)")
+        return
+    env = dict(os.environ, PYTHONIOENCODING="utf-8", GH_TOKEN="", HTTPS_PROXY="http://127.0.0.1:9",
+               HTTP_PROXY="http://127.0.0.1:9")                  # kein Netz: jede Anfrage liefe ins Leere
+    env.pop("GITHUB_ACTIONS", None)
+
+    def lauf(*args):
+        return subprocess.run([sys.executable, *map(str, args)], env=env, cwd=str(tmp), capture_output=True, text=True,
+                              encoding="utf-8", errors="replace", timeout=600)
+    vorher = sorted((p.name, p.stat().st_mtime) for p in arbeit.iterdir() if p.is_file())
+    pr = lauf(ci_lauf, HIER.parent, "--probe")
+    nachher = sorted((p.name, p.stat().st_mtime) for p in arbeit.iterdir() if p.is_file())
+    m = re.search(r"^#plan (.*)$", pr.stdout, re.M)
+    plan = json.loads(m.group(1)) if m else {}
+    spec = importlib.util.spec_from_file_location("ci_lauf_e38", ci_lauf)
+    cl = importlib.util.module_from_spec(spec)
+    vorher_bc = sys.dont_write_bytecode
+    sys.dont_write_bytecode = True                              # kein __pycache__ im Arbeitsordner
+    try:
+        spec.loader.exec_module(cl)
+    finally:
+        sys.dont_write_bytecode = vorher_bc
+    rel = tmp / "e38-release"
+    subprocess.run([sys.executable, str(rel_bau), str(HIER.parent), str(rel)], env=env, capture_output=True, timeout=300)
+    summe = cl.inhalt_pruefsumme(rel / HIER.parent.name) if (rel / HIER.parent.name).is_dir() else ""
+    pruefe("ci_lauf.py --probe: Plan für Branch ci (Release-Inhalt + tests.yml + frischtest.py, Prüfsumme = Release-Ordner), ohne Netz, schreibt nichts",
+           pr.returncode == 0 and plan.get("branch") == "ci" and plan.get("workflows") == ["tests.yml", "woechentlich.yml"]
+           and {".github/workflows/tests.yml", ".github/ci/frischtest.py"} <= set(plan.get("github", []))
+           and plan.get("pruefsumme") == summe and len(summe) == 64 and plan.get("dateien", 0) > 60 and vorher == nachher,
+           (pr.stdout + pr.stderr)[-500:])
+    b1, b2 = lauf(ci_lauf, HIER.parent, "--probe", "--branch", "main"), lauf(ci_lauf, HIER.parent, "--branch", "gh-pages")
+    quelle = ci_lauf.read_text(encoding="utf-8")
+    pruefe("ci_lauf.py verweigert jeden anderen Branch (main, gh-pages) vor jedem Netz; Force-Push nur nach refs/heads/ci",
+           all(b.returncode != 0 and "verweigert" in b.stderr and "#plan" not in b.stdout for b in (b1, b2))
+           and "ziel_ref = pruefe_branch(branch)" in quelle and quelle.count('"--force"') == 1
+           and 'f"HEAD:{ziel_ref}"' in quelle and 'return f"refs/heads/{BRANCH}"' in quelle, (b1.stderr + b2.stderr)[-300:])
+    f1 = lauf(frisch, "--system", "e38", "--ergebnis", tmp / "e38-ergebnis.json")
+    f2 = lauf(frisch, "--lokal", tmp / "e38-lokal", "--quelle", HIER.parent)
+    pruefe("frischtest.py verweigert die echte Startdatei ohne GITHUB_ACTIONS=true (kein Ergebnis) und --lokal in Temp",
+           f1.returncode != 0 and "GITHUB_ACTIONS" in f1.stderr and not (tmp / "e38-ergebnis.json").exists()
+           and "Frischtest" not in f1.stdout and f2.returncode != 0 and not (tmp / "e38-lokal").exists(),
+           (f1.stdout + f1.stderr + f2.stderr)[-300:])
+    y = wf.read_text(encoding="utf-8")
+    uses = re.findall(r"^\s*-?\s*uses:\s*(\S+)", y, re.M)
+    jobs = re.findall(r"^  ([a-z][a-z0-9_-]*):\s*$", y.split("\njobs:", 1)[1], re.M) if "\njobs:" in y else []
+    zeiten = [int(z) for z in re.findall(r"^\s+timeout-minutes:\s*(\d+)", y, re.M)]
+    pruefe("tests.yml: Actions per Commit-SHA, nur contents: read, Auslöser push auf ci + workflow_dispatch (kein pull_request), "
+           "Zeitlimit je Job, fail-fast aus, keine Secrets",
+           uses and all(re.fullmatch(r"actions/[a-z-]+@[0-9a-f]{40}", u) for u in uses)
+           and re.search(r"^permissions:\n  contents: read\n\n", y, re.M) and "write" not in y and "pull_request" not in y
+           and re.search(r"^on:\n  push:\n    branches: \[ci\]\n  workflow_dispatch:\n\n", y, re.M) and "schedule" not in y
+           and len(jobs) >= 2 and len(zeiten) == len(jobs) and all(0 < z <= 45 for z in zeiten)
+           and "fail-fast: false" in y and "secrets." not in y and y.count("persist-credentials: false") == len(jobs)
+           and all(s in y for s in ("windows-latest", "windows-11-arm", "macos-14", "macos-15-intel", "ubuntu-latest",
+                                    "ubuntu-24.04-arm", "debian:stable-slim")), f"{uses} {jobs} {zeiten}")
+    version = re.search(r'^VERSION = "([\d.]+)', (HIER / "gans_lernkarten.py").read_text(encoding="utf-8"), re.M)[1]
+    zip_pfad = tmp / "e36-release" / f"Me-Goos-ta-Deutsch-{version}.zip"
+    if not zip_pfad.is_file():
+        subprocess.run([sys.executable, str(rel_bau), str(HIER.parent), str(tmp / "e38-zip"), "--zip"], env=env,
+                       capture_output=True, timeout=300)
+        zip_pfad = tmp / "e38-zip" / f"Me-Goos-ta-Deutsch-{version}.zip"
+    namen = zipfile.ZipFile(zip_pfad).namelist() if zip_pfad.is_file() else []
+    oben = {p.relative_to(rel / HIER.parent.name).parts[0] for p in (rel / HIER.parent.name).rglob("*")} if summe else set()
+    pruefe("Release-ZIP und -Ordner ohne .github/.gitattributes (CI-Dateien nur im Branch ci)",
+           len(namen) > 60 and not any(".github" in n or ".gitattributes" in n for n in namen)
+           and not any(o.startswith(".") for o in oben) and hashlib.sha256(b"").hexdigest() != summe, str(sorted(oben))[:200])
+
+
+def test_ci_browser(tmp):
+    """E39 (2.2): Browser-Test, wöchentlicher Lauf und Release-Schranke – browser_test.py statisch (Abläufe A/B1/B2 in drei
+    Engines, keine festen Wartezeiten > 30 s, keine Schlüssel, Playwright nie im Programm), woechentlich.yml und Browser-Job
+    in tests.yml statisch, ci_lauf.py legt web-app/ bzw. (--woechentlich) nur den Wochen-Workflow mit push-Auslöser in den
+    Branch ci, veroeffentliche_release.py --probe nur mit grünem CI-Ergebnis für genau diesen Inhalt (.github/ im Plan, im
+    Ordner ignoriert, --ohne-ci nur mit Begründung), gleiche Prüfsumme wie ci_lauf.py, neuestes_release.py ohne Netz sauber.
+    Ohne die Dateien des Arbeitsordners entfallen alle 7."""
+    print("\n[E39] Browser-Test, wöchentlicher Lauf, Release-Schranke (CI)")
+    import importlib.util
+    arbeit = HIER.parent.parent
+    ci = arbeit / "ci" / "github"
+    bt, nr, woche, wf = ci / "ci" / "browser_test.py", ci / "ci" / "neuestes_release.py", ci / "workflows" / "woechentlich.yml", \
+        ci / "workflows" / "tests.yml"
+    ci_lauf, vr, rel_bau = arbeit / "ci_lauf.py", arbeit / "veroeffentliche_release.py", arbeit / "bau_release.py"
+    if not all(x.is_file() for x in (bt, nr, woche, wf, ci_lauf, vr, rel_bau, arbeit / "bau_webapp.py")):
+        print("  (ci_lauf.py, ci/ und die Release-Skripte liegen nur im Arbeitsordner – Prüfungen entfallen)")
+        return
+    env = dict(os.environ, PYTHONIOENCODING="utf-8", PYTHONDONTWRITEBYTECODE="1", GH_TOKEN="",
+               HTTPS_PROXY="http://127.0.0.1:9", HTTP_PROXY="http://127.0.0.1:9")     # kein Netz
+    env.pop("GITHUB_ACTIONS", None)
+
+    def lauf(*args):
+        return subprocess.run([sys.executable, *map(str, args)], env=env, cwd=str(tmp), capture_output=True, text=True,
+                              encoding="utf-8", errors="replace", timeout=600)
+
+    def modul(pfad, name):
+        spec = importlib.util.spec_from_file_location(name, pfad)
+        m = importlib.util.module_from_spec(spec)
+        vorher = sys.dont_write_bytecode
+        sys.dont_write_bytecode = True
+        try:
+            spec.loader.exec_module(m)
+        finally:
+            sys.dont_write_bytecode = vorher
+        return m
+    # 1) browser_test.py statisch + Aufruf ohne Playwright
+    q = bt.read_text(encoding="utf-8")
+    m = modul(bt, "browser_test_e39")
+    stufen = {(a[0], e) for a in m.ABLAEUFE for e in a[1]}
+    warten = [float(x) for x in re.findall(r"time\.sleep\(\s*([\d.]+)", q)] + \
+        [float(x.replace("_", "")) / 1000 for x in re.findall(r"wait_for_timeout\(\s*([\d_]+)", q)]
+    schluessel = re.findall(r"(ghp_[A-Za-z0-9]{20,}|github_pat_\w{20,}|gho_\w{20,}|AKIA[0-9A-Z]{16}|-----BEGIN [A-Z ]*PRIVATE KEY)", q)
+    imp = [f.name for f in HIER.glob("*.py") if re.search(r"^\s*(import|from)\s+playwright", f.read_text(encoding="utf-8"), re.M)]
+    req = (HIER / "requirements.txt").read_text(encoding="utf-8") + (HIER / "DRITTLIZENZEN.md").read_text(encoding="utf-8")
+    falsch = lauf(bt, "--engines", "netscape")
+    pruefe("browser_test.py: Abläufe A/B1/B2 in Chromium, Firefox und WebKit, keine feste Wartezeit > 30 s, keine Schlüssel, "
+           "Playwright nur im CI (nicht im Programm), falscher Aufruf endet sauber",
+           {(s, e) for s in ("A", "B1", "B2") for e in ("chromium", "firefox", "webkit")} <= stufen and len(m.ABLAEUFE) >= 15
+           and all(w <= 30 for w in warten) and m.ZEIT_GESAMT <= 28 * 60 and not schluessel and not imp
+           and "playwright" not in req.lower() and falsch.returncode != 0 and "Traceback" not in falsch.stderr
+           and m.UNTERORDNER == "/me-goos-ta-deutsch/", f"{sorted(stufen)} {warten} {schluessel} {imp} {falsch.stderr[-200:]}")
+    # 2) woechentlich.yml statisch
+    y = woche.read_text(encoding="utf-8")
+    uses = re.findall(r"^\s*-?\s*uses:\s*(\S+)", y, re.M)
+    jobs = re.findall(r"^  ([a-z][a-z0-9_-]*):\s*$", y.split("\njobs:", 1)[1], re.M) if "\njobs:" in y else []
+    zeiten = [int(z) for z in re.findall(r"^\s+timeout-minutes:\s*(\d+)", y, re.M)]
+    pruefe("woechentlich.yml: Montag 05:00 UTC + workflow_dispatch (kein push/pull_request), nur Lesen, Actions per SHA, "
+           "Prüfsummen-Schritt, Frischtest mit dem veröffentlichten Release auf 7 Systemen, Browser live",
+           re.search(r'^on:\n  schedule:\n    - cron: "0 5 \* \* 1"\n  workflow_dispatch:\n\n', y, re.M)
+           and "pull_request" not in y and "push:" not in y and re.search(r"^permissions:\n  contents: read\n", y, re.M)
+           and "write" not in y and "secrets." not in y and uses and all(re.fullmatch(r"actions/[a-z-]+@[0-9a-f]{40}", u) for u in uses)
+           and re.search(r"name: Prüfsumme[^\n]*SHA256SUMS[^\n]*\n\s+run: python \.github/ci/neuestes_release\.py", y)
+           and y.count("frischtest.py --neuestes-release") == 2 and "browser_test.py --live --neuestes-release" in y
+           and all(s in y for s in ("windows-latest", "windows-11-arm", "macos-14", "macos-15-intel", "ubuntu-latest",
+                                    "ubuntu-24.04-arm", "debian:stable-slim"))
+           and len(jobs) == 4 and len(zeiten) == len(jobs) and all(0 < z <= 45 for z in zeiten)
+           and y.count("persist-credentials: false") == len(jobs) and y.count("needs: release") == 3, f"{jobs} {zeiten} {uses[:2]}")
+    # 3) tests.yml: Browser-Job
+    t2 = wf.read_text(encoding="utf-8")
+    job = t2.split("\n  browser:\n", 1)[1] if "\n  browser:\n" in t2 else ""
+    pruefe("tests.yml: Job browser (Ubuntu: Chromium, Firefox, WebKit · macOS: WebKit), Playwright fest 1.63.0, Ergebnis als Artefakt",
+           "browser-linux, os: ubuntu-latest, engines: \"chromium,firefox,webkit\"" in job
+           and "browser-macos, os: macos-15-intel, engines: \"webkit\"" in job and "playwright==1.63.0" in job
+           and "python .github/ci/browser_test.py --system ${{ matrix.name }}" in job and "name: ergebnis-${{ matrix.name }}" in job
+           and "--live" not in job, job[:200])
+    # 4) ci_lauf.py: web-app/ im Branch ci; --woechentlich nur der Wochen-Workflow mit push-Auslöser
+    cl = modul(ci_lauf, "ci_lauf_e39")
+    pr = lauf(ci_lauf, HIER.parent, "--probe")
+    mp = re.search(r"^#plan (.*)$", pr.stdout, re.M)
+    plan = json.loads(mp.group(1)) if mp else {}
+    rel = tmp / "e39-rel"
+    subprocess.run([sys.executable, str(rel_bau), str(HIER.parent), str(rel)], env=env, capture_output=True, timeout=300)
+    subprocess.run([sys.executable, str(rel_bau), str(HIER.parent), str(rel), "--zip"], env=env, capture_output=True, timeout=300)
+    ordner = rel / HIER.parent.name
+    zips = sorted(rel.glob("Me-Goos-ta-Deutsch-*.zip"))
+    w = tmp / "e39-woche"
+    liste = cl.branch_inhalt(ordner, w, woechentlich=True) if ordner.is_dir() else []
+    wy = (w / ".github" / "workflows" / "woechentlich.yml").read_text(encoding="utf-8") if liste else ""
+    pruefe("ci_lauf.py: Branch ci mit web-app/ (Handy-App + Download-Seite); --woechentlich: nur woechentlich.yml, Auslöser "
+           "push auf ci statt Zeitplan, ohne web-app/",
+           pr.returncode == 0 and plan.get("web_app", 0) >= 10 and plan.get("woechentlich") is False
+           and ".github/ci/browser_test.py" in plan.get("github", []) and liste
+           and not (w / ".github" / "workflows" / "tests.yml").exists() and not (w / "web-app").exists()
+           and wy.startswith(y.split("\non:", 1)[0]) and cl.WOCHE_PROBE in wy and "schedule" not in wy,
+           f"{(pr.stdout + pr.stderr)[-300:]} · {len(liste)}")
+    # 5) veroeffentliche_release.py --probe: CI-Schranke
+    vrm = modul(vr, "veroeffentliche_release_e39")
+    summe = cl.inhalt_pruefsumme(ordner) if ordner.is_dir() else ""
+    version = re.search(r'^VERSION = "([\d.]+)', (HIER / "gans_lernkarten.py").read_text(encoding="utf-8"), re.M)[1]
+    gruen = dict(version=version, pruefsumme=summe, ok=True, lauf="https://example.invalid/lauf", zeit="jetzt",
+                 systeme={"linux-x64": {"ok": True}, "browser-linux": {"ok": True}})
+    (tmp / "e39-gruen.json").write_text(json.dumps(gruen), encoding="utf-8")
+    (tmp / "e39-anders.json").write_text(json.dumps(dict(gruen, pruefsumme="0" * 64)), encoding="utf-8")
+    (tmp / "e39-rot.json").write_text(json.dumps(dict(gruen, ok=False)), encoding="utf-8")
+    (ordner / ".github").mkdir(exist_ok=True)
+    (ordner / ".github" / "zufall.txt").write_text("liegt nur im Ordner", encoding="utf-8")   # Ordner = ZIP trotz .github/
+    z = zips[0] if zips else tmp / "fehlt.zip"
+    ohne, anders, rot, gut = (lauf(vr, ordner, z, "--probe", "--ci-ergebnis", tmp / n) for n in
+                              ("e39-fehlt.json", "e39-anders.json", "e39-rot.json", "e39-gruen.json"))
+    mg = re.search(r"^#plan (.*)$", gut.stdout, re.M)
+    pg = json.loads(mg.group(1)) if mg else {}
+    pruefe("veroeffentliche_release.py --probe: ohne / roter / fremder CI-Lauf → Abbruch vor dem Plan; grün für genau diesen "
+           "Inhalt → Plan mit .github/ (Workflows), Ordner = ZIP trotz .github/ im Ordner",
+           all(x.returncode != 0 and "CI-Schranke" in x.stderr and "#plan" not in x.stdout for x in (ohne, anders, rot))
+           and gut.returncode == 0 and ".github/workflows/woechentlich.yml" in pg.get("github", [])
+           and ".github/ci/browser_test.py" in pg.get("github", []) and pg.get("ci", {}).get("pruefsumme") == summe
+           and "zufall.txt" not in gut.stdout, (ohne.stderr + anders.stderr + rot.stderr + gut.stderr)[-400:])
+    leer = lauf(vr, ordner, z, "--probe", "--ci-ergebnis", tmp / "e39-fehlt.json", "--ohne-ci", "kurz")
+    grund = "GitHub Actions gestört, e39 geprüft"
+    mit = lauf(vr, ordner, z, "--probe", "--ci-ergebnis", tmp / "e39-fehlt.json", "--ohne-ci", grund)
+    notizen = mit.stdout.split("--- Release-Notizen ---", 1)[1] if "--- Release-Notizen ---" in mit.stdout else "?"
+    pruefe("veroeffentliche_release.py --ohne-ci: ohne echte Begründung Abbruch; mit Begründung im Protokoll (Achtung + #plan), "
+           "nie in den Release-Notizen",
+           leer.returncode != 0 and "Begründung" in leer.stderr and mit.returncode == 0 and f"Achtung: Release ohne grünen CI-Lauf – Begründung: {grund}" in mit.stdout
+           and grund in (re.search(r"^#plan (.*)$", mit.stdout, re.M) or [""])[0] and grund not in notizen and "Warnung" not in mit.stdout,
+           (leer.stderr + mit.stderr)[-300:])
+    # 6) gleiche Prüfsumme in beiden Skripten; neuestes_release.py ohne Netz
+    shutil.rmtree(ordner / ".github", ignore_errors=True)
+    nrl = lauf(nr, "--ziel", tmp / "e39-neu", "--repo", "beispiel/repo")
+    pruefe("Inhalts-Prüfsumme: veroeffentliche_release.py = ci_lauf.py; neuestes_release.py ohne Netz → sauber „nicht geladen“ (Exit 1)",
+           bool(summe) and vrm.inhalt_pruefsumme(ordner, vrm.dateien(ordner)) == summe and nrl.returncode == 1
+           and "nicht geladen" in nrl.stdout and "Traceback" not in nrl.stderr, nrl.stdout[-200:] + nrl.stderr[-200:])
+
+
+def test_aussprache(tmp):
+    """E40 (2.2): Deutsche Aussprache beim Lernen – 🔊 neben dem deutschen Text erst nach dem Aufdecken, nur mit lokaler
+    de-Stimme (de-DE → de-AT → de-CH → andere de), gemeinsamer Weg vorlesen(), Beenden bricht ab; Lernseite ebenso (Stimme
+    beim Laden + voiceschanged, Knopf nur umgedreht); keine neue Taste, kein {{tts}} im Anki-Paket. Den Klick mit
+    nachgebildeter speechSynthesis prüft browser_test.py (B1, alle Engines)."""
+    print("\n[E40] Deutsche Aussprache beim Lernen")
+    ui = (HIER / "ui" / "index.html").read_text(encoding="utf-8")
+    i = ui.index("function lernStimme(code)")
+    stimme = ui[i:ui.index("\n}\n", i)]
+    j = ui.index("function lernKarteHTML(k)")
+    karte = ui[j:ui.index("\n}\n", j)]
+    k = ui.index('$("#lern-inhalt").addEventListener("click"')
+    klick = ui[k:ui.index("\n});\n", k)]
+    pruefe("Stimme für Deutsch: nur lokal (localService), Reihenfolge de-DE → de-AT → de-CH → andere de",
+           stimme.count("localService !== false") == 2 and '["de-de", "de-at", "de-ch"]' in stimme
+           and 'ziel.includes(lang(v).split("-")[0])' in stimme, stimme[:200])
+    pruefe("🔊 Deutsch nur nach dem Aufdecken (beide Richtungen), nur mit Stimme, mit aria-label; Text bleibt lang=\"de\"",
+           karte.count('data-ln="vorlesen-de"') == 1 and 'LS.gezeigt && k.de && lernStimme("de") ?' in karte
+           and 'aria-label="${esc(t("h_ln_vorlesen_de"))}"' in karte and '<span lang="de">${esc(k.de)}</span>' in karte
+           and karte.count("${deZeile}") == 2 and "deZeile" not in karte.split("const vorn", 1)[1].split("\n", 1)[0])
+    pruefe("Klick liest genau den deutschen Text über vorlesen() (cancel, Stimme, lang); Beenden ruft cancel",
+           'if (a === "vorlesen-de" && LS && LS.n.karte && LS.gezeigt) { vorlesen(LS.n.karte.de, lernStimme("de")); return; }' in klick
+           and "vorlesen(k.wort, lernStimme(k.sprache))" in klick and "speechSynthesis.cancel(); const s = new SpeechSynthesisUtterance(text); s.voice = stimme; s.lang = stimme.lang;" in ui
+           and "function lernBeenden() { LS = null; if (window.speechSynthesis) speechSynthesis.cancel();" in ui)
+    import lernkarten_digital as ld
+    ls = ld.LERNSEITE
+    pruefe("Lernseite: Stimme beim Laden + voiceschanged, nur lokal, Knopf nur umgedreht und mit Stimme, Texte de/en/es",
+           "function deStimme()" in ls and "localService !== false" in ls and 'speechSynthesis.addEventListener("voiceschanged"' in ls
+           and '$("sprechen").hidden = !(stimme && aktuell && umgedreht());' in ls and "if (!aktuell || !stimme || !umgedreht()) return;" in ls
+           and 'u.lang = "de-DE"' not in ls and all("Deutsch" in ld.LERNSEITE_TEXTE[s]["vorlesen"] or "German" in ld.LERNSEITE_TEXTE[s]["vorlesen"]
+                                                     or "alemán" in ld.LERNSEITE_TEXTE[s]["vorlesen"] for s in ("de", "en", "es")))
+    tasten = re.search(r'ln_tasten: "([^"]*)"', ui)
+    pruefe("Keine neue Taste (Belegung 1–4/Leertaste/Strg+Z/Esc unverändert), kein {{tts}} im Anki-Paket, Hover-Text in de/en/es",
+           tasten and "1" in tasten.group(1) and "{{tts" not in (HIER / "lernkarten_digital.py").read_text(encoding="utf-8")
+           and ui.count("h_ln_vorlesen_de:") == 3 and "vorlesen-de" not in ui[ui.index('document.addEventListener("keydown"'):][:4000])
+
+
+E41_PROZESS = r"""
+import json, os, socket, sys, urllib.error, urllib.request
+from pathlib import Path
+sys.path.insert(0, sys.argv[1])
+os.environ.pop("MGD_IM_PROZESS", None)
+p, port = Path(sys.argv[1]), int(sys.argv[2])
+netz = []                                           # jeder Versuch, einen fremden Rechner zu erreichen
+LOKAL = {"127.0.0.1", "localhost", "::1", None}
+_gai, _conn = socket.getaddrinfo, socket.socket.connect
+def gai(host, *a, **k):
+    if host not in LOKAL:
+        netz.append(("dns", host))
+    return _gai(host, *a, **k)
+def conn(self, adr):
+    if isinstance(adr, tuple) and adr[0] not in LOKAL:
+        netz.append(("connect", adr[0]))
+    return _conn(self, adr)
+socket.getaddrinfo, socket.socket.connect = gai, conn
+import gans_ui as ui, gans_lernkarten as gl, uebersetzer as ue
+e = {}
+abrufe = []
+SZ = {"f": None}
+class Antwort:
+    def __init__(s, roh, art):
+        s.roh, s.headers = roh, {"Content-Type": art}
+    def read(s, n=-1):
+        return s.roh[:n] if n >= 0 else s.roh
+    def __enter__(s):
+        return s
+    def __exit__(s, *a):
+        return False
+class Oeffner:
+    def __init__(s, handler):
+        s.handler = handler
+    def open(s, anfrage, timeout=None):
+        abrufe.append(dict(url=anfrage.full_url, methode=anfrage.get_method(), timeout=timeout, daten=anfrage.data,
+                           weiter=any(isinstance(h, ue._KeineWeiterleitung) for h in s.handler),
+                           kopf={k.lower(): v for k, v in anfrage.header_items()}))
+        return SZ["f"](anfrage)
+echter_oeffner = urllib.request.build_opener
+ue.urllib.request.build_opener = lambda *h: Oeffner(h)
+def j(d):
+    return lambda a: Antwort(json.dumps(d).encode(), "application/json; charset=utf-8")
+def fehler(code):
+    def f(a):
+        raise urllib.error.HTTPError(a.full_url, code, "x", {}, None)
+    return f
+def wirf(x):
+    def f(a):
+        raise x
+    return f
+def umleiten(a):
+    ue._KeineWeiterleitung().redirect_request(a, None, 302, "", {}, "https://evil.example/")
+def direkt(methode, weg, koerper=b"{}", am_handy=False):
+    s, k, i = ui.verarbeite(methode, weg, "", koerper, {"X-GL-Sprache": "de", "Content-Type": "application/json"}, am_handy=am_handy)
+    try:
+        return s, json.loads(i)
+    except ValueError:
+        return s, {}
+gl.setze_sprache("de")
+wa = p / "web_adresse.txt"
+wa.write_text("https://lukasdiegans.github.io/me-goos-ta-deutsch/" + chr(10), encoding="utf-8")
+def frage(f):
+    SZ["f"] = f
+    return direkt("POST", "/api/neue-version")
+eigene = gl.VERSION.split()[0]
+alt_version = gl.VERSION
+v = [int(x) for x in eigene.split(".")]
+hoeher, tiefer = f"v{v[0]}.{v[1] + 1}", f"{v[0]}.{max(0, v[1] - 1)}" if v[1] else f"{v[0] - 1}.9"
+r = {}
+r["neuer"] = frage(j({"tag_name": hoeher, "published_at": "2026-11-02T10:00:00Z", "html_url": "https://evil.example/",
+                      "body": "<script>x</script>", "assets": [{"browser_download_url": "https://evil.example/x.zip"}]}))
+r["gleich"] = frage(j({"tag_name": eigene, "published_at": "2026-10-20T08:00:00Z"}))
+r["gleich_v"] = frage(j({"tag_name": "v" + eigene}))
+r["aelter"] = frage(j({"tag_name": tiefer, "published_at": "javascript:alert(1)"}))
+anfrage = abrufe[0] if abrufe else {}
+gl.VERSION = "2.9 (1.1.2027)"
+r["zehn"] = frage(j({"tag_name": "v2.10"}))
+gl.VERSION = alt_version
+for n, tag in (("latest", "latest"), ("v2", "v2"), ("html", "<b>2.3</b>"), ("leer", None)):
+    r["tag_" + n] = frage(j({"tag_name": tag}))
+r["html_antwort"] = frage(lambda a: Antwort(b"<html>2.9</html>", "text/html"))
+r["gross"] = frage(lambda a: Antwort(json.dumps({"tag_name": "v9.9", "x": "a" * 200_001}).encode(), "application/json"))
+r["kein_dict"] = frage(lambda a: Antwort(b"[1, 2]", "application/json"))
+for n, f in (("403", fehler(403)), ("429", fehler(429)), ("404", fehler(404)), ("500", fehler(500)),
+             ("zeit", wirf(TimeoutError("timed out"))), ("netz", wirf(urllib.error.URLError(OSError("getaddrinfo failed")))),
+             ("umleitung", umleiten)):
+    r[n] = frage(f)
+e["r"] = {k: [s, d.get("ergebnis"), d.get("code"), d.get("version"), d.get("datum"), sorted(d)] for k, (s, d) in r.items()}
+e["anfrage"] = anfrage
+e["meldungen"] = {k: d.get("meldung") or d.get("fehler") for k, (s, d) in r.items()}
+# manipulierte web_adresse.txt → keine Anfrage
+vorher = len(abrufe)
+falsch = []
+for zeile in ("https://evil.example/me-goos-ta-deutsch/", "https://gans.github.io/../", "http://gans.github.io/repo/",
+              "https://gans.github.io/repo/?x=1", "https://gans.github.io.evil.example/repo/", "javascript:alert(1)", ""):
+    wa.write_text(zeile, encoding="utf-8")
+    falsch.append(frage(j({"tag_name": "v9.9"})))
+e["falsch"] = [[s, d.get("code")] for s, d in falsch] + [len(abrufe) - vorher]
+wa.write_text("https://lukasdiegans.github.io/me-goos-ta-deutsch/", encoding="utf-8")
+# Host-Sperre: Übersetzung nicht an api.github.com, Versionsprüfung nur dort
+sperre = []
+for url, hosts in (("https://api.github.com/repos/a/b/releases/latest", None), ("https://de.wiktionary.org/w/api.php", ("api.github.com",)),
+                   ("https://api.mymemory.translated.net/get", ("api.github.com",)), ("http://api.github.com/x", ("api.github.com",))):
+    try:
+        ue.pruefe_adresse(url, hosts)
+        sperre.append(False)
+    except ue.UebersetzungsFehler:
+        sperre.append(True)
+sperre.append(ue.pruefe_adresse("https://api.github.com/repos/a/b/releases/latest", ("api.github.com",)) == "api.github.com")
+sperre.append("api.github.com" in ue.ERLAUBTE_HOSTS)
+e["sperre"] = sperre
+# Handy-Zugang und Web-App: 403
+vorher = len(abrufe)
+SZ["f"] = j({"tag_name": "v9.9"})
+h = direkt("POST", "/api/neue-version", am_handy=True)
+ui.im_browser = lambda: True
+w = direkt("POST", "/api/neue-version")
+ui.im_browser = lambda: False
+e["handy"] = [h[0], w[0], ui.tx("nur_rechner") == w[1].get("fehler"), len(abrufe) - vorher]
+# kein automatischer Abruf: Server starten und alles laden, was die Seite beim Start und in Hilfe/Über lädt
+netz.clear()
+ui.starte(port, browser=False)
+oeffner = echter_oeffner(urllib.request.ProxyHandler({}))
+codes = []
+vorher = len(abrufe)
+for weg in ("/", "/api/status", "/api/karten", "/api/ideen", "/api/werkzeuge", "/api/tools", "/api/hilfe?doc=leitfaden",
+            "/api/hilfe?doc=spec", "/api/status"):
+    a = urllib.request.Request(f"http://127.0.0.1:{ui.PORT}{weg}", headers={"Cookie": f"mgd_{ui.PORT}={ui.TOKEN}", "X-GL-Token": ui.TOKEN})
+    try:
+        with oeffner.open(a, timeout=60) as x:
+            codes.append(x.status)
+    except urllib.error.HTTPError as f:
+        codes.append(f.code)
+e["start"] = [codes, len(abrufe) - vorher, list(netz)]
+wa.unlink()
+print("#e41 " + json.dumps(e, ensure_ascii=False, default=str))
+"""
+
+
+def test_neue_version(p, tmp):
+    """E41 (2.2): Nach neuer Version suchen – Antworten von GitHub nachgebildet (neuer/gleich/älter, v-Präfix, 2.10 > 2.9,
+    kaputte Tags, zu groß, falscher Inhaltstyp, 403/429, 404, Zeitlimit, Weiterleitung), manipulierte web_adresse.txt →
+    keine Anfrage, getrennte Host-Listen, Handy/Web-App 403, kein automatischer Abruf (Server mit Netz-Mitschnitt), statisch:
+    die Adresse genau einmal in der Seite und nur im Klick-Handler, api.github.com nur in gans_ui.neue_version()."""
+    print("\n[E41] Nach neuer Version suchen (nur auf Klick)")
+    daten = tmp / "daten-e41"
+    daten.mkdir()
+    env = dict(os.environ, PYTHONIOENCODING="utf-8", MGD_DATEN=str(daten), MGD_START_ID="test")
+    env.pop("MGD_IM_PROZESS", None)
+    r = subprocess.run([sys.executable, "-c", E41_PROZESS, str(p), str(tg._freier_port())], cwd=p, env=env,
+                       capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=300)
+    m = re.search(r"^#e41 (.*)$", r.stdout, re.M)
+    e = json.loads(m.group(1)) if m else {}
+    if not m:
+        print((r.stdout + r.stderr)[-2000:])
+    x = e.get("r") or {}
+    ok = ["datum", "eigene", "ergebnis", "version"]
+    pruefe("Neuer / gleich (mit und ohne v) / älter: neuer · aktuell · voraus; nur Version + Datum aus der Antwort (keine Links, kein Text)",
+           (x.get("neuer") or [0])[:2] == [200, "neuer"] and x["neuer"][4] == "2026-11-02" and x["neuer"][5] == ok
+           and x.get("gleich", [0])[1] == "aktuell" and x.get("gleich_v", [0])[1] == "aktuell"
+           and x.get("aelter", [0])[1] == "voraus" and x["aelter"][4] == "" and "evil" not in json.dumps(e.get("r")), str(x)[:600])
+    pruefe("Versionen als Zahlen: 2.10 ist neuer als 2.9", (x.get("zehn") or [0, 0, 0, 0])[1:4] == ["neuer", None, "2.10"], str(x.get("zehn")))
+    kaputt = ["tag_latest", "tag_v2", "tag_html", "tag_leer", "html_antwort", "gross", "kein_dict", "500", "umleitung"]
+    pruefe("Kaputter Tag (latest, v2, HTML, fehlt), HTML-Antwort, zu groß (> 200 KB), kein Objekt, 500, Weiterleitung → freundlich „unerwartet“",
+           all((x.get(n) or [0])[:3] == [200, "fehler", "nv_format"] for n in kaputt), str({n: x.get(n) for n in kaputt})[:600])
+    me = e.get("meldungen") or {}
+    pruefe("403/429 → Abfrage-Grenze („in einer Stunde“), 404 → noch kein Release, Zeitlimit, offline – Texte positiv, nie „Warnung“",
+           [(x.get(n) or [0, 0, 0])[2] for n in ("403", "429", "404", "zeit", "netz")] == ["nv_grenze", "nv_grenze", "nv_noch_keins", "nv_zeit", "nv_netz"]
+           and "Stunde" in (me.get("403") or "") and all(me.get(n) and "Warnung" not in me[n] for n in ("403", "404", "zeit", "netz")), str(me)[:400])
+    a = e.get("anfrage") or {}
+    pruefe("Anfrage: GET https://api.github.com/repos/<konto>/<repo>/releases/latest aus web_adresse.txt, ohne Daten/Cookie, 10 s, "
+           "ohne Weiterleitung",
+           a.get("url") == "https://api.github.com/repos/lukasdiegans/me-goos-ta-deutsch/releases/latest" and a.get("methode") == "GET"
+           and a.get("daten") is None and a.get("timeout") == 10 and a.get("weiter") is True
+           and "cookie" not in (a.get("kopf") or {}) and "Me-Goos-ta-Deutsch" in (a.get("kopf") or {}).get("user-agent", ""), str(a)[:300])
+    f = e.get("falsch") or []
+    pruefe("Manipulierte oder fehlende web_adresse.txt → 409 kein_release, keine einzige Anfrage",
+           len(f) == 8 and all(z == [409, "kein_release"] for z in f[:7]) and f[7] == 0, str(f))
+    pruefe("Host-Listen getrennt: Übersetzung kommt nicht an api.github.com, Versionsprüfung an keinen anderen Host, nur HTTPS",
+           e.get("sperre") == [True, True, True, True, True, False], str(e.get("sperre")))
+    pruefe("Über den Handy-Zugang und in der Web-App gesperrt (403 nur_rechner), ohne Anfrage",
+           e.get("handy") == [403, 403, True, 0], str(e.get("handy")))
+    st = e.get("start") or [[], -1, ["?"]]
+    pruefe("Kein automatischer Abruf: Start, Seite, Status, Karten, Ideen, Werkzeuge, Tools, Hilfe → 0 Anfragen ins Netz",
+           len(st[0]) == 9 and st[0][0] == 200 and st[1] == 0 and st[2] == [], str(st)[:400])
+    ui = (HIER / "ui" / "index.html").read_text(encoding="utf-8")
+    i = ui.find('$("#doku").addEventListener("click", async e => {')
+    handler = ui[i:ui.index("\n});\n", i)] if i >= 0 else ""
+    fremd = {}
+    for d in HIER.glob("*.py"):
+        if d.name.startswith("test_"):
+            continue
+        q = d.read_text(encoding="utf-8")
+        if "api.github.com" in q:
+            fremd[d.name] = q.count("api.github.com")
+    g = (HIER / "gans_ui.py").read_text(encoding="utf-8")
+    k = g.find("def neue_version(")
+    fn = g[k:g.index("\n\n\n", k)] if k >= 0 else ""
+    pruefe("Statisch: /api/neue-version genau einmal in der Seite, nur im Klick-Handler (nicht am Handy/in der App); "
+           "api.github.com nur in gans_ui.neue_version()",
+           ui.count("/api/neue-version") == 1 and "/api/neue-version" in handler and "AM_HANDY || AM_APP" in handler
+           and "setInterval" not in handler and "setTimeout" not in handler
+           and list(fremd) == ["gans_ui.py"] and fremd["gans_ui.py"] == fn.count("api.github.com") >= 1
+           and "!AM_HANDY && !AM_APP ?" in ui, str(fremd))
+
+
+E42_PROZESS = r'''
+import json, os, random, sys, threading, time, unicodedata, urllib.error, urllib.request
+from pathlib import Path
+sys.path.insert(0, sys.argv[1])
+os.environ.pop("MGD_IM_PROZESS", None)
+p, tmp, port = Path(sys.argv[1]), Path(sys.argv[2]), int(sys.argv[3])
+import gans_ui as ui, gans_lernkarten as gl, erweiterungen as erw
+gl.setze_sprache("de")
+erw.IDEEN_DATEI, erw.IDEEN_ORDNER = tmp / "ideen.json", tmp / "ideen"      # eigene Ideen, nichts im Programmordner
+E = []
+def ok(name, gut, detail=""):
+    E.append([name, bool(gut), str(detail)[:700]])
+def lies(roh, **o):
+    try:
+        return erw.wortliste_lesen(roh, o)
+    except erw.WortlisteFehler as f:
+        return {"fehler": f.code, "text": str(f)}
+def zl(r):
+    return [(z["nr"], z["de"], z["wort"], z["notiz"], z["status"]) for z in r.get("zeilen", [])]
+def paare(r):
+    return [(z["de"], z["wort"]) for z in r.get("zeilen", [])]
+# ---------- Stufe 1–2: Dateiart und Kodierung ----------
+text = "müde;cansado\nalt;viejo"
+soll = [("Gans müde", "cansado"), ("Gans alt", "viejo")]
+faelle = [("utf-8", text.encode()), ("utf-8", b"\xef\xbb\xbf" + text.encode()), ("utf-16-le", b"\xff\xfe" + text.encode("utf-16-le")),
+          ("utf-16-be", b"\xfe\xff" + text.encode("utf-16-be")), ("utf-16-le", text.encode("utf-16-le")), ("utf-16-be", text.encode("utf-16-be"))]
+erg = [(k, lies(b)) for k, b in faelle]
+ok("Kodierung: UTF-8 mit/ohne BOM, UTF-16 LE/BE mit BOM (Excel „Unicode-Text“) und ohne BOM → gleiche Wörter",
+   all(paare(r) == soll and r["erkannt"]["kodierung"] == k and not r["hinweise"] for k, r in erg), [(k, r.get("erkannt"), paare(r)) for k, r in erg])
+r = lies("Müdigkeit;cansancio\nniño;Kind".encode("cp1252"))
+ok("Windows-1252 („Müdigkeit;cansancio“, „ñ“) → richtig gelesen + freundlicher Hinweis oben",
+   paare(r) == [("Gans Müdigkeit", "cansancio"), ("Gans niño", "Kind")] and r["erkannt"]["kodierung"] == "cp1252"
+   and len(r["hinweise"]) == 1 and "Windows-1252" in r["hinweise"][0], r)
+arten = {n: lies(b) for n, b in (("xlsx", b"PK\x03\x04\x14\x00rest"), ("pdf", b"%PDF-1.7\n..."), ("png", b"\x89PNG\r\n\x1a\nxx"),
+                                  ("jpg", b"\xff\xd8\xff\xe0xx"), ("xls", b"\xd0\xcf\x11\xe0\xa1\xb1"), ("rtf", b"{\\rtf1 alt"),
+                                  ("webp", b"RIFF1234WEBPVP8 "))}
+ok("Excel/ZIP, PDF, PNG, JPG, altes Excel/Word, RTF, WEBP → „bitte als CSV UTF-8 oder Text speichern“ (nichts angelegt)",
+   all(r.get("fehler") == "wl_dateiart" and "CSV UTF-8" in r["text"] for r in arten.values()), arten)
+binaer = lies(bytes(range(256)) * 4)
+ok("Binärdaten mit NUL-Bytes, leere Datei, nur Leerzeilen → kein lesbarer Text bzw. „noch leer“",
+   binaer.get("fehler") == "wl_unlesbar" and lies(b"").get("fehler") == "wl_leer" and lies(b" \n\r\n\t\n").get("fehler") == "wl_leer"
+   and lies(b"\xef\xbb\xbf").get("fehler") == "wl_leer" and lies("# nur Kommentar".encode()).get("fehler") == "wl_leer", binaer)
+# ---------- Stufe 3–4: Bereinigen, Zeilen ----------
+r = lies("Müde;cansado\nmüde;otro".encode())
+ok("NFD (macOS) → NFC: „Müde“ wird zusammengesetzt und als doppelt zu „müde“ erkannt",
+   r["zeilen"][0]["de"] == "Gans Müde" and unicodedata.is_normalized("NFC", r["zeilen"][0]["de"]) and r["zeilen"][1]["status"] == "doppelt_liste", zl(r))
+r = lies("alt;viejo\r\nmüde;cansado\rneu;nuevo rot;rojo\u0085blau;azul\ngrün;verde".encode())
+ok("Zeilenenden CRLF, CR, LF, U+2028, NEL → 6 Zeilen mit den Zeilennummern der Datei",
+   [z[0] for z in zl(r)] == [1, 2, 3, 4, 5, 6] and paare(r)[5] == ("Gans grün", "verde"), zl(r))
+r = lies("alt ; vie​jo\nmü­de;can⁠sado　\n﻿rot;ro\x07jo".encode())
+ok("Geschützte Leerzeichen, Nullbreiten, weiches Trennzeichen, BOM mitten im Text, Steuerzeichen → saubere Wörter",
+   paare(r) == [("Gans alt", "viejo"), ("Gans müde", "cansado"), ("Gans rot", "rojo")], paare(r))
+r = lies("# Farben\n- alt\n* müde\n• rot\n– blau\n1. grün\n2) gelb\n\n-los".encode())
+ok("Kommentare (#) gezählt, Listenzeichen (- * • – 1. 2)) entfernt, „-los“ bleibt (Formel-Schutz statt still „los“)",
+   [z[1] for z in zl(r)][:6] == ["Gans alt", "Gans müde", "Gans rot", "Gans blau", "Gans grün", "Gans gelb"]
+   and zl(r)[6][4] == "fehler" and "Gans -los" == zl(r)[6][1] and r["zahlen"]["kommentare"] == 1 and r["zahlen"]["leer"] == 1
+   and [z[0] for z in zl(r)] == [2, 3, 4, 5, 6, 7, 9], zl(r))
+# ---------- Stufe 5: Trennzeichen ----------
+tr = {n: lies(b) for n, b in (("tab", "alt\tviejo\nmüde\tcansado".encode()), ("semikolon", "alt;viejo\nmüde;cansado".encode()),
+                               ("komma", 'alt,"viejo, anciano"\nmüde,cansado'.encode()), ("gleich", "alt = viejo\nmüde = cansado".encode()),
+                               ("strich", "alt - viejo\nmüde – cansado".encode()), ("keiner", "alt\nmüde".encode()))}
+ok("Trenner automatisch: Tab, Semikolon, Komma mit Anführungszeichen, „ = “, „ - “/„ – “, keiner (einspaltig)",
+   all(r["erkannt"]["trenner"] == n for n, r in tr.items()) and paare(tr["komma"])[0] == ("Gans alt", "viejo, anciano")
+   and paare(tr["strich"]) == [("Gans alt", "viejo"), ("Gans müde", "cansado")] and paare(tr["keiner"])[0] == ("Gans alt", ""),
+   {n: (r.get("erkannt", {}).get("trenner"), paare(r)) for n, r in tr.items()})
+r1 = lies("Rot-Weiß;rojo y blanco\nalt;viejo".encode())
+r2 = lies("alt,viejo,anciano\nmüde,cansado".encode())
+r3 = lies("alt;viejo;;\nmüde;cansado;".encode())
+r4 = lies("alt;viejo\nmüde;cansado".encode(), trenner="keiner")
+ok("„Rot-Weiß“ wird nicht am Strich geteilt; Komma mit 3 Spalten → Hinweis „Alternative?“; leere Zellen am Ende weg; Wahl „keiner“ gilt",
+   paare(r1)[0] == ("Gans Rot-Weiß", "rojo y blanco") and r2["hinweise"] and "Alternative" in r2["hinweise"][0]
+   and zl(r2)[0][3] == "anciano" and paare(r3) == [("Gans alt", "viejo"), ("Gans müde", "cansado")]
+   and paare(r4)[0] == ("Gans alt;viejo", ""), (paare(r1), r2["hinweise"], paare(r3), paare(r4)))
+# ---------- Stufe 6–7: Kopfzeile, Spalten ----------
+k1 = lies("Deutsch;Spanisch\nalt;viejo".encode())
+k2 = lies("Spanish;German\nviejo;alt".encode())
+k3 = lies("Haus;casa\nalt;viejo".encode())
+k4 = lies("Haus;casa\nalt;viejo".encode(), kopf="ja")
+k5 = lies("Deutsch;Spanisch\nalt;viejo".encode(), kopf="nein")
+k6 = lies("alemán;español;nota\nalt;viejo;ojo".encode())
+ok("Kopfzeile: „Deutsch;Spanisch“ erkannt, „Spanish;German“ → getauscht, unbekannter Kopf = Wort, Schalter ja/nein, es-Namen + Notiz",
+   k1["erkannt"]["kopf"] and zl(k1) == [(2, "Gans alt", "viejo", "", "neu")] and k2["erkannt"]["getauscht"]
+   and paare(k2) == [("Gans alt", "viejo")] and not k3["erkannt"]["kopf"] and len(k3["zeilen"]) == 2
+   and paare(k4) == [("Gans alt", "viejo")] and len(k5["zeilen"]) == 2 and zl(k6) == [(2, "Gans alt", "viejo", "ojo", "neu")],
+   [zl(k) for k in (k1, k2, k3, k4, k5, k6)])
+k7 = lies("Deutsch;Französisch\nalt;vieux".encode())
+k8 = lies("Deutsch;Russisch\nalt;старый".encode(), zs="ru")
+ok("Kopf nennt eine andere Sprache als die Kartensprache → Hinweis oben (Spalte gilt als Kartensprache), passende Sprache → kein Hinweis",
+   k7["erkannt"]["kopf_sprache"] == "fr" and "Französisch" in k7["hinweise"][0] and paare(k7) == [("Gans alt", "vieux")]
+   and not k8["hinweise"] and paare(k8) == [("Gans alt", "старый")], (k7["hinweise"], k8["hinweise"]))
+e1 = lies("alt\nmüde".encode())
+e2 = lies("viejo\ncansado".encode(), einspaltig="zs")
+e3 = lies("alt;viejo;Notiz".encode())
+e4 = lies("alt;viejo;Notiz;mehr".encode())
+e5 = lies("viejo;alt".encode(), tauschen="1")
+ok("Einspaltig Deutsch / einspaltig Kartensprache, 3 Spalten = Notiz, 4 Spalten → Zeile fehlerhaft („/“), „tauschen“ tauscht",
+   paare(e1) == [("Gans alt", ""), ("Gans müde", "")] and paare(e2) == [("", "viejo"), ("", "cansado")]
+   and zl(e3) == [(1, "Gans alt", "viejo", "Notiz", "neu")] and e4["zeilen"][0]["status"] == "fehler" and "/" in e4["zeilen"][0]["text"]
+   and not e4["zeilen"][0]["wahl"] and paare(e5) == [("Gans alt", "viejo")], [zl(e) for e in (e1, e2, e3, e4, e5)])
+# ---------- Stufe 8–10: Felder, „Gans“, Prüfen ----------
+r = lies("„alt“;«viejo»\n\"müde\";'cansado'\n  viel    zu   weit ; muy   lejos ".encode())
+ok("Typografische Anführungszeichen außen weg, Leerraum zusammengefasst; „/“ und „|“ bleiben",
+   paare(r) == [("Gans alt", "viejo"), ("Gans müde", "cansado"), ("Gans viel zu weit", "muy lejos")]
+   and paare(lies("alt;viejo / anciano | x".encode()))[0][1] == "viejo / anciano | x", paare(r))
+r = lies("Gans;x\nganz alt;viejo\nGANS müde;cansado\nGans  rot;rojo\nblau;azul".encode())
+r0 = lies("alt;viejo\nGans müde;cansado".encode(), gans="0")
+ok("„Gans“ davor: „ganz alt“/„GANS müde“/„alt“ → „Gans …“, nur „Gans“ → fehlerhaft; Schalter aus lässt alles, wie es ist",
+   [z[1] for z in zl(r)] == ["Gans", "Gans alt", "Gans müde", "Gans rot", "Gans blau"] and zl(r)[0][4] == "fehler"
+   and "Gans" in r["zeilen"][0]["text"] and paare(r0) == [("alt", "viejo"), ("Gans müde", "cansado")], zl(r))
+r = lies("=SUMME(A1);x\n+49;y\n@a;b\nalt;=1+1\nmüde;cansado;-x".encode())
+ok("Formel-Anfang (= + - @) in jeder Spalte → fehlerhaft (k_formel), nicht wählbar",
+   all(z["status"] == "fehler" and "Formel" in z["text"] and not z["wahl"] for z in r["zeilen"]), zl(r))
+lang = lies(("a" * 116 + ";x\nalt;" + "b" * 301 + "\nmüde;c;" + "n" * 301 + "\nrot;" + "w" * 300).encode())
+ok("Überlänge (Deutsch > 120, Wort > 300, Notiz > 300) → fehlerhaft mit Zahl, nichts still gekürzt; genau 300 geht",
+   [z["status"] for z in lang["zeilen"]] == ["fehler", "fehler", "fehler", "neu"] and "121" in lang["zeilen"][0]["text"]
+   and len(lang["zeilen"][0]["de"]) == 121 and len(lang["zeilen"][1]["wort"]) == 301 and len(lang["zeilen"][3]["wort"]) == 300,
+   [(z["status"], z["text"][:60]) for z in lang["zeilen"]])
+r = lies("123;x\n🦢;cisne\nalt;🦢\nalt2;老人\ngroß;größe\nrot;<script>alert(1)</script>".encode())
+st = [(z["status"], len(z["hinweise"])) for z in r["zeilen"]]
+ok("Nur Ziffern / nur Emoji → fehlerhaft; Emoji, Japanisch, ä/ö/ß im Wort bei es → nur Hinweis; HTML bleibt reiner Text",
+   st[:5] == [("fehler", 0), ("fehler", 0), ("neu", 1), ("neu", 1), ("neu", 1)] and "Spanisch" in r["zeilen"][3]["hinweise"][0]
+   and "ö" in r["zeilen"][4]["hinweise"][0]
+   and r["zeilen"][5]["wort"] == "<script>alert(1)</script>", st)
+r = lies("müde;müde".encode(), zs="es")
+ok("Umlaut-Hinweis nur bei ä/ö/ß (ü gibt es im Spanischen); andere Kartensprache (de-ähnlich) ohne es-Hinweis",
+   not r["zeilen"][0]["hinweise"] and lies("alt;größer".encode())["zeilen"][0]["hinweise"]
+   and not lies("alt;größer".encode(), zs="nds")["zeilen"][0]["hinweise"], zl(r))
+# ---------- Stufe 11: doppelt ----------
+r = lies("alt;viejo\nALT;viejo\nGans alt;anciano\nÄlter;x\naelter;y\nneu;viejo".encode())
+ok("Doppelt in der Liste: Groß/Klein, „Gans“ davor, ä = ae, gleiche Übersetzung – spätere Zeile nicht vorausgewählt, nennt Zeile + andere Übersetzung",
+   [z[4] for z in zl(r)] == ["neu", "doppelt_liste", "doppelt_liste", "neu", "doppelt_liste", "doppelt_liste"]
+   and r["zeilen"][2]["text"].endswith("(dort mit „viejo“)") and "Zeile 1" in r["zeilen"][1]["text"] and "dort" not in r["zeilen"][1]["text"]
+   and [z["wahl"] for z in r["zeilen"]] == [True, False, False, True, False, False] and r["zahlen"]["doppelt"] == 4, zl(r))
+vorhanden = dict(ideen=[dict(de="Gans rot", es="rojo")], karten=[dict(de="Gans blau", es="azul", nr=3, bild="blau.jpg")])
+r = lies("rot;x\nx2;rojo\ngrün;azul\nblau;y\nneu;nuevo".encode(), vorhanden=vorhanden)
+ok("Gegen vorhandene Ideen (Deutsch oder Wort) und Karten (mit Nummer + Bild) → idee_da / karte_da, wählbar, nicht vorausgewählt",
+   [z[4] for z in zl(r)] == ["idee_da", "idee_da", "karte_da", "karte_da", "neu"] and "3" in r["zeilen"][2]["text"]
+   and "blau.jpg" in r["zeilen"][2]["text"] and [z["wahl"] for z in r["zeilen"]] == [False, False, False, False, True], zl(r))
+ja = lies("alt;老人\nalt2;老人\nalt3;ﾛｳｼﾞﾝ\nalt4;ロウジン".encode(), zs="ja")
+ru = lies("alt;старый\nalt2;СТАРЫЙ\nalt3;старый!".encode(), zs="ru")
+ok("Japanisch/Russisch: gleiche Wörter werden erkannt (NFKC, Groß/Klein, Satzzeichen), nicht alle „leer“; wort_schluessel unverändert",
+   [z[4] for z in zl(ja)] == ["neu", "doppelt_liste", "neu", "doppelt_liste"] and [z[4] for z in zl(ru)] == ["neu", "doppelt_liste", "doppelt_liste"]
+   and "dort" not in ru["zeilen"][1]["text"] and erw.wort_schluessel("老人", True) == "" and erw.wort_schluessel_zs("老人", "ja") == "老人"
+   and erw.wort_schluessel("Gans Müde") == "muede" and erw.wort_schluessel_zs("Viejo / anciano", "es") == "viejo", (zl(ja), zl(ru)))
+# ---------- Grenzen und Robustheit ----------
+z500 = "\n".join(f"wort{i};palabra{i}" for i in range(500)).encode()
+t0 = time.time(); r500 = lies(z500, vorhanden=dict(ideen=[dict(de=f"Gans x{i}", es=f"y{i}") for i in range(300)])); dauer = time.time() - t0
+r501 = lies(("Deutsch;Spanisch\n" + "\n".join(f"wort{i};palabra{i}" for i in range(501))).encode())
+gross = lies(b"alt;viejo\n" * 120_000)
+ok("Grenzen: 500 Wörter gehen (< 2 s), 501 → „bitte teilen“ mit Zahl (nichts abgeschnitten), > 1 MB → ablehnen, nur Kopf → Hinweis",
+   len(r500.get("zeilen", [])) == 500 and r500["zahlen"]["neu"] == 500 and dauer < 2 and r501.get("fehler") == "wl_zu_viele"
+   and "501" in r501["text"] and gross.get("fehler") == "wl_gross" and lies("Deutsch;Spanisch\n\n".encode()).get("fehler") == "wl_nur_kopf",
+   (round(dauer, 2), r501, gross.get("fehler")))
+zufall = random.Random(42)
+schlecht, langsam = [], 0.0
+for n in range(200):
+    if n % 2:
+        roh = bytes(zufall.randrange(256) for _ in range(zufall.randrange(1, 3000)))
+    else:
+        roh = "".join(zufall.choice("aäß;,\t=- \n\r#\"„“1.•🦢老ж​ \x00 ") for _ in range(zufall.randrange(1, 800))).encode(
+            zufall.choice(["utf-8", "utf-16-le", "utf-16"]), "surrogatepass")
+    t0 = time.time()
+    try:
+        r = erw.wortliste_lesen(roh, {"zs": zufall.choice(["es", "ja", "ru", "ar"]), "trenner": zufall.choice(erw.WL_TRENNER),
+                                      "kopf": zufall.choice(["auto", "ja", "nein"])})
+        json.dumps(r)
+        assert all(z["status"] in ("neu", "fehler", "doppelt_liste", "idee_da", "karte_da") for z in r["zeilen"])
+    except erw.WortlisteFehler:
+        pass
+    except Exception as f:
+        schlecht.append((n, type(f).__name__, str(f)[:80]))
+    langsam = max(langsam, time.time() - t0)
+ok("200 Zufalls-Byte-Folgen (random.Random(42)): nie ein unbehandelter Fehler, jede < 1 s", not schlecht and langsam < 1, (schlecht[:3], round(langsam, 2)))
+# ---------- API ----------
+def direkt(methode, weg, koerper=b"", abfrage="", am_handy=False):
+    kopf = {"X-GL-Sprache": "de", "Content-Type": "application/json" if weg != "/api/wortliste-pruefen" else "application/octet-stream"}
+    if isinstance(koerper, (dict, list)):
+        koerper = json.dumps(koerper).encode()
+    s, k, i = ui.verarbeite(methode, weg, abfrage, koerper, kopf, am_handy=am_handy)
+    try:
+        return s, json.loads(i)
+    except ValueError:
+        return s, {}
+def ideen():
+    return json.loads(erw.IDEEN_DATEI.read_text(encoding="utf-8"))["ideen"] if erw.IDEEN_DATEI.exists() else []
+karte = ui.karten_daten()["karten"][0]
+s1, v = direkt("POST", "/api/wortliste-pruefen", f"Deutsch;Spanisch\nquer;transversal\nmüde;cansado\nrot;rojo\n{karte['de']};x".encode(), "trenner=auto&gans=1")
+ok("POST /api/wortliste-pruefen (Rohdaten, Optionen in der Abfrage) → Vorschau mit erkannt, zs und Karte als „schon Karte“",
+   s1 == 200 and v.get("zs") == "es" and v["erkannt"]["kopf"] and [z["status"] for z in v["zeilen"]] == ["neu", "neu", "neu", "karte_da"]
+   and v.get("zs_name") == "Spanisch", (s1, str(v)[:300]))
+s0, leer = direkt("POST", "/api/wortliste-pruefen", b"")
+sg, gr = direkt("POST", "/api/wortliste-pruefen", b"a;b\n" * 300_000)
+sx, xl = direkt("POST", "/api/wortliste-pruefen", b"PK\x03\x04xxxx")
+ok("Leere Liste, > 1 MB, Excel-Datei → 400 mit freundlichem Text (keine 500)",
+   (s0, sg, sx) == (400, 400, 400) and "leer" in leer.get("fehler", "") and "MB" in gr.get("fehler", "") and "CSV UTF-8" in xl.get("fehler", ""),
+   (s0, sg, sx, leer, gr, xl))
+vorher = len(ideen())
+sr, ir = direkt("POST", "/api/idee", {"de": "Gans rot", "es": "rojo"})          # dazwischen angelegt → Vorschau veraltet
+zeilen = [dict(nr=z["nr"], de=z["de"], wort=z["wort"], notiz=z["notiz"]) for z in v["zeilen"] if z["wahl"]]
+s2, u = direkt("POST", "/api/wortliste-uebernehmen", {"zs": "es", "zeilen": zeilen})
+neu = ideen()
+ok("Übernehmen: alle in einem Schreibvorgang, Reihenfolge wie in der Liste oben; veraltete Vorschau → „rot“ übersprungen (schon Idee)",
+   s2 == 200 and u["angelegt"] == 2 and [x["status"] for x in u["uebersprungen"]] == ["idee_da"] and u["uebersprungen"][0]["nr"] == 4
+   and [x["de"] for x in neu[:2]] == ["Gans quer", "Gans müde"] and len(neu) == vorher + 3 and all(x.get("wl") == u["wl"] and x["es_auto"] == ""
+   for x in neu[:2]) and len(u.get("ideen", [])) == len(neu), (s2, str(u)[:400]))
+s3, z3 = direkt("POST", "/api/wortliste-uebernehmen", {"zs": "ru", "zeilen": zeilen})
+s4, z4 = direkt("POST", "/api/wortliste-uebernehmen", {"zs": "es", "zeilen": [dict(de="=1+1", wort="x"), dict(de="Gans", wort="y"),
+                                                                               dict(de="a" * 130, wort="z"), dict(de="Gans quer4", wort="transversal4")]})
+s5, z5 = direkt("POST", "/api/wortliste-uebernehmen", {"zs": "es", "zeilen": "kaputt"})
+s6, z6 = direkt("POST", "/api/wortliste-uebernehmen", {"zs": "es", "zeilen": []})
+ok("Kartensprache gewechselt → 409 zs_geaendert; jede Zeile wird beim Anlegen erneut geprüft (Formel, nur Gans, Länge); kaputte Daten → 400",
+   s3 == 409 and z3.get("code") == "zs_geaendert" and "Kartensprache" in z3.get("fehler", "")
+   and s4 == 200 and z4["angelegt"] == 1 and [x["status"] for x in z4["uebersprungen"]] == ["fehler"] * 3
+   and s5 == 400 and s6 == 400 and "ausgewählt" in z6.get("fehler", ""), (s3, z3, s4, str(z4)[:300], s5, s6))
+# zwei gleichzeitige Übernahmen derselben Liste + zwei verschiedene Listen
+vorher = len(ideen())
+gleich = [dict(de=f"Gans gleich{i}", wort=f"igual{i}") for i in range(40)]
+antworten = []
+def los(z):
+    antworten.append(direkt("POST", "/api/wortliste-uebernehmen", {"zs": "es", "zeilen": z}))
+fs = [threading.Thread(target=los, args=(gleich,)) for _ in range(2)]
+fs += [threading.Thread(target=los, args=([dict(de=f"Gans liste{k}x{i}", wort=f"lista{k}x{i}") for i in range(30)],)) for k in range(2)]
+[f.start() for f in fs]; [f.join() for f in fs]
+nachher = ideen()
+schl = [erw.wort_schluessel(x["de"]) for x in nachher]
+ok("Zwei gleichzeitige Übernahmen (Threads): keine Doppelten, nichts verloren (40 + 30 + 30), ideen.json bleibt gültiges JSON",
+   len(nachher) == vorher + 100 and len(schl) == len(set(schl)) and sorted(a[1]["angelegt"] for a in antworten) == [0, 30, 30, 40]
+   and all(a[0] == 200 for a in antworten), (len(nachher) - vorher, sorted(a[1].get("angelegt") for a in antworten)))
+# Rückgängig
+liste = direkt("POST", "/api/wortliste-uebernehmen", {"zs": "es", "zeilen": [dict(de=f"Gans rueck{i}", wort=f"atras{i}") for i in range(4)]})[1]
+vorher_ids = [x["id"] for x in ideen() if x.get("wl") != liste["wl"]]
+eigene = [x for x in ideen() if x.get("wl") == liste["wl"]]
+direkt("POST", "/api/idee", {"id": eigene[0]["id"], "de": eigene[0]["de"], "es": "atras geändert", "notiz": ""})
+direkt("POST", "/api/idee-weg", {"id": eigene[1]["id"]})
+s7, r7 = direkt("POST", "/api/wortliste-rueckgaengig", {"wl": liste["wl"]})
+rest = ideen()
+s8, r8 = direkt("POST", "/api/wortliste-rueckgaengig", {"wl": liste["wl"]})
+s9, r9 = direkt("POST", "/api/wortliste-rueckgaengig", {"wl": "../x"})
+s10, r10 = direkt("POST", "/api/wortliste-rueckgaengig", {"wl": "0123456789ab"})
+ok("Rückgängig: entfernt nur unveränderte Ideen der Liste, geänderte bleiben, weggenommene zählen als „nicht mehr da“; Rest unberührt",
+   s7 == 200 and (r7["entfernt"], r7["geaendert"], r7["schon_karte"]) == (2, 1, 1) and [x["id"] for x in rest if x["id"] != eigene[0]["id"]] == vorher_ids
+   and any(x["id"] == eigene[0]["id"] for x in rest) and s8 == 200 and (r8["entfernt"], r8["geaendert"], r8["schon_karte"]) == (0, 1, 0)
+   and s9 == 400 and s10 == 400 and "rückgängig" in r10.get("fehler", ""), (s7, r7.get("entfernt"), r7.get("geaendert"), r7.get("schon_karte"), s8, s9, s10))
+try:
+    json.loads(erw.IDEEN_DATEI.read_text(encoding="utf-8")); gueltig = True
+except ValueError:
+    gueltig = False
+# Handy-Zugang, Web-App, echter HTTP-Server
+sh, vh = direkt("POST", "/api/wortliste-pruefen", "alt;viejo".encode(), am_handy=True)
+ui.im_browser = lambda: True
+sw, vw = direkt("POST", "/api/wortliste-pruefen", "alt;viejo".encode())
+sw2, uw = direkt("POST", "/api/wortliste-uebernehmen", {"zs": "es", "zeilen": [dict(de="Gans webapp", wort="aplicación")]})
+ui.im_browser = lambda: False
+ui.starte(port, browser=False)
+a = urllib.request.Request(f"http://127.0.0.1:{ui.PORT}/api/wortliste-pruefen?trenner=semikolon", data="alt;viejo".encode("utf-16"), method="POST",
+                           headers={"Cookie": f"mgd_{ui.PORT}={ui.TOKEN}", "X-GL-Token": ui.TOKEN, "X-GL-Sprache": "de",
+                                    "Content-Type": "application/octet-stream"})
+try:
+    with urllib.request.build_opener(urllib.request.ProxyHandler({})).open(a, timeout=60) as x:
+        sh2, vh2 = x.status, json.loads(x.read())
+except urllib.error.HTTPError as f:
+    sh2, vh2 = f.code, {}
+ok("Über den Handy-Zugang, in der Web-App (verarbeite) und über HTTP wie am Rechner; ideen.json gültig",
+   gueltig and sh == 200 and sw == 200 and paare(vh) == paare(vw) == [("Gans alt", "viejo")] and sw2 == 200 and uw["angelegt"] == 1
+   and sh2 == 200 and paare(vh2) == [("Gans alt", "viejo")] and vh2["erkannt"]["kodierung"] == "utf-16-le", (sh, sw, sw2, sh2, str(vh2)[:200]))
+print("#e42 " + json.dumps(E, ensure_ascii=False))
+'''
+
+
+def test_wortliste(p, tmp):
+    """E42 (2.2): Wortliste in Ideen – Einlesen in Stufen (Dateiart, Kodierung, Bereinigen, Zeilen, Trenner, Kopf, Spalten,
+    Felder, „Gans“, Prüfen, Doppelt), Grenzen, 200 Zufalls-Byte-Folgen; API prüfen → übernehmen (erneut geprüft, 409 bei
+    gewechselter Kartensprache, gleichzeitig ohne Doppelte) → rückgängig; Handy-Zugang, Web-App und HTTP."""
+    print("\n[E42] Wortliste: Einlesen, Prüfen, Anlegen, Rückgängig")
+    daten = tmp / "daten-e42"
+    ideen = tmp / "ideen-e42"
+    daten.mkdir()
+    ideen.mkdir()
+    env = dict(os.environ, PYTHONIOENCODING="utf-8", MGD_DATEN=str(daten), MGD_START_ID="test")
+    env.pop("MGD_IM_PROZESS", None)
+    r = subprocess.run([sys.executable, "-c", E42_PROZESS, str(p), str(ideen), str(tg._freier_port())], cwd=p, env=env,
+                       capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=300)
+    m = re.search(r"^#e42 (.*)$", r.stdout, re.M)
+    if not m:
+        print((r.stdout + r.stderr)[-3000:])
+        pruefe("E42-Prozess lief durch", False, (r.stdout + r.stderr)[-600:])
+        return
+    for name, gut, detail in json.loads(m.group(1)):
+        pruefe(name, gut, detail)
+
+
+E43_PROZESS = r'''
+import json, os, sys
+from pathlib import Path
+sys.path.insert(0, sys.argv[1])
+os.environ.pop("MGD_IM_PROZESS", None)
+p, tmp = Path(sys.argv[1]), Path(sys.argv[2])
+import gans_ui as ui, gans_lernkarten as gl, erweiterungen as erw, uebersetzer
+gl.setze_sprache("de")
+erw.IDEEN_DATEI, erw.IDEEN_ORDNER = tmp / "ideen.json", tmp / "ideen"
+E = []
+def ok(name, gut, detail=""):
+    E.append([name, bool(gut), str(detail)[:700]])
+def direkt(methode, weg, koerper=b"", am_handy=False):
+    kopf = {"X-GL-Sprache": "de", "Content-Type": "application/json" if weg != "/api/wortliste-pruefen" else "application/octet-stream"}
+    if isinstance(koerper, (dict, list)):
+        koerper = json.dumps(koerper).encode()
+    s, k, i = ui.verarbeite(methode, weg, "", koerper, kopf, am_handy=am_handy)
+    try:
+        return s, json.loads(i)
+    except ValueError:
+        return s, {}
+def ideen():
+    return json.loads(erw.IDEEN_DATEI.read_text(encoding="utf-8"))["ideen"] if erw.IDEEN_DATEI.exists() else []
+# nachgebildeter Dienst: 3 Wörter, danach Tageskontingent erschöpft
+aufrufe = []
+def falsch_uebersetze(de, dienst=None, richtung="de-es", **k):
+    aufrufe.append(de)
+    if len(aufrufe) > 3:
+        raise uebersetzer.UebersetzungsFehler("kontingent")
+    w = "auto" + de.split()[-1]
+    return dict(quelle=de, dienst="wiktionary", vorschlag=w, alternativen=[dict(text=w, hinweis="")], aus_cache=False)
+uebersetzer.uebersetze = falsch_uebersetze
+s1, v = direkt("POST", "/api/wortliste-pruefen", "\n".join(f"e43wort{i}" for i in range(1, 7)).encode())
+zeilen = [dict(nr=z["nr"], de=z["de"], wort=z["wort"], notiz=z["notiz"]) for z in v.get("zeilen", []) if z["wahl"]]
+s2, u = direkt("POST", "/api/wortliste-uebernehmen", {"zs": "es", "zeilen": zeilen})
+ok("Wortliste ohne Übersetzung (einspaltig) → 6 Ideen mit „Gans …“, ohne Wort",
+   s1 == 200 and s2 == 200 and u.get("angelegt") == 6 and all(x["de"].startswith("Gans e43wort") and not x["es"] for x in ideen()[:6]), (s1, s2, str(u)[:300]))
+# wie die Seite: Liste der Ideen ohne Wort, je Idee /api/uebersetzen → /api/idee-wort, Abbruch beim ersten Fehler
+offen = [i for i in ideen() if i["de"].strip() and not i["es"].strip()]
+gefuellt, meldung, status = 0, "", 200
+for i in offen:
+    s, r = direkt("POST", "/api/uebersetzen", {"de": i["de"]})
+    if s != 200:
+        status, meldung = s, r.get("fehler", "")
+        break
+    s, r = direkt("POST", "/api/idee-wort", {"id": i["id"], "es": r["vorschlag"]})
+    gefuellt += bool(s == 200 and r.get("gefuellt"))
+nachher = {i["id"]: i for i in ideen()}
+voll = [nachher[i["id"]] for i in offen[:3]]
+leer = [nachher[i["id"]] for i in offen[3:]]
+ok("Alle übersetzen mit nachgebildetem Dienst: Kontingent nach 3 erschöpft → 3 gefüllt (als „automatisch – prüfen“), Rest leer, freundliche Meldung",
+   len(offen) == 6 and gefuellt == 3 and len(aufrufe) == 4 and all(x["es"] == x["es_auto"] == "auto" + x["de"].split()[-1] for x in voll)
+   and all(not x["es"] and not x["es_auto"] for x in leer) and status == 400 and "Tageskontingent" in meldung, (gefuellt, len(aufrufe), status, meldung))
+# nur füllen, wenn das Feld beim Speichern noch leer ist
+ziel = leer[0]
+direkt("POST", "/api/idee", {"id": ziel["id"], "de": ziel["de"], "es": "eigenes", "notiz": ""})
+s3, r3 = direkt("POST", "/api/idee-wort", {"id": ziel["id"], "es": "vorschlag"})
+jetzt = {i["id"]: i for i in ideen()}[ziel["id"]]
+s4, r4 = direkt("POST", "/api/idee-wort", {"id": leer[1]["id"], "es": "=1+1"})
+s5, r5 = direkt("POST", "/api/idee-wort", {"id": "../x", "es": "x"})
+s6, r6 = direkt("POST", "/api/idee-wort", {"id": leer[1]["id"], "es": "  "})
+ok("/api/idee-wort: eigenes Wort bleibt (gefuellt false), Formel → 400, ungültige id/leeres Wort → 400",
+   s3 == 200 and r3.get("gefuellt") is False and jetzt["es"] == "eigenes" and not jetzt["es_auto"] and len(r3.get("ideen", [])) == len(ideen())
+   and (s4, s5, s6) == (400, 400, 400), (s3, r3.get("gefuellt"), jetzt.get("es"), s4, s5, s6))
+# Rückgängig: automatisch gefüllte Ideen gelten weiter als unverändert, von Hand geänderte bleiben
+s7, r7 = direkt("POST", "/api/wortliste-rueckgaengig", {"wl": u["wl"]})
+ok("Rückgängig nach „Alle übersetzen“: automatisch gefüllte zählen als unverändert (5 entfernt), die von Hand geänderte bleibt",
+   s7 == 200 and (r7.get("entfernt"), r7.get("geaendert")) == (5, 1) and [i["id"] for i in ideen()] == [ziel["id"]], (s7, r7.get("entfernt"), r7.get("geaendert")))
+leer2 = ideen()[0]
+direkt("POST", "/api/idee", {"id": leer2["id"], "de": leer2["de"], "es": "", "notiz": ""})
+sh, rh = direkt("POST", "/api/idee-wort", {"id": leer2["id"], "es": "handy"}, am_handy=True)
+ok("/api/idee-wort auch über den Handy-Zugang (und damit in der Web-App) erlaubt", sh == 200 and rh.get("gefuellt") is True, (sh, rh.get("fehler")))
+print("#e43 " + json.dumps(E, ensure_ascii=False))
+'''
+
+
+def test_wortliste_oberflaeche(p, tmp):
+    """E43 (2.2): Wortliste in der Oberfläche – Texte de/en/es (auch dynamische Schlüssel und _touch), esc() in der
+    Vorschau, accept-Liste, Dialog im Reiter Ideen, „Alle übersetzen“ über alleUebersetzen + /api/idee-wort; API-Ablauf
+    „Liste ohne Übersetzung → Alle übersetzen“ mit nachgebildetem Dienst (Kontingent nach 3), Rückgängig, Handy."""
+    print("\n[E43] Wortliste: Oberfläche und „Alle übersetzen“")
+    seite = (HIER / "ui" / "index.html").read_text(encoding="utf-8")
+    txt = {"de": [], "en": [], "es": []}
+    a = seite.index("const TXT = {")
+    for m in re.finditer(r"\n(de|en|es)\s*:\s*\{", seite[a:seite.index("\n};", a)]):
+        txt[m.group(1)] += js_schluessel(seite, a + m.end() - 1)
+    for m in re.finditer(r"Object\.assign\(TXT\.(de|en|es),\s*\{", seite):
+        txt[m.group(1)] += js_schluessel(seite, m.end() - 1)
+    noetig = ["wl_trenner_" + w for w in ("auto", "tab", "semikolon", "komma", "gleich", "strich", "keiner")]
+    noetig += ["wl_kopf_" + w for w in ("auto", "ja", "nein")] + ["wl_einspaltig_de", "wl_einspaltig_zs"]
+    noetig += [f"{v}_{w}" for w in ("trenner", "kopf", "einspaltig", "tauschen", "gans") for v in ("wl_o", "h_wl")]
+    noetig += ["wl_s_" + s for s in ("neu", "doppelt_liste", "idee_da", "karte_da", "fehler")]
+    noetig += [f"wl_bsp_{i}{e}" for i in range(1, 6) for e in ("", "_text")]
+    noetig += [k + "_touch" for k in ("wl_waehlen", "wl_waehlen_text", "h_wl_datei")]
+    fehlt = [f"{s}.{k}" for s in txt for k in noetig if k not in txt[s]]
+    import erweiterungen as erw
+    pruefe("Texte der Wortliste in de/en/es – auch die dynamischen Schlüssel (Trenner, Kopf, Status, Beispiele) und _touch-Varianten",
+           not fehlt and tuple(erw.WL_TRENNER) == ("auto", "tab", "semikolon", "komma", "gleich", "strich", "keiner"), fehlt[:8])
+    def funktion(name):
+        i = seite.index(f"function {name}(")
+        return seite[i:seite.index("\n}", i)]
+    zeile, wl = funktion("wlZeileHTML"), funktion("zeichneWL")
+    pruefe("Vorschau: jedes Feld der Zeile über esc() (de, wort, notiz, text, roh, Hinweise), kein ${z.…} ungeschützt",
+           not re.search(r"\$\{\s*z\.(de|wort|notiz|text|roh|nr|status)\s*\}", zeile) and all(f"esc({x})" in zeile for x in ("z.de", "z.wort", "z.notiz", "z.text", "z.roh", "z.nr", "h"))
+           and "esc(h)" in wl and "innerHTML" not in zeile, zeile[:200])
+    pruefe("Dateifeld: accept nur Text/CSV/TSV, Dialog im Reiter Ideen, Ziehfläche + Einfügen, ≤ 1 MB schon in der Seite",
+           'const WL_ACCEPT = ".txt,.csv,.tsv,text/plain,text/csv,text/tab-separated-values"' in seite
+           and 'data-dialog="wortliste"' in seite[seite.index('id="v-ideen"'):seite.index('id="ideen-inhalt"')]
+           and 'data-zieh="wortliste"' in wl and 'id="wl-text"' in wl and "WL_MAX_BYTES = 1024 * 1024" in seite
+           and "dateiWaehlen(WL_ACCEPT, wlDatei)" in seite, "")
+    anlegen = funktion("wlAnlegen")
+    pruefe("Anlegen: Doppelklick-Sperre, 409 zs_geaendert → Vorschau neu, Toast mit Rückgängig über /api/wortliste-rueckgaengig",
+           "WL.status)" in anlegen and '"zs_geaendert"' in anlegen and "wlPruefen()" in anlegen and "wlRueckgaengig(r.wl)" in anlegen
+           and '"/api/wortliste-rueckgaengig"' in funktion("wlRueckgaengig"), "")
+    i = seite.index('$("#ideen-uebersetzen").addEventListener')
+    knopf = seite[i:seite.index("\n});", i)]
+    alle = funktion("alleUebersetzen")
+    pruefe("„🌐 Alle übersetzen“ in Ideen: nutzt alleUebersetzen + /api/idee-wort, sichtbar nur mit Ideen ohne Wort; Abbruch meldet „n von m“",
+           "alleUebersetzen(knopf" in knopf and '"/api/idee-wort"' in knopf and "await a.fuellen(v)" in alle
+           and alle.count('t("uebersetzt_n"') == 2 and '$("#ideen-uebersetzen").hidden = !IDEEN.ideen.some(ideeOhneWort)' in funktion("zeichneIdeen"), "")
+    ideen = tmp / "ideen-e43"
+    daten = tmp / "daten-e43"
+    ideen.mkdir()
+    daten.mkdir()
+    env = dict(os.environ, PYTHONIOENCODING="utf-8", MGD_DATEN=str(daten), MGD_START_ID="test")
+    env.pop("MGD_IM_PROZESS", None)
+    r = subprocess.run([sys.executable, "-c", E43_PROZESS, str(p), str(ideen)], cwd=p, env=env,
+                       capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=300)
+    m = re.search(r"^#e43 (.*)$", r.stdout, re.M)
+    if not m:
+        print((r.stdout + r.stderr)[-3000:])
+        pruefe("E43-Prozess lief durch", False, (r.stdout + r.stderr)[-600:])
+        return
+    for name, gut, detail in json.loads(m.group(1)):
+        pruefe(name, gut, detail)
 
 
 def main():
@@ -4110,6 +5004,12 @@ def main():
         test_rueckseite_gans(Path(tmp))
         test_download_seite(Path(tmp))
         test_status_englisch(Path(tmp))
+        test_ci(Path(tmp))
+        test_ci_browser(Path(tmp))
+        test_aussprache(Path(tmp))
+        test_neue_version(p, Path(tmp))
+        test_wortliste(p, Path(tmp))
+        test_wortliste_oberflaeche(p, Path(tmp))
     ok =sum(1 for e in tg.ergebnisse if e[1])
     print(f"\n{ok} von {len(tg.ergebnisse)} Prüfungen bestanden ({time.time() - t0:.0f} s).")
     if ok == len(tg.ergebnisse):

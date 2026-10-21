@@ -1,0 +1,108 @@
+# Me Goos-ta Deutsch – Frischtest auf echten GitHub-Rechnern (seit 2.2).
+# Installiert das Programm wie ein Nutzer über die Startdatei, bedient die Oberfläche per API, lässt beide Testreihen
+# laufen, prüft zweiten Start, Update und Deinstallation; dazu der Browser-Test (Oberfläche, Web-App, Download-Seite,
+# Anleitungen in WebKit, Firefox und Chromium). Keine Person nötig, nichts zum Anklicken.
+# Gepusht wird nur Branch ci (ci_lauf.py im Arbeitsordner, verwaister Commit). Keine Secrets, nur Lesen.
+name: Frischtest
+
+on:
+  push:
+    branches: [ci]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: frischtest-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  frischtest:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: windows-x64, os: windows-latest }
+          - { name: windows-arm, os: windows-11-arm }
+          - { name: macos-arm, os: macos-14 }        # macos-latest/-15/-26 (arm64) bekamen am 20.10.2026 keinen Runner
+          - { name: macos-intel, os: macos-15-intel }
+          - { name: linux-x64, os: ubuntu-latest }
+          - { name: linux-arm, os: ubuntu-24.04-arm }
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.13"
+      - name: desktop-file-validate (nur Linux, zum Prüfen des Menüeintrags)
+        if: runner.os == 'Linux'
+        run: sudo apt-get install -y -qq --no-install-recommends desktop-file-utils > /dev/null
+      - name: Frischtest
+        run: python .github/ci/frischtest.py --system ${{ matrix.name }} --ergebnis ergebnis.json
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: ergebnis-${{ matrix.name }}
+          path: ergebnis.json
+          retention-days: 14
+          if-no-files-found: warn
+
+  debian:
+    # schlankes Debian: nur wget (kein curl), ca-certificates, tar – python3 nur als Dirigent des Tests
+    name: debian-slim
+    runs-on: ubuntu-latest
+    container: debian:stable-slim
+    timeout-minutes: 45
+    steps:
+      - name: Minimal-System
+        run: apt-get update -qq && apt-get install -y -qq --no-install-recommends wget ca-certificates tar python3 > /dev/null
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Frischtest
+        run: python3 .github/ci/frischtest.py --system debian-slim --ergebnis ergebnis.json
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: ergebnis-debian-slim
+          path: ergebnis.json
+          retention-days: 14
+          if-no-files-found: warn
+
+  browser:
+    # Playwright (Apache-2.0) nur hier, nie im Programm. WebKit = Safaris Engine (kein echtes iPhone). Windows ohne
+    # Browser-Job (Chromium läuft dort schon über den Frischtest bzw. lokal).
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: browser-linux, os: ubuntu-latest, engines: "chromium,firefox,webkit" }
+          - { name: browser-macos, os: macos-15-intel, engines: "webkit" }   # WebKit für macOS 14 ist eingefroren (hängt), macos-latest/-15 arm64 ohne Runner
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.13"
+      - name: Programm-Pakete und Playwright
+        run: |
+          python -m pip install -q -r Programm/requirements.txt playwright==1.63.0
+          python -m playwright install --with-deps $(echo "${{ matrix.engines }}" | tr ',' ' ')
+      - name: Browser-Test
+        run: python .github/ci/browser_test.py --system ${{ matrix.name }} --engines ${{ matrix.engines }} --ergebnis ergebnis.json
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: ergebnis-${{ matrix.name }}
+          path: ergebnis.json
+          retention-days: 14
+          if-no-files-found: warn

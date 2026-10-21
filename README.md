@@ -24,6 +24,16 @@ Print them at home, order them from a print shop, or study digitally with Anki, 
 one click away. Everything before and during the setup starts in English; afterwards the language you pick in the
 program counts.
 
+## New in 2.2
+
+**Hear the German** – when you learn, 🔊 now also reads the German text aloud after you reveal the answer (offline
+voices of your system) · **word lists in Ideas** – “📋 Word list …” turns a file or pasted text into up to 500 ideas
+at once, with a preview (nothing gets cut quietly, undo with one click), and “🌐 Translate all” suggests the missing
+words · **“🔎 Check for a new version”** in Help → About this program – only when you click · for developers: every
+version is tested automatically on Windows, macOS and Linux (x64 and ARM) and in WebKit, Firefox and Chromium before
+it is released, and the published version is checked again every week. Updating keeps your cards, settings and
+learning progress.
+
 ## New in 2.1
 
 **Download for every system** – one ZIP for Windows, macOS and Linux as a GitHub release, with a friendly download
@@ -75,7 +85,10 @@ error messages. Updating keeps your cards, settings and learning progress.
 Everything stays on your computer. Internet is only used for the one-time setup (python.org, pypi.org, github.com –
 every download is checked by checksum), for tools you install yourself (models and fonts from github.com or
 huggingface.co, checked by checksum) and, only if you switch it on, for translation suggestions (only the single word
-is sent). The interface is reachable only from your own computer unless you deliberately enable phone access.
+is sent). Checking for a new version happens only when you click “Check for a new version” (Help → About this
+program): one request to api.github.com, with no data about you or your cards – the program never checks on its own.
+Read aloud (🔊) only uses offline voices of your system. The interface is reachable only from your own computer unless
+you deliberately enable phone access.
 
 ## For developers
 

@@ -1,6 +1,6 @@
 # Me Goos-ta Deutsch – Guía
 
-Actualizada: 20/10/2026 · programa e interfaz versión 2.1 · Alemán: `LEITFADEN.md` · Inglés: `LEITFADEN_en.md`
+Actualizada: 21/10/2026 · programa e interfaz versión 2.2 · Alemán: `LEITFADEN.md` · Inglés: `LEITFADEN_en.md`
 
 ¡Qué bueno que estás aquí! Esta guía te acompaña desde el primer doble clic hasta la carta terminada, paso a paso y sin tecnicismos. No tienes que leerla de principio a fin: salta a la parte que necesites. Y tranquilo: aquí nadie te apura; cada paso va a tu ritmo, como un ganso que pasea a gusto.
 
@@ -64,7 +64,7 @@ La interfaz sigue funcionando en segundo plano aunque cierres la pestaña del na
 
 Tu trabajo está en la carpeta `Programm`: la lista de cartas `karten.csv`, las imágenes en `bilder/`, tus ideas en `ideen/`, archivos de impresión e imágenes mejoradas en `ausgabe/`, los ajustes en `ui_einstellungen.json` y tu imagen de ganso en `assets/`. La descarga de una versión nueva no trae nada de eso: sus cartas de ejemplo vienen como `beispiel-karten.csv` y `beispiel-bilder/` y solo se usan en una carpeta totalmente nueva. Así no se pierde nada al actualizar.
 
-**La versión nueva** siempre está en la página de descarga; en el programa, en **Ayuda → «Acerca del programa»**, enlace «Versión más reciente para Windows, macOS y Linux».
+**La versión nueva** siempre está en la página de descarga; en el programa, en **Ayuda → «Acerca del programa»**, enlace «Versión más reciente para Windows, macOS y Linux». Si hay una versión nueva te lo dice ahí el botón **«🔎 Buscar una versión nueva»**: solo tu clic pregunta una vez a GitHub (api.github.com) por la versión más reciente; nunca por sí solo, nunca en segundo plano, sin datos sobre ti ni tus cartas, y no se guarda nada. Si hay un ganso más nuevo, un enlace te lleva a la página de descarga; «¡Ganso al día!» significa que ya tienes el más reciente. El botón solo existe en la computadora (no en la app del celular ni con el acceso desde el celular).
 
 **Lo más seguro:** antes descarga una copia completa en **Importar / exportar**. La puedes importar en cualquier lugar.
 
@@ -220,6 +220,25 @@ Las buenas ideas llegan de repente, y aquí tienen su lugar. Una idea solo neces
 - Cuando están la imagen, el texto de la imagen y la palabra en {{español}}, se activa **«Hacer carta»**: la idea pasa las mismas revisiones que en los pasos 1 y 2 y después aparece en **Mis cartas**.
 - **«Descartar»** se puede deshacer con «Deshacer».
 - Abajo están todas las **cartas sin terminar** de «Carta nueva» con «Seguir →».
+
+**Lista de palabras: muchas ideas de una vez.** ¿Ya tienes una lista de vocabulario? **«📋 Lista de palabras …»** la convierte en ideas de un jalón, con o sin traducción.
+
+1. Elige un archivo (CSV, TSV o texto) o arrástralo, o simplemente pega la lista en el campo y pulsa «Revisar».
+2. La **vista previa** muestra cada línea con su estado: *nueva*, *repetida en la lista*, *ya es idea*, *ya es carta* o *con errores* (con el motivo). Las líneas nuevas van marcadas, lo demás lo decides tú; las líneas con errores se corrigen en la lista.
+3. Si algo no cuadra, ayudan las opciones de arriba: separador, primera línea como encabezado, una sola columna es alemán o {{español}}, intercambiar columnas, «Gans» delante. Cada cambio vuelve a revisar la lista.
+4. **«Crear n ideas»** y listo. El aviso de después trae **«Deshacer»**: retira la lista completa; las ideas que hayas cambiado mientras tanto se quedan.
+
+| En la lista | Resultado |
+| --- | --- |
+| `alt;viejo` | Gans alt → viejo |
+| `müde` | Gans müde, la palabra en {{español}} viene después |
+| `Alemán;Palabra;Nota` (primera línea) | encabezado: define el orden de las columnas |
+| `rot;rojo;Farbe` | tercera columna = nota |
+| `# Farben` | comentario, se omite |
+
+Los separadores pueden ser punto y coma, tabulador, coma, « = » o « – »; como máximo 500 palabras y 1 MB por lista, nunca se acorta nada en silencio. La palabra siempre es del idioma actual de las cartas; para otro idioma, cambia antes el idioma de las cartas.
+
+**🌐 Traducir todas** aparece en cuanto hay ideas con texto en alemán pero sin palabra en {{español}}: un clic trae una sugerencia para todas (con el mismo consentimiento de siempre). Solo se llenan los campos que en ese momento sigan vacíos, marcados como «automática – revisar». Si se agota la cuota diaria del servicio, el programa se detiene sin problemas y te dice cuántas ya están.
 
 ## Traducción automática
 
@@ -404,7 +423,7 @@ Con la herramienta **«🎓 Aprender cartas»** practicas tus cartas dentro del 
 | Ajustes | cartas nuevas y repasos por día, retención deseada (80–95 %, normal 90 %), dirección (imagen → palabra, palabra → imagen, ambas), idioma de aprendizaje, inicio del día de aprendizaje (normal 4 a. m.) |
 | Respaldar progreso | exportar (archivo JSON), importar (en cada carta gana el estado más reciente), reiniciar todo |
 
-**Al aprender:** espacio = mostrar respuesta, teclas **1–4** = calificar, **Ctrl+Z** = deshacer, **Esc** = terminar. En el celular tocas la carta; los botones para calificar quedan abajo, al alcance del pulgar; deslizar a la derecha significa «Bien», a la izquierda «Otra vez» (↶ lo deshace). Puedes parar cuando quieras: cada calificación se guarda al instante, aunque cierres el programa. Si tu sistema tiene una voz para el idioma, 🔊 lee la palabra en voz alta.
+**Al aprender:** espacio = mostrar respuesta, teclas **1–4** = calificar, **Ctrl+Z** = deshacer, **Esc** = terminar. En el celular tocas la carta; los botones para calificar quedan abajo, al alcance del pulgar; deslizar a la derecha significa «Bien», a la izquierda «Otra vez» (↶ lo deshace). Puedes parar cuando quieras: cada calificación se guarda al instante, aunque cierres el programa. Si tu sistema tiene una voz para el idioma, 🔊 lee la palabra en voz alta. Después de «Mostrar respuesta» también hay un 🔊 junto al texto en alemán: lee el alemán tal como aparece en la imagen, en ambas direcciones, pero solo después de destapar la carta (si no, revelaría la respuesta). Solo usa una voz de tu sistema que funcione sin internet (primero alemán de Alemania, luego de Austria y después de Suiza); sin ella no aparece el botón. En Windows puedes agregar una voz alemana en Configuración, en «Hora e idioma → Idioma».
 
 **En «Mis cartas»** cada carta muestra su progreso (nueva, aprendiendo, joven, segura; al pasar el mouse: cuántas veces se aprendió y cuándo es el siguiente repaso). Arriba de la lista filtras por pendientes, nuevas, seguras o difíciles. Con **«☑ Seleccionar»** marcas cartas y las aprendes **«ahora»** o las pones en un mazo.
 
@@ -419,7 +438,7 @@ Con la herramienta **«🎓 Aprender cartas»** practicas tus cartas dentro del 
 | Formato | Cómo estudiar con él |
 | --- | --- |
 | Paquete de Anki (`.apkg`) | ábrelo en Anki en tu computadora (Windows, Mac, Linux), o mándalo al celular por correo, nube o cable e impórtalo en AnkiDroid (Android) o AnkiMobile (iPhone/iPad) |
-| Página de estudio (`.html`) | un solo archivo que funciona sin conexión en el navegador de la computadora. Voltear, «¡La sé!» u «Otra vez»; tu progreso se guarda en ese navegador. En el celular funciona solo a medias (en el iPhone casi nunca arranca desde la app Archivos); ahí mejor usa el paquete de Anki o el PDF de pantalla |
+| Página de estudio (`.html`) | un solo archivo que funciona sin conexión en el navegador de la computadora. Voltear, «¡La sé!» u «Otra vez»; después de voltear, 🔊 lee el texto en alemán (solo con una voz sin conexión de tu sistema; si no, no hay botón); tu progreso se guarda en ese navegador. En el celular funciona solo a medias (en el iPhone casi nunca arranca desde la app Archivos); ahí mejor usa el paquete de Anki o el PDF de pantalla |
 | PDF de pantalla | hojéalo en cualquier app de PDF: anverso, reverso, siguiente carta |
 | Tablas (CSV) | para Quizlet, Brainscape, Mochi y más; elige «Tablas para otras apps» en los ajustes finos |
 
@@ -480,6 +499,8 @@ Se probaron cinco modelos libres contra el más sencillo FSRCNN con fotos peque�
 - La interfaz solo es accesible desde tu computadora y solo se abre con el programa de inicio (clave de inicio secreta), salvo que actives a propósito el acceso desde el celular: entonces, además, con PIN y en tu propia wifi.
 - Otras páginas web no pueden controlarla; los archivos solo se leen y escriben en las carpetas del proyecto, y «Abrir» nunca ejecuta programas ni scripts.
 - La traducción automática solo envía datos con tu permiso y solo la palabra a traducir (en la imagen IA, al hacer clic, la descripción corta), cifrada, a tres servicios fijos.
+- «Buscar una versión nueva» solo pregunta cuando haces clic en el botón: una consulta a api.github.com, sin datos sobre ti ni tus cartas. El programa nunca busca actualizaciones por sí solo.
+- Leer en voz alta (🔊) solo usa voces de tu sistema que funcionan sin conexión; ningún texto va a internet para eso.
 - El modelo de imágenes IA trabaja por completo en tu computadora; las descripciones y las imágenes no salen de ella.
 - Los textos que Excel tomaría como fórmula (que empiezan con = + - @) se rechazan, también al importar. Las imágenes se revisan y se guardan sin metadatos.
 - Los modelos de IA y Python solo se descargan de fuentes oficiales y se verifican con suma de comprobación; los archivos de modelo no pueden ejecutar código.
@@ -510,6 +531,9 @@ No te preocupes: casi todo tiene una solución rápida.
 | Se rechaza la imagen de ganso | Usa JPG, PNG o WEBP (no HEIC), mínimo 300 píxeles, máximo 40 MB |
 | Generar tarda mucho | Real-ESRGAN necesita de 1 a 4 minutos por imagen la primera vez; después va rápido. Mejora las imágenes antes en «Mejora de imagen» o elige «FSRCNN (rápido)» para probar |
 | La vista previa del reverso solo muestra la palabra | Haz doble clic una vez en el archivo de inicio (lo repara); los PDF salen bien de todos modos |
+| Lista de palabras: «parece un archivo de Excel» | en Excel «Guardar como» → «CSV UTF-8 (delimitado por comas)», o copia las celdas y pégalas en el campo de la lista |
+| La lista muestra caracteres raros (Ã¤ en vez de ä) | guárdala como «CSV UTF-8» o texto UTF-8; la vista previa muestra arriba la codificación detectada |
+| Lista de palabras: «lista demasiado larga, divídela» | como máximo 500 palabras y 1 MB por lista: divídela en varios archivos y créalos uno tras otro |
 | ñ, á o ü salen como caracteres raros | Guarda `karten.csv` como «CSV UTF-8» |
 | Reverso al revés / impresión desplazada | «Girar el reverso 180°» / «desplazamiento» en Generar |
 | Imagen mal recortada | Cambia el recorte en el paso 1 |

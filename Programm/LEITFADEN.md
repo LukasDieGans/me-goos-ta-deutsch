@@ -1,6 +1,6 @@
 # Me Goos-ta Deutsch – Leitfaden
 
-Stand: 20.10.2026 · Programm und Oberfläche Version 2.1 · Englisch: `LEITFADEN_en.md` · Spanisch: `LEITFADEN_es.md`
+Stand: 21.10.2026 · Programm und Oberfläche Version 2.2 · Englisch: `LEITFADEN_en.md` · Spanisch: `LEITFADEN_es.md`
 
 Schön, dass du da bist! Dieser Leitfaden begleitet dich vom ersten Doppelklick bis zur fertigen Karte – Schritt für Schritt und ohne Fachchinesisch. Du musst ihn nicht von vorn bis hinten lesen: Spring einfach zu dem Teil, den du gerade brauchst. Und keine Sorge – das ist hier kein Gänsemarsch, du kannst jeden Schritt in deinem Tempo gehen.
 
@@ -64,7 +64,7 @@ Die Oberfläche läuft im Hintergrund weiter, auch wenn der Browser-Tab geschlos
 
 Deine Arbeit liegt im Ordner `Programm`: die Kartenliste `karten.csv`, die Bilder in `bilder/`, deine Ideen in `ideen/`, Druckdateien und verbesserte Bilder in `ausgabe/`, die Einstellungen in `ui_einstellungen.json` und ein eigenes Gänse-Bild in `assets/`. Der Download einer neuen Version enthält nichts davon – seine Beispielkarten liegen als `beispiel-karten.csv` und `beispiel-bilder/` bei und werden nur in einem ganz neuen Ordner verwendet. So geht beim Update nichts verloren.
 
-**Die neue Version** gibt es immer auf der Download-Seite – im Programm unter **Hilfe → „Über dieses Programm“**, Link „Neueste Version für Windows, macOS und Linux“.
+**Die neue Version** gibt es immer auf der Download-Seite – im Programm unter **Hilfe → „Über dieses Programm“**, Link „Neueste Version für Windows, macOS und Linux“. Ob es eine neue Version gibt, verrät dir dort der Knopf **„🔎 Nach neuer Version suchen“**: Erst dein Klick fragt einmal bei GitHub (api.github.com) nach dem neuesten Release – nie von selbst, nie im Hintergrund, ohne Daten über dich oder deine Karten, und nichts wird gespeichert. Ist eine neuere Gans da, führt ein Link zur Download-Seite; „Gans aktuell!“ heißt, du hast schon die neueste. Den Knopf gibt es nur am Rechner (nicht in der Handy-App und nicht über den Handy-Zugang).
 
 **Am sichersten:** Vorher unter **Import / Export** eine Komplettsicherung herunterladen. Die lässt sich überall wieder einlesen.
 
@@ -220,6 +220,25 @@ Gute Ideen kommen oft zwischendurch – hier haben sie ihren Platz. Eine Idee br
 - Sind Bild, Text auf dem Bild und Wort auf {{Spanisch}} da, wird **„Als Karte aufnehmen“** aktiv: Die Idee durchläuft dieselben Prüfungen wie in Schritt 1 und 2 und steht danach unter **Meine Karten**.
 - **„Verwerfen“** lässt sich mit „Rückgängig“ zurückholen.
 - Darunter stehen alle **unfertigen Karten** aus „Neue Karte“ mit „Weiter bearbeiten →“.
+
+**Wortliste: viele Ideen auf einmal.** Hast du schon eine Vokabelliste? **„📋 Wortliste …“** macht daraus in einem Rutsch Ideen – mit oder ohne Übersetzung.
+
+1. Datei wählen (CSV, TSV oder Text) oder hineinziehen – oder die Liste einfach ins Feld einfügen und „Prüfen“ drücken.
+2. Die **Vorschau** zeigt jede Zeile mit Status: *neu*, *doppelt in der Liste*, *schon Idee*, *schon Karte* oder *fehlerhaft* (mit Grund). Neue Zeilen sind angehakt, den Rest entscheidest du selbst; fehlerhafte Zeilen korrigierst du in der Liste.
+3. Passt etwas nicht, helfen die Optionen darüber: Trennzeichen, erste Zeile als Überschrift, eine Spalte ist Deutsch oder {{Spanisch}}, Spalten tauschen, „Gans“ davor. Jede Änderung prüft die Liste neu.
+4. **„n Ideen anlegen“** – fertig. Der Hinweis danach hat **„Rückgängig“**: Er nimmt die ganze Liste zurück; Ideen, die du inzwischen geändert hast, bleiben stehen.
+
+| So steht es in der Liste | Daraus wird |
+| --- | --- |
+| `alt;viejo` | Gans alt → viejo |
+| `müde` | Gans müde, das Wort auf {{Spanisch}} folgt später |
+| `Deutsch;Wort;Notiz` (erste Zeile) | Überschrift – legt die Reihenfolge der Spalten fest |
+| `rot;rojo;Farbe` | dritte Spalte = Notiz |
+| `# Farben` | Kommentar, wird übersprungen |
+
+Trennzeichen dürfen Semikolon, Tab, Komma, „ = “ oder „ – “ sein; höchstens 500 Wörter und 1 MB je Liste, gekürzt wird nie still. Das Wort gilt immer für die aktuelle Kartensprache – für eine andere Sprache vorher die Kartensprache wechseln.
+
+**🌐 Alle übersetzen** erscheint, sobald Ideen einen deutschen Text, aber noch kein Wort auf {{Spanisch}} haben: Ein Klick holt für alle einen Vorschlag (mit derselben Zustimmung wie überall). Gefüllt werden nur Felder, die dann noch leer sind, markiert als „automatisch – prüfen“. Ist das Tageskontingent des Dienstes aufgebraucht, hört das Programm sauber auf und meldet, wie viele schon geschafft sind.
 
 ## Automatische Übersetzung
 
@@ -404,7 +423,7 @@ Mit dem Tool **„🎓 Karten lernen“** übst du deine Karten direkt im Progra
 | Einstellungen | neue Karten und Wiederholungen pro Tag, gewünschte Behaltensquote (80–95 %, Standard 90 %), Richtung (Bild → Wort, Wort → Bild, beide), Lernsprache, Beginn des Lerntags (Standard 4 Uhr) |
 | Lernstand sichern | exportieren (JSON-Datei), importieren (je Karte gilt der neuere Stand), alles zurücksetzen |
 
-**Beim Lernen:** Leertaste = Antwort zeigen, Tasten **1–4** = bewerten, **Strg+Z** = rückgängig, **Esc** = beenden. Am Handy tippst du die Karte an; die Bewertungsknöpfe liegen unten im Daumenbereich, Wischen nach rechts heißt „Gut“, nach links „Nochmal“ (↶ nimmt es zurück). Du kannst jederzeit aufhören – jede Bewertung ist sofort gespeichert, auch wenn du das Programm schließt. Hat dein System eine Stimme für die Sprache, liest 🔊 das Wort vor.
+**Beim Lernen:** Leertaste = Antwort zeigen, Tasten **1–4** = bewerten, **Strg+Z** = rückgängig, **Esc** = beenden. Am Handy tippst du die Karte an; die Bewertungsknöpfe liegen unten im Daumenbereich, Wischen nach rechts heißt „Gut“, nach links „Nochmal“ (↶ nimmt es zurück). Du kannst jederzeit aufhören – jede Bewertung ist sofort gespeichert, auch wenn du das Programm schließt. Hat dein System eine Stimme für die Sprache, liest 🔊 das Wort vor. Nach „Antwort zeigen“ steht auch neben dem deutschen Text ein 🔊: Es liest das Deutsche so vor, wie es auf dem Bild steht – in beiden Richtungen, aber erst nach dem Aufdecken (sonst wäre die Antwort verraten). Vorgelesen wird nur mit einer Stimme deines Systems, die ohne Internet arbeitet (zuerst Deutsch aus Deutschland, dann Österreich, dann Schweiz); fehlt sie, gibt es keinen Knopf. Unter Windows lässt sich eine deutsche Stimme in den Einstellungen unter „Zeit und Sprache → Sprache“ hinzufügen.
 
 **In „Meine Karten“** zeigt jede Karte ihren Lernstand (neu, lernt, jung, sicher; im Hover: wie oft gelernt und wann die nächste Wiederholung ist). Darüber filterst du nach fällig, neu, sicher oder Problemkarten. Mit **„☑ Auswählen“** kreuzt du Karten an und lernst sie **„Jetzt“** oder legst sie in einen Stapel.
 
@@ -419,7 +438,7 @@ Lust, auch unterwegs zu lernen? Wähle in Erzeugen **„Digitale Lernkarten“**
 | Format | So lernst du damit |
 | --- | --- |
 | Anki-Paket (`.apkg`) | in Anki am Rechner öffnen (Windows, Mac, Linux) – oder per Mail, Cloud oder Kabel aufs Handy und in AnkiDroid (Android) bzw. AnkiMobile (iPhone/iPad) importieren |
-| Lernseite (`.html`) | eine einzige Datei, läuft offline im Browser am Rechner. Umdrehen, „Gewusst“ oder „Nochmal“; dein Lernstand bleibt in diesem Browser gespeichert. Am Handy klappt sie nur eingeschränkt (am iPhone startet sie aus der Dateien-App meist nicht) – dort lieber das Anki-Paket oder das Bildschirm-PDF |
+| Lernseite (`.html`) | eine einzige Datei, läuft offline im Browser am Rechner. Umdrehen, „Gewusst“ oder „Nochmal“; nach dem Umdrehen liest 🔊 den deutschen Text vor (nur mit einer Offline-Stimme deines Systems, sonst kein Knopf); dein Lernstand bleibt in diesem Browser gespeichert. Am Handy klappt sie nur eingeschränkt (am iPhone startet sie aus der Dateien-App meist nicht) – dort lieber das Anki-Paket oder das Bildschirm-PDF |
 | Bildschirm-PDF | in jeder PDF-App durchblättern: Vorderseite, Rückseite, nächste Karte |
 | Tabellen (CSV) | für Quizlet, Brainscape, Mochi & Co. – im Feinschliff „Tabellen für andere Apps“ wählen |
 
@@ -480,6 +499,8 @@ Getestet wurden fünf frei verfügbare Modelle gegen das einfachere FSRCNN, an k
 - Die Oberfläche ist nur auf deinem Rechner erreichbar und nur über das Startprogramm zu öffnen (geheimer Startschlüssel) – außer du schaltest bewusst den Handy-Zugang ein, dann zusätzlich mit PIN im eigenen WLAN.
 - Andere Webseiten können sie nicht fernsteuern; Dateien werden nur in den Projektordnern gelesen und geschrieben, „Öffnen“ startet nie Programme oder Skripte.
 - Die automatische Übersetzung sendet nur nach deiner Zustimmung und nur das zu übersetzende Wort (beim KI-Bild auf Klick die kurze Beschreibung), verschlüsselt an drei fest eingetragene Dienste.
+- „Nach neuer Version suchen“ fragt nur, wenn du auf den Knopf klickst: eine Anfrage an api.github.com, ohne Daten über dich oder deine Karten. Von selbst sucht das Programm nie nach Updates.
+- Vorlesen (🔊) nutzt nur Stimmen deines Systems, die offline arbeiten – kein Text geht dafür ins Internet.
 - Das KI-Bildmodell rechnet vollständig auf deinem Rechner; Beschreibungen und Bilder verlassen ihn nicht.
 - Texte, die in Excel als Formel gelten würden (Anfang = + - @), werden abgelehnt – auch beim Import. Bilder werden geprüft und ohne Metadaten gespeichert.
 - KI-Modelle und Python werden nur von offiziellen Quellen geladen und per Prüfsumme kontrolliert; Modell-Dateien können keinen Code ausführen.
@@ -510,6 +531,9 @@ Keine Panik – für fast alles gibt es eine schnelle Lösung:
 | Gänse-Bild wird abgelehnt | JPG, PNG oder WEBP verwenden (kein HEIC), mindestens 300 Pixel, höchstens 40 MB |
 | Erzeugen dauert lange | Real-ESRGAN braucht beim ersten Mal 1–4 Minuten pro Bild; danach geht es schnell. Bilder vorab im Reiter „Bildverbesserung“ verbessern oder zum Ausprobieren „FSRCNN (schnell)“ wählen |
 | Rückseiten-Vorschau zeigt nur das Wort | einmal die Startdatei doppelklicken (repariert); die PDFs sind in jedem Fall richtig |
+| Wortliste: „sieht nach einer Excel-Datei aus“ | in Excel „Speichern unter“ → „CSV UTF-8 (durch Trennzeichen getrennt)“ – oder die Zellen kopieren und ins Feld der Wortliste einfügen |
+| Wortliste zeigt Zeichensalat (Ã¤ statt ä) | als „CSV UTF-8“ bzw. Text in UTF-8 speichern; die Vorschau nennt oben die erkannte Kodierung |
+| Wortliste: „Liste zu lang – bitte teilen“ | höchstens 500 Wörter und 1 MB je Liste: in mehrere Dateien aufteilen und nacheinander anlegen |
 | ñ, á oder ü erscheinen als Zeichensalat | `karten.csv` als „CSV UTF-8“ speichern |
 | Rückseite steht kopfüber / Druck versetzt | „Rückseite um 180° drehen“ / „Versatz“ in Erzeugen |
 | Bild ungünstig beschnitten | in Schritt 1 den Ausschnitt wechseln |

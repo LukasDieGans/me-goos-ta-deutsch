@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-ME GOOS-TA DEUTSCH – Tools (optionale Funktionen)                    Version 2.1 (20.10.2026)
+ME GOOS-TA DEUTSCH – Tools (optionale Funktionen)                    Version 2.2 (21.10.2026)
 =============================================================================================
 Ein Tool ist eine optionale Funktion, die nicht vorinstalliert ist (spart Platz). Reiter und Knöpfe bleiben immer
 sichtbar; wer ein fehlendes Tool nutzen will, wird gefragt, das Tool lädt über die Warteschlange (gans_ui) und die

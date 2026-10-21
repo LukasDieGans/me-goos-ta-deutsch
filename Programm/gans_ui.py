@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-ME GOOS-TA DEUTSCH – Oberfläche                                     Version 2.1 (20.10.2026)
+ME GOOS-TA DEUTSCH – Oberfläche                                     Version 2.2 (21.10.2026)
 =============================================================================================
 Startet eine lokale Oberfläche im Browser, von der aus alles bedient wird: Meine Karten, Tabelle (Vorder- und
 Rückseite nebeneinander), Bildverbesserung, Schritt 1 „Bilder vorbereiten“ (auch viele auf einmal), Schritt 2
@@ -65,7 +65,7 @@ except ImportError:                                      # Datei fehlt (Testkopi
     sprachen = None
 
 L, T = gl.L, gl.T
-UI_VERSION = "2.1 (20.10.2026)"
+UI_VERSION = "2.2 (21.10.2026)"
 EINSTELLUNGEN = HIER / "ui_einstellungen.json"
 UI_DATEI = HIER / "ui" / "index.html"
 MAX_BILD = gl.MAX_DATEI_MB * 1024 * 1024
@@ -284,6 +284,25 @@ TEXTE = {
                             "Esto no es un progreso de Me Goos-ta Deutsch (lernstand.json de «Exportar progreso»)."),
     "lern_ungueltig": L("Das hat nicht geklappt – bitte die Eingaben prüfen.", "That didn’t work – please check the input.",
                         "Eso no funcionó; revisa los datos."),
+    # Nach neuer Version suchen (nur auf Klick)
+    "nv_kein_release": L("Für dieses Programm ist keine Download-Adresse eingetragen – die Gans weiß nicht, wo sie nachsehen soll.",
+                         "No download address is set for this program – the goose doesn’t know where to look.",
+                         "Este programa no tiene una dirección de descarga; el ganso no sabe dónde buscar."),
+    "nv_netz": L("Keine Verbindung zum Internet – die Gans fliegt gerade offline. Später einfach nochmal klicken.",
+                 "No internet connection – the goose is flying offline right now. Just click again later.",
+                 "No hay conexión a internet; el ganso vuela sin red. Vuelve a hacer clic más tarde."),
+    "nv_zeit": L("GitHub antwortet gerade nicht rechtzeitig. Gleich nochmal versuchen?",
+                 "GitHub didn’t answer in time. Try again in a moment?",
+                 "GitHub no respondió a tiempo. ¿Lo intentas de nuevo en un momento?"),
+    "nv_grenze": L("GitHub braucht eine kleine Pause (Abfrage-Grenze erreicht). In einer Stunde nochmal klicken.",
+                   "GitHub needs a little break (request limit reached). Click again in an hour.",
+                   "GitHub necesita un pequeño descanso (límite de consultas). Vuelve a hacer clic en una hora."),
+    "nv_noch_keins": L("Es gibt noch kein veröffentlichtes Release – du hast also die neueste Gans.",
+                       "There’s no published release yet – so you have the newest goose.",
+                       "Todavía no hay ninguna versión publicada; tienes el ganso más nuevo."),
+    "nv_format": L("Die Antwort von GitHub sah unerwartet aus – bitte später nochmal versuchen.",
+                   "GitHub’s answer looked unexpected – please try again later.",
+                   "La respuesta de GitHub se veía extraña; inténtalo más tarde."),
 }
 
 
@@ -2585,8 +2604,10 @@ img{width:96px;height:96px}</style></head><body><main><img src="/symbol.svg" alt
 # Anfragen: Logik ohne HTTP-Server (verarbeite, Anfrage) + dünne Hülle für den lokalen Server (Handler)
 # =============================================================================================
 OEFFENTLICH = {"/symbol.svg", "/favicon.ico", "/apple-touch-icon.png", "/apple-touch-icon-precomposed.png"}
-# Was Handy-Zugang und Web-App nicht dürfen (POST): Beenden, Deinstallieren, am Rechner öffnen, Start-/Handy-Einstellungen
-NUR_RECHNER_WEGE = {"/api/deinstallieren", "/api/beenden", "/api/oeffnen", "/api/lan", "/api/start-einstellung"}
+# Was Handy-Zugang und Web-App nicht dürfen (POST): Beenden, Deinstallieren, am Rechner öffnen, Start-/Handy-Einstellungen,
+# Versionsprüfung (betrifft nur das Programm am Rechner)
+NUR_RECHNER_WEGE = {"/api/deinstallieren", "/api/beenden", "/api/oeffnen", "/api/lan", "/api/start-einstellung",
+                    "/api/neue-version"}
 
 
 def oeffentlich(weg):
@@ -2944,6 +2965,8 @@ class Anfrage:
             return self._senden(200, uebersetzung_setzen(daten))
         if weg == "/api/uebersetzen":
             return self._senden(200, uebersetzen(daten))
+        if weg == "/api/neue-version":                         # nur auf Klick „Nach neuer Version suchen“
+            return self._senden(200, neue_version())
         if weg == "/api/ki-bild-prompt" and ki_bild:
             return self._senden(200, ki_bild_prompt_setzen(daten))
         if weg == "/api/ki-bild-text" and ki_bild:
@@ -3132,6 +3155,51 @@ def web_adresse():
     except (OSError, IndexError):
         return ""
     return zeile if re.fullmatch(r"https://[A-Za-z0-9.-]+(/[A-Za-z0-9._~/-]*)?", zeile) else ""
+
+
+# =============================================================================================
+# Nach neuer Version suchen – nur auf Klick (Hilfe → Über), nie beim Start oder im Hintergrund; nichts wird gespeichert
+# =============================================================================================
+VERSION_MAX_ANTWORT = 200_000                                 # Bytes; eine Release-Antwort von GitHub hat ~5–20 KB
+
+
+def version_tupel(text):
+    """„v2.10“ → (2, 10, 0); alles andere (latest, v2, HTML …) → None."""
+    m = re.fullmatch(r"v?(\d{1,4})\.(\d{1,4})(?:\.(\d{1,4}))?", str(text or "").strip())
+    return (int(m.group(1)), int(m.group(2)), int(m.group(3) or 0)) if m else None
+
+
+def release_quelle():
+    """(Konto, Repository) nur aus web_adresse.txt (https://<konto>.github.io/<repo>/) – sonst None."""
+    m = re.fullmatch(r"https://([a-z0-9](?:[a-z0-9-]{0,38}))\.github\.io/((?!\.)[A-Za-z0-9._-]{1,100})/", web_adresse())
+    return (m.group(1), m.group(2)) if m else None
+
+
+def neue_version(abruf=None):
+    """Fragt GitHub nach dem neuesten Release. Ausgewertet werden nur tag_name und published_at (kein Text, keine Links
+    aus der Antwort). abruf: Ersatz für uebersetzer.http_json (Tests)."""
+    quelle = release_quelle()
+    if not quelle:
+        raise Meldung("nv_kein_release", 409, extra={"code": "kein_release"})
+    adresse = f"https://api.github.com/repos/{quelle[0]}/{quelle[1]}/releases/latest"
+    try:
+        d = (abruf or uebersetzer.http_json)(adresse, kopf={"Accept": "application/vnd.github+json"},
+                                             hosts=("api.github.com",), max_antwort=VERSION_MAX_ANTWORT)
+    except uebersetzer.UebersetzungsFehler as e:
+        status = e.werte.get("code")
+        code = ("nv_grenze" if e.code == "zu_viele" or status in (403, 429) else "nv_noch_keins" if status == 404
+                else "nv_zeit" if e.code == "zeit" else "nv_netz" if e.code in ("netz", "zertifikat") else "nv_format")
+        return dict(ergebnis="fehler", code=code, meldung=tx(code))
+    neu = version_tupel(d.get("tag_name") if isinstance(d, dict) else None)
+    if not neu:
+        return dict(ergebnis="fehler", code="nv_format", meldung=tx("nv_format"))
+    datum = str(d.get("published_at") or "")[:10]
+    datum = datum if re.fullmatch(r"\d{4}-\d{2}-\d{2}", datum) else ""
+    eigene = str(gl.VERSION).split()[0]                         # „2.2 (21.10.2026)“ → „2.2“
+    hier = version_tupel(eigene) or (0, 0, 0)
+    version = ".".join(map(str, neu if neu[2] else neu[:2]))
+    ergebnis = "neuer" if neu > hier else "aktuell" if neu == hier else "voraus"
+    return dict(ergebnis=ergebnis, version=version, datum=datum, eigene=eigene)
 
 
 # =============================================================================================

@@ -116,6 +116,7 @@ h2 { font-size: 18px; margin: 0 0 12px; font-weight: 700; }
 h3 { font-size: 15px; margin: 0 0 8px; font-weight: 700; }
 .unter { color: var(--nacht-2); margin: 0; max-width: 70ch; }
 .klein { font-size: 13px; color: var(--nacht-3); }
+.umbruch { overflow-wrap: anywhere; }   /* lange Pfade (z. B. Datenordner) brechen um statt am Handy überzustehen */
 
 /* ---------- Knöpfe ---------- */
 .knopf { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 40px; padding: 8px 16px;
@@ -555,6 +556,31 @@ table.kompakt { width: 100%; border-collapse: collapse; table-layout: fixed; fon
 .chip-s { display: inline-block; font-size: 11.5px; font-weight: 700; padding: 1px 8px; border-radius: 10px; white-space: nowrap; }
 .chip-s.neu { background: var(--gut-flaeche); color: var(--gut); } .chip-s.konflikt { background: var(--warn-flaeche); color: var(--warn); }
 .chip-s.gleich { background: var(--himmel); color: var(--nacht-2); } .chip-s.fehler { background: var(--fehler-flaeche); color: var(--schlecht); }
+/* Wortliste (Ideen): Eingabe, Optionen, Vorschau – am Handy (≤ 600 px) als Liste statt Tabelle */
+.wl-start { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; }
+.wl-start textarea.eingabe { min-height: 120px; resize: vertical; font-family: ui-monospace, Consolas, monospace; font-size: 13px; }
+.wl-beispiele code { background: var(--himmel); border-radius: 4px; padding: 0 4px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.wl-optionen { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; margin: 10px 0; }
+.wl-optionen label.feld { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; }
+.wl-optionen select.eingabe { width: auto; min-height: 34px; padding: 4px 8px; }
+.wl-zahlen { display: flex; flex-wrap: wrap; gap: 6px 12px; font-size: 13px; margin: 6px 0; }
+.wl-rollen { max-height: min(52vh, 520px); }
+.wl-tabelle th:nth-child(1), .wl-tabelle td:nth-child(1) { width: 38px; } .wl-tabelle th:nth-child(2), .wl-tabelle td:nth-child(2) { width: 44px; }
+.wl-tabelle th:nth-child(6), .wl-tabelle td:nth-child(6) { width: 28%; }
+.wl-tabelle tr.fehler td { color: var(--nacht-3); }
+.wl-tabelle .wl-hinweis { display: block; font-size: 12px; color: var(--warn); margin-top: 2px; }
+.wl-haken { display: inline-grid; place-items: center; min-width: 30px; min-height: 30px; cursor: pointer; }
+.wl-haken input[type="checkbox"] { width: 18px; height: 18px; margin: 0; }
+@media (max-width: 860px) { .wl-start { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 600px) {
+  .wl-tabelle thead { display: none; }
+  .wl-tabelle, .wl-tabelle tbody { display: block; }
+  .wl-tabelle tr { display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 0 6px; padding: 6px 4px; border-bottom: 1px solid var(--linie); }
+  .wl-tabelle td { display: block; width: auto !important; border: 0; padding: 1px 0; grid-column: 2; }
+  .wl-tabelle td:nth-child(1) { grid-column: 1; grid-row: 1 / span 5; }
+  .wl-tabelle td:nth-child(2) { font-size: 11px; color: var(--nacht-3); }
+  .wl-tabelle td[data-label]:not(:empty)::before { content: attr(data-label) ": "; font-size: 11px; color: var(--nacht-3); }
+}
 .gw-raster { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(260px, 1fr); gap: 20px; align-items: start; }
 .gw-buehne { position: relative; border-radius: var(--radius-gross); overflow: hidden; background: var(--buehne); display: grid; place-items: center; }
 .gw-buehne canvas { display: block; max-width: 100%; max-height: 62vh; width: auto; height: auto; touch-action: none; cursor: grab; }
@@ -789,6 +815,8 @@ table.kompakt { width: 100%; border-collapse: collapse; table-layout: fixed; fon
   input:not([type="checkbox"]):not([type="radio"]):not([type="color"]):not([type="file"]), select, .f select, .eingabe { min-height: 44px; }
   .geprueft { min-height: 44px; }
   .verb-karte .wahl { width: 44px; height: 44px; }
+  .wl-haken { min-width: 44px; min-height: 44px; }
+  .wl-optionen select.eingabe { min-height: 44px; }
   details > summary { min-height: 44px; padding-top: 10px; padding-bottom: 10px; box-sizing: border-box; }
   button.sprach-chip { position: relative; }
   button.sprach-chip::after { content: ""; position: absolute; inset: -4px 0; }   /* Tippfläche 44 px, Chip bleibt klein */
@@ -881,6 +909,10 @@ button.sprach-chip[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--schnabel);
 .lern-hinten::before { content: ""; display: block; width: 60%; border-top: 2px dashed var(--linie); margin-bottom: 6px; }
 .lern-kopf-chip { display: flex; align-items: center; gap: 8px; justify-content: center; }
 .lern-de { font-size: 16px; color: var(--nacht-2); }
+.lern-de .lern-de-ton { margin-left: 6px; vertical-align: middle; }
+.ueber .nv-hinweis { margin: 6px 0 0; color: var(--nacht-2); }
+.ueber .nv-ergebnis:not(:empty) { margin-top: 8px; }
+.ueber .nv-ergebnis p { margin: 4px 0; }
 .lern-notiz { max-width: 520px; }
 .lern-problem { display: flex; align-items: center; gap: 8px 12px; flex-wrap: wrap; padding: 10px 12px; border-radius: var(--radius);
   background: var(--warn-flaeche); color: var(--warn); text-align: left; }
@@ -1142,7 +1174,9 @@ label.knopf input[type="file"] { display: none; }
     <section class="ansicht" id="v-ideen" hidden>
       <div class="titelzeile">
         <div class="text"><h1 data-t="ideen_titel"></h1><p class="unter" data-t="ideen_unter"></p></div>
-        <div class="knopfzeile"><button class="knopf" type="button" data-dialog="import-export" data-vorwahl="ideen" data-t="ie_knopf" data-t-attr="title:ie_ideen_titel"></button>
+        <div class="knopfzeile"><button class="knopf" type="button" id="ideen-uebersetzen" hidden data-t="alle_uebersetzen" data-t-attr="title:h_ideen_uebersetzen"></button>
+          <button class="knopf" type="button" data-dialog="wortliste" data-t="wl_knopf" data-t-attr="title:h_wl_knopf"></button>
+          <button class="knopf" type="button" data-dialog="import-export" data-vorwahl="ideen" data-t="ie_knopf" data-t-attr="title:ie_ideen_titel"></button>
           <button class="knopf" type="button" data-dialog="gans-werkzeug" data-t="gw_knopf" data-t-attr="title:gw_knopf_unter"></button>
           <button class="knopf haupt" type="button" id="idee-neu" data-t="idee_neu" data-t-attr="title:h_idee_neu"></button></div>
       </div>
@@ -1255,6 +1289,12 @@ label.knopf input[type="file"] { display: none; }
   <div class="fenster" role="dialog" aria-modal="true" aria-labelledby="ie-titel">
     <div class="fenster-kopf"><h2 id="ie-titel" data-t="ie_titel"></h2><button class="knopf klein leise" data-zu data-t="schliessen"></button></div>
     <div id="ie-inhalt"></div>
+  </div>
+</div>
+<div class="overlay" id="wl-fenster" hidden data-dialogfenster>
+  <div class="fenster breit" role="dialog" aria-modal="true" aria-labelledby="wl-titel">
+    <div class="fenster-kopf"><h2 id="wl-titel" data-t="wl_titel"></h2><button class="knopf klein leise" data-zu data-t="schliessen"></button></div>
+    <div id="wl-inhalt"></div>
   </div>
 </div>
 <div class="overlay" id="gw-fenster" hidden data-dialogfenster>
@@ -1420,6 +1460,12 @@ de: {
   u_generator: "Generator", u_oberflaeche: "Oberfläche", u_python: "Python", u_projekt: "Projektordner", u_schrift: "Schrift",
   u_ki: "Bildverbesserung", u_vorschau: "Vorschau", u_vorschau_ok: "vollständig", u_vorschau_nein: "nur Vorderseite – für die Rückseiten-Vorschau „pip install pypdfium2“ ausführen",
   u_download: "Download für den Rechner", u_download_text: "Neueste Version für Windows, macOS und Linux",
+  u_neue_version: "Neue Version", nv_knopf: "🔎 Nach neuer Version suchen", nv_sucht: "Die Gans späht nach neuen Versionen …",
+  h_nv_knopf: "Fragt einmal bei GitHub nach dem neuesten Release – nur jetzt, ohne Daten über dich oder deine Karten",
+  nv_aktuell: v => `Gans aktuell! Version ${v} ist die neueste.`, nv_neuer: (v, d) => `Neue Gänse-Version ${v} da${d ? ` (vom ${d})` : ""}!`,
+  nv_voraus: (v, e) => `Du bist voraus: Version ${e} ist neuer als das neueste Release ${v} – ganz schön flott, Gans!`,
+  nv_zur_seite: "Zur Download-Seite", nv_leitfaden: "Wie das Update geht, steht im Leitfaden unter „Neue Version installieren“.",
+  nv_hinweis: "Nur auf Klick: eine Anfrage an api.github.com, ohne Daten über dich oder deine Karten.",
   u_letzter: "Letzter Lauf", u_keiner: "noch keiner", u_erweitern: "Neue Funktionen ergänzen",
   u_erweitern_text: "Neue Schalter werden in gans_lernkarten.py in baue_parser() eingetragen und erscheinen in Schritt 3 automatisch. Eine neue Auswahl bei --nur wird automatisch zu einem Startknopf, neue Werkzeuge entstehen in gans_ui.py mit @werkzeug(…).",
   fuss_version: v => `Version ${v}`, fuss_ki: m => `KI: ${m}`, fuss_vorschau_ok: "Vorschau bereit", fuss_vorschau_nein: "Vorschau eingeschränkt",
@@ -1578,6 +1624,12 @@ en: {
   u_generator: "Generator", u_oberflaeche: "Interface", u_python: "Python", u_projekt: "Project folder", u_schrift: "Font",
   u_ki: "Image enhancement", u_vorschau: "Preview", u_vorschau_ok: "complete", u_vorschau_nein: "front only – run “pip install pypdfium2” for the back preview",
   u_download: "Download for computers", u_download_text: "Latest version for Windows, macOS and Linux",
+  u_neue_version: "New version", nv_knopf: "🔎 Check for a new version", nv_sucht: "The goose is scouting for new versions …",
+  h_nv_knopf: "Asks GitHub once for the latest release – only now, with no data about you or your cards",
+  nv_aktuell: v => `Goose up to date! Version ${v} is the newest.`, nv_neuer: (v, d) => `New goose version ${v} is here${d ? ` (from ${d})` : ""}!`,
+  nv_voraus: (v, e) => `You’re ahead: version ${e} is newer than the latest release ${v} – one speedy goose!`,
+  nv_zur_seite: "Go to the download page", nv_leitfaden: "How to update is explained in the guide under “Installing a new version”.",
+  nv_hinweis: "Only when you click: one request to api.github.com, with no data about you or your cards.",
   u_letzter: "Last run", u_keiner: "none yet", u_erweitern: "Adding new features",
   u_erweitern_text: "New switches are added in gans_lernkarten.py in baue_parser() and appear in step 3 automatically. A new choice for --nur automatically becomes a start button; new tools are created in gans_ui.py with @werkzeug(…).",
   fuss_version: v => `Version ${v}`, fuss_ki: m => `AI: ${m}`, fuss_vorschau_ok: "Preview ready", fuss_vorschau_nein: "Preview limited",
@@ -1736,6 +1788,12 @@ es: {
   u_generator: "Generador", u_oberflaeche: "Interfaz", u_python: "Python", u_projekt: "Carpeta del proyecto", u_schrift: "Fuente",
   u_ki: "Mejora de imagen", u_vorschau: "Vista previa", u_vorschau_ok: "completa", u_vorschau_nein: "solo anverso; ejecuta «pip install pypdfium2» para ver el reverso",
   u_download: "Descarga para la computadora", u_download_text: "Versión más reciente para Windows, macOS y Linux",
+  u_neue_version: "Versión nueva", nv_knopf: "🔎 Buscar una versión nueva", nv_sucht: "El ganso busca versiones nuevas …",
+  h_nv_knopf: "Pregunta una vez a GitHub por la versión más reciente; solo ahora, sin datos sobre ti ni tus cartas",
+  nv_aktuell: v => `¡Ganso al día! La versión ${v} es la más reciente.`, nv_neuer: (v, d) => `¡Llegó la versión ${v} del ganso${d ? ` (del ${d})` : ""}!`,
+  nv_voraus: (v, e) => `Vas adelante: la versión ${e} es más nueva que la última publicada (${v}). ¡Qué ganso tan veloz!`,
+  nv_zur_seite: "Ir a la página de descarga", nv_leitfaden: "Cómo actualizar se explica en la guía, en «Instalar una versión nueva».",
+  nv_hinweis: "Solo al hacer clic: una consulta a api.github.com, sin datos sobre ti ni tus cartas.",
   u_letzter: "Última ejecución", u_keiner: "ninguna", u_erweitern: "Agregar funciones",
   u_erweitern_text: "Los interruptores nuevos se agregan en gans_lernkarten.py en baue_parser() y aparecen solos en el paso 3. Una opción nueva en --nur se convierte en un botón; las herramientas nuevas se crean en gans_ui.py con @werkzeug(…).",
   fuss_version: v => `Versión ${v}`, fuss_ki: m => `IA: ${m}`, fuss_vorschau_ok: "Vista previa lista", fuss_vorschau_nein: "Vista previa limitada",
@@ -2722,6 +2780,7 @@ Object.assign(TXT.de, {
   ln_rueck: "Rückgängig", h_ln_rueck: "Letzte Bewertung zurücknehmen (Strg+Z)", ln_rueck_ok: "Zurückgenommen – die Karte kommt noch einmal.",
   ln_beenden: "Beenden", h_ln_beenden: "Lernen beenden – jede Bewertung ist schon gespeichert",
   h_ln_vorlesen: "Vorlesen (Stimme deines Systems, offline)",
+  h_ln_vorlesen_de: "Deutsch vorlesen (Stimme deines Systems, offline) – so klingt die Gans auf Deutsch",
   ln_zaehler: (n, l, w) => `${n} neu · ${l} lernen · ${w} wiederholen`,
   ln_tasten: "Tastatur: Leertaste = Antwort zeigen · 1–4 = bewerten · Strg+Z = rückgängig · Esc = beenden",
   ln_tasten_touch: "Karte antippen = Antwort zeigen · nach rechts wischen = Gut, nach links = Nochmal (↶ nimmt es zurück)",
@@ -2784,6 +2843,7 @@ Object.assign(TXT.en, {
   ln_rueck: "Undo", h_ln_rueck: "Take back the last rating (Ctrl+Z)", ln_rueck_ok: "Taken back – the card comes once more.",
   ln_beenden: "Finish", h_ln_beenden: "Stop learning – every rating is already saved",
   h_ln_vorlesen: "Read aloud (your system’s voice, offline)",
+  h_ln_vorlesen_de: "Read the German aloud (your system’s voice, offline) – hear how the goose sounds in German",
   ln_zaehler: (n, l, w) => `${n} new · ${l} learning · ${w} to review`,
   ln_tasten: "Keyboard: space = show answer · 1–4 = rate · Ctrl+Z = undo · Esc = finish",
   ln_tasten_touch: "Tap the card = show answer · swipe right = Good, left = Again (↶ takes it back)",
@@ -2846,6 +2906,7 @@ Object.assign(TXT.es, {
   ln_rueck: "Deshacer", h_ln_rueck: "Deshacer la última calificación (Ctrl+Z)", ln_rueck_ok: "Deshecho: la carta vuelve una vez más.",
   ln_beenden: "Terminar", h_ln_beenden: "Terminar de aprender; cada calificación ya está guardada",
   h_ln_vorlesen: "Leer en voz alta (voz de tu sistema, sin internet)",
+  h_ln_vorlesen_de: "Leer el alemán en voz alta (voz de tu sistema, sin internet): así suena el ganso en alemán",
   ln_zaehler: (n, l, w) => `${n} nuevas · ${l} aprendiendo · ${w} por repasar`,
   ln_tasten: "Teclado: espacio = mostrar respuesta · 1–4 = calificar · Ctrl+Z = deshacer · Esc = terminar",
   ln_tasten_touch: "Toca la carta = mostrar respuesta · desliza a la derecha = Bien, a la izquierda = Otra vez (↶ lo deshace)",
@@ -2902,6 +2963,142 @@ Object.assign(TXT.es, {
   gw_leer_touch: "Elige una foto de ganso",
   gw_hilfe_touch: "Arrastrar la imagen con el dedo = mover el recorte · arrastrar el texto = mover el texto · control «Zoom» = ampliar",
   wk_tour_1_touch: "Elige imágenes de gansos, o crea una con «🎨 Diseñar imagen GANS».",
+});
+// Wortliste in Ideen (seit 2.2): viele Ideen auf einmal + „Alle übersetzen“ für Ideen ohne Wort
+Object.assign(TXT.de, {
+  wl_knopf: "📋 Wortliste …", h_wl_knopf: "Eine ganze Wortliste (Datei oder eingefügter Text) auf einmal als Ideen anlegen – mit Vorschau, nichts passiert ungefragt",
+  h_ideen_uebersetzen: "Schlägt für alle Ideen mit deutschem Text, aber ohne Wort auf {zs} eine Übersetzung vor – leere Felder werden gefüllt, du prüfst danach",
+  wl_titel: "Wortliste als Ideen anlegen",
+  wl_text: "Ein Wort pro Zeile – mit oder ohne Übersetzung. Du siehst zuerst eine Vorschau und entscheidest dann, welche Zeilen zu Ideen werden.",
+  wl_waehlen: "Datei wählen oder hierher ziehen", wl_waehlen_text: "CSV, TSV oder Text (.txt) – z. B. aus Excel als „CSV UTF-8“ gespeichert",
+  wl_waehlen_touch: "Datei wählen", wl_waehlen_text_touch: "CSV, TSV oder Text (.txt) – aus Dateien, Drive oder iCloud",
+  h_wl_datei: "Klicken, um eine Wortliste zu wählen – oder die Datei einfach hierher ziehen", h_wl_datei_touch: "Antippen, um eine Wortliste zu wählen",
+  wl_einfuegen: "… oder hier einfügen", wl_einfuegen_ph: "alt;viejo\nmüde;cansado\nGans neugierig", wl_pruefen: "Prüfen",
+  wl_beispiele: "Welche Formate gehen?",
+  wl_bsp_1: "alt;viejo", wl_bsp_1_text: "Deutsch und {zs}, getrennt mit Semikolon, Tab, Komma, „ = “ oder „ – “",
+  wl_bsp_2: "müde", wl_bsp_2_text: "nur Deutsch – das Wort auf {zs} kommt später (z. B. mit „🌐 Alle übersetzen“)",
+  wl_bsp_3: "Deutsch;Wort;Notiz", wl_bsp_3_text: "eine Kopfzeile wird erkannt und legt die Reihenfolge der Spalten fest",
+  wl_bsp_4: "rot;rojo;Farbe", wl_bsp_4_text: "dritte Spalte = Notiz; Alternativen im Wort mit „/“ trennen",
+  wl_bsp_5: "# Farben", wl_bsp_5_text: "Zeilen mit # sind Kommentare, Listenzeichen wie „-“ oder „1.“ fallen weg",
+  wl_grenzen: "Bis 500 Wörter und 1 MB je Liste – längere Listen bitte teilen. Gekürzt oder abgeschnitten wird nie etwas still.",
+  wl_pruefe: "Die Gänse lesen die Liste …",
+  wl_erkannt: "Erkannt:", wl_mit_kopf: "mit Kopfzeile", wl_ohne_kopf: "ohne Kopfzeile", wl_getauscht: "Spalten getauscht",
+  wl_o_trenner: "Trennzeichen", wl_o_kopf: "Erste Zeile", wl_o_einspaltig: "Eine Spalte ist", wl_o_tauschen: "Spalten tauschen", wl_o_gans: "„Gans“ davor",
+  h_wl_trenner: "Womit die Spalten getrennt sind – „automatisch“ erkennt es meistens richtig",
+  h_wl_kopf: "Ist die erste Zeile eine Überschrift (z. B. „Deutsch;Wort“)?",
+  h_wl_einspaltig: "Steht nur ein Wort pro Zeile: Ist es der deutsche Text oder das Wort auf {zs}?",
+  h_wl_tauschen: "Erste und zweite Spalte vertauschen – falls das Wort auf {zs} vorne steht",
+  h_wl_gans: "Setzt „Gans“ vor den deutschen Text (aus „alt“ wird „Gans alt“) – wie auf jeder Karte",
+  wl_trenner_auto: "automatisch", wl_trenner_tab: "Tab", wl_trenner_semikolon: "Semikolon", wl_trenner_komma: "Komma",
+  wl_trenner_gleich: "Gleichheitszeichen", wl_trenner_strich: "Gedankenstrich", wl_trenner_keiner: "keins (eine Spalte)",
+  wl_kopf_auto: "automatisch", wl_kopf_ja: "Überschrift", wl_kopf_nein: "schon ein Wort",
+  wl_einspaltig_de: "Deutsch", wl_einspaltig_zs: "{zs}",
+  wl_wahl_zurueck: "Neu geprüft – die Häkchen stehen wieder wie vorgeschlagen.",
+  wl_z_zeilen: n => `${n} ${n === 1 ? "Zeile" : "Zeilen"}:`, wl_z_neu: n => `${n} neu`, wl_z_doppelt: n => `${n} schon da`,
+  wl_z_fehler: n => `${n} fehlerhaft`, wl_z_hinweise: n => `${n} mit Hinweis`,
+  h_wl_alle: "Alle anlegbaren Zeilen an- oder abwählen", wl_sp_nr: "Nr.", wl_sp_de: "Text auf dem Bild", wl_sp_wort_von: name => `Wort auf ${name}`,
+  wl_sp_notiz: "Notiz", wl_sp_status: "Status", wl_zeile_n: nr => `Zeile ${nr} anlegen`,
+  h_wl_haken: "Mit Häkchen wird diese Zeile zur Idee", h_wl_fehler: "Diese Zeile muss erst in der Liste korrigiert werden",
+  wl_s_neu: "neu", wl_s_doppelt_liste: "doppelt in der Liste", wl_s_idee_da: "schon Idee", wl_s_karte_da: "schon Karte", wl_s_fehler: "fehlerhaft",
+  wl_andere: "Andere Liste", wl_anlegen: n => n === 1 ? "1 Idee anlegen" : `${n} Ideen anlegen`,
+  h_wl_anlegen: "Legt die angehakten Zeilen als Ideen an – jede wird dabei noch einmal geprüft; „Rückgängig“ nimmt die Liste wieder zurück",
+  wl_zu_gross: mb => `Die Liste ist größer als ${mb} MB – teil sie einfach in kleinere Listen auf.`,
+  wl_nichts_angelegt: "Inzwischen gibt es diese Wörter schon – es wurde nichts angelegt. Die Vorschau ist neu geladen.",
+  wl_fertig: n => n === 1 ? "1 neue Idee – ein schöner Fang!" : `${n} neue Ideen – ein schöner Fang!`,
+  wl_uebersprungen: n => `${n} übersprungen (inzwischen schon da oder fehlerhaft).`,
+  wl_tipp_uebersetzen: "Tipp: „🌐 Alle übersetzen“ füllt die fehlenden Wörter.",
+  wl_rueck_fertig: n => n === 1 ? "1 Idee zurückgenommen." : `${n} Ideen zurückgenommen.`,
+  wl_rueck_geblieben: n => n === 1 ? "1 geänderte Idee bleibt stehen." : `${n} geänderte Ideen bleiben stehen.`,
+});
+Object.assign(TXT.en, {
+  wl_knopf: "📋 Word list …", h_wl_knopf: "Create a whole word list (file or pasted text) as ideas at once – with a preview, nothing happens unasked",
+  h_ideen_uebersetzen: "Suggests a translation for every idea with German text but no {zs} word – empty fields get filled, you check afterwards",
+  wl_titel: "Create ideas from a word list",
+  wl_text: "One word per line – with or without a translation. You see a preview first and then decide which lines become ideas.",
+  wl_waehlen: "Choose a file or drag it here", wl_waehlen_text: "CSV, TSV or text (.txt) – e.g. saved from Excel as “CSV UTF-8”",
+  wl_waehlen_touch: "Choose a file", wl_waehlen_text_touch: "CSV, TSV or text (.txt) – from Files, Drive or iCloud",
+  h_wl_datei: "Click to choose a word list – or simply drag the file here", h_wl_datei_touch: "Tap to choose a word list",
+  wl_einfuegen: "… or paste it here", wl_einfuegen_ph: "alt;viejo\nmüde;cansado\nGans neugierig", wl_pruefen: "Check",
+  wl_beispiele: "Which formats work?",
+  wl_bsp_1: "alt;viejo", wl_bsp_1_text: "German and {zs}, separated by semicolon, tab, comma, “ = ” or “ – ”",
+  wl_bsp_2: "müde", wl_bsp_2_text: "German only – the {zs} word comes later (e.g. with “🌐 Translate all”)",
+  wl_bsp_3: "German;Word;Note", wl_bsp_3_text: "a header line is recognized and sets the order of the columns",
+  wl_bsp_4: "rot;rojo;Farbe", wl_bsp_4_text: "third column = note; separate alternatives in the word with “/”",
+  wl_bsp_5: "# Farben", wl_bsp_5_text: "lines starting with # are comments, list markers like “-” or “1.” are dropped",
+  wl_grenzen: "Up to 500 words and 1 MB per list – please split longer lists. Nothing is ever shortened or cut off silently.",
+  wl_pruefe: "The geese are reading the list …",
+  wl_erkannt: "Detected:", wl_mit_kopf: "with header line", wl_ohne_kopf: "without header line", wl_getauscht: "columns swapped",
+  wl_o_trenner: "Separator", wl_o_kopf: "First line", wl_o_einspaltig: "A single column is", wl_o_tauschen: "Swap columns", wl_o_gans: "“Gans” in front",
+  h_wl_trenner: "What separates the columns – “automatic” usually gets it right",
+  h_wl_kopf: "Is the first line a heading (e.g. “German;Word”)?",
+  h_wl_einspaltig: "Only one word per line: is it the German text or the {zs} word?",
+  h_wl_tauschen: "Swap the first and second column – in case the {zs} word comes first",
+  h_wl_gans: "Puts “Gans” in front of the German text (“alt” becomes “Gans alt”) – like on every card",
+  wl_trenner_auto: "automatic", wl_trenner_tab: "Tab", wl_trenner_semikolon: "Semicolon", wl_trenner_komma: "Comma",
+  wl_trenner_gleich: "Equals sign", wl_trenner_strich: "Dash", wl_trenner_keiner: "none (one column)",
+  wl_kopf_auto: "automatic", wl_kopf_ja: "heading", wl_kopf_nein: "already a word",
+  wl_einspaltig_de: "German", wl_einspaltig_zs: "{zs}",
+  wl_wahl_zurueck: "Checked again – the ticks are back to the suggested choice.",
+  wl_z_zeilen: n => `${n} ${n === 1 ? "line" : "lines"}:`, wl_z_neu: n => `${n} new`, wl_z_doppelt: n => `${n} already there`,
+  wl_z_fehler: n => `${n} with errors`, wl_z_hinweise: n => `${n} with a hint`,
+  h_wl_alle: "Select or deselect all lines that can be created", wl_sp_nr: "No.", wl_sp_de: "Text on the image", wl_sp_wort_von: name => `${name} word`,
+  wl_sp_notiz: "Note", wl_sp_status: "Status", wl_zeile_n: nr => `Create line ${nr}`,
+  h_wl_haken: "Ticked lines become ideas", h_wl_fehler: "This line needs fixing in the list first",
+  wl_s_neu: "new", wl_s_doppelt_liste: "twice in the list", wl_s_idee_da: "already an idea", wl_s_karte_da: "already a card", wl_s_fehler: "has errors",
+  wl_andere: "Another list", wl_anlegen: n => n === 1 ? "Create 1 idea" : `Create ${n} ideas`,
+  h_wl_anlegen: "Creates the ticked lines as ideas – each one is checked again; “Undo” takes the list back",
+  wl_zu_gross: mb => `The list is larger than ${mb} MB – just split it into smaller lists.`,
+  wl_nichts_angelegt: "These words exist by now – nothing was created. The preview has been reloaded.",
+  wl_fertig: n => n === 1 ? "1 new idea – a fine catch!" : `${n} new ideas – a fine catch!`,
+  wl_uebersprungen: n => `${n} skipped (already there by now or with errors).`,
+  wl_tipp_uebersetzen: "Tip: “🌐 Translate all” fills in the missing words.",
+  wl_rueck_fertig: n => n === 1 ? "1 idea taken back." : `${n} ideas taken back.`,
+  wl_rueck_geblieben: n => n === 1 ? "1 changed idea stays." : `${n} changed ideas stay.`,
+});
+Object.assign(TXT.es, {
+  wl_knopf: "📋 Lista de palabras …", h_wl_knopf: "Crear de una vez una lista de palabras completa (archivo o texto pegado) como ideas, con vista previa; nada pasa sin preguntar",
+  h_ideen_uebersetzen: "Sugiere una traducción para cada idea con texto en alemán pero sin palabra en {zs}; se llenan los campos vacíos y luego tú revisas",
+  wl_titel: "Crear ideas desde una lista de palabras",
+  wl_text: "Una palabra por línea, con o sin traducción. Primero ves una vista previa y luego decides qué líneas se vuelven ideas.",
+  wl_waehlen: "Elige un archivo o arrástralo aquí", wl_waehlen_text: "CSV, TSV o texto (.txt), p. ej. guardado desde Excel como «CSV UTF-8»",
+  wl_waehlen_touch: "Elige un archivo", wl_waehlen_text_touch: "CSV, TSV o texto (.txt), desde Archivos, Drive o iCloud",
+  h_wl_datei: "Haz clic para elegir una lista de palabras, o simplemente arrastra el archivo aquí", h_wl_datei_touch: "Toca para elegir una lista de palabras",
+  wl_einfuegen: "… o pégala aquí", wl_einfuegen_ph: "alt;viejo\nmüde;cansado\nGans neugierig", wl_pruefen: "Revisar",
+  wl_beispiele: "¿Qué formatos sirven?",
+  wl_bsp_1: "alt;viejo", wl_bsp_1_text: "alemán y {zs}, separados por punto y coma, tabulador, coma, « = » o « – »",
+  wl_bsp_2: "müde", wl_bsp_2_text: "solo alemán; la palabra en {zs} viene después (p. ej. con «🌐 Traducir todas»)",
+  wl_bsp_3: "Alemán;Palabra;Nota", wl_bsp_3_text: "una línea de encabezado se reconoce y define el orden de las columnas",
+  wl_bsp_4: "rot;rojo;Farbe", wl_bsp_4_text: "tercera columna = nota; separa las alternativas de la palabra con «/»",
+  wl_bsp_5: "# Farben", wl_bsp_5_text: "las líneas con # son comentarios; viñetas como «-» o «1.» se quitan",
+  wl_grenzen: "Hasta 500 palabras y 1 MB por lista; divide las listas más largas. Nunca se acorta ni se corta nada en silencio.",
+  wl_pruefe: "Los gansos están leyendo la lista …",
+  wl_erkannt: "Detectado:", wl_mit_kopf: "con encabezado", wl_ohne_kopf: "sin encabezado", wl_getauscht: "columnas intercambiadas",
+  wl_o_trenner: "Separador", wl_o_kopf: "Primera línea", wl_o_einspaltig: "Una sola columna es", wl_o_tauschen: "Intercambiar columnas", wl_o_gans: "«Gans» delante",
+  h_wl_trenner: "Qué separa las columnas; «automático» casi siempre acierta",
+  h_wl_kopf: "¿La primera línea es un encabezado (p. ej. «Alemán;Palabra»)?",
+  h_wl_einspaltig: "Solo una palabra por línea: ¿es el texto en alemán o la palabra en {zs}?",
+  h_wl_tauschen: "Intercambia la primera y la segunda columna, por si la palabra en {zs} va primero",
+  h_wl_gans: "Pone «Gans» delante del texto en alemán («alt» se vuelve «Gans alt»), como en cada carta",
+  wl_trenner_auto: "automático", wl_trenner_tab: "Tabulador", wl_trenner_semikolon: "Punto y coma", wl_trenner_komma: "Coma",
+  wl_trenner_gleich: "Signo igual", wl_trenner_strich: "Guion largo", wl_trenner_keiner: "ninguno (una columna)",
+  wl_kopf_auto: "automático", wl_kopf_ja: "encabezado", wl_kopf_nein: "ya es una palabra",
+  wl_einspaltig_de: "Alemán", wl_einspaltig_zs: "{zs}",
+  wl_wahl_zurueck: "Revisado de nuevo: las marcas vuelven a la selección sugerida.",
+  wl_z_zeilen: n => `${n} ${n === 1 ? "línea" : "líneas"}:`, wl_z_neu: n => `${n} ${n === 1 ? "nueva" : "nuevas"}`, wl_z_doppelt: n => `${n} ya existen`,
+  wl_z_fehler: n => `${n} con errores`, wl_z_hinweise: n => `${n} con aviso`,
+  h_wl_alle: "Marcar o desmarcar todas las líneas que se pueden crear", wl_sp_nr: "N.º", wl_sp_de: "Texto en la imagen", wl_sp_wort_von: name => `Palabra en ${name}`,
+  wl_sp_notiz: "Nota", wl_sp_status: "Estado", wl_zeile_n: nr => `Crear la línea ${nr}`,
+  h_wl_haken: "Las líneas marcadas se vuelven ideas", h_wl_fehler: "Primero hay que corregir esta línea en la lista",
+  wl_s_neu: "nueva", wl_s_doppelt_liste: "repetida en la lista", wl_s_idee_da: "ya es idea", wl_s_karte_da: "ya es carta", wl_s_fehler: "con errores",
+  wl_andere: "Otra lista", wl_anlegen: n => n === 1 ? "Crear 1 idea" : `Crear ${n} ideas`,
+  h_wl_anlegen: "Crea las líneas marcadas como ideas; cada una se revisa otra vez y «Deshacer» retira la lista",
+  wl_zu_gross: mb => `La lista pesa más de ${mb} MB; divídela en listas más pequeñas y listo.`,
+  wl_nichts_angelegt: "Estas palabras ya existen; no se creó nada. La vista previa se volvió a cargar.",
+  wl_fertig: n => n === 1 ? "1 idea nueva: ¡buena pesca!" : `${n} ideas nuevas: ¡buena pesca!`,
+  wl_uebersprungen: n => `${n} omitidas (ya existían o tenían errores).`,
+  wl_tipp_uebersetzen: "Consejo: «🌐 Traducir todas» llena las palabras que faltan.",
+  wl_rueck_fertig: n => n === 1 ? "1 idea retirada." : `${n} ideas retiradas.`,
+  wl_rueck_geblieben: n => n === 1 ? "1 idea modificada se queda." : `${n} ideas modificadas se quedan.`,
 });
 Object.assign(TXT.de, {
   fa_titel: "Farben & Darstellung",
@@ -4816,7 +5013,7 @@ function zeichneUeEinstellungen() {
     </div>
     <label class="schalter abstand"><input type="checkbox" data-ue="automatisch"${u.automatisch ? " checked" : ""}${u.zugestimmt ? "" : " disabled"}><span class="spur"></span><span>${esc(t("ue_automatisch"))}</span></label>
     <div class="knopfzeile abstand"><button class="knopf klein" data-ue-aktion="cache" title="${esc(t("h_ue_cache"))}">${esc(t("ue_cache"))}</button></div>
-    <p class="klein">${esc(t("ue_datenschutz", u.ablage || ""))}</p>`;
+    <p class="klein umbruch">${esc(t("ue_datenschutz", u.ablage || ""))}</p>`;
   const feld = $("#ue-deepl"); if (feld && getippt) { feld.value = getippt; if (fokus) feld.focus(); }     // Getipptes nicht verlieren
 }
 async function ueSetzen(daten, meldung) {
@@ -4859,6 +5056,8 @@ async function ladeHilfe() {
       ${s.tools && Object.keys(s.tools).length ? `<dt>${esc(t("u_tools"))}</dt><dd>${Object.entries(s.tools).map(([id, da]) =>
         esc(`${(toolInfo(id) || {}).titel || id}: ${t(da ? "tool_installiert" : "tool_nicht")}`)).join("<br>")}</dd>` : ""}
       ${downloadAdresse() ? `<dt>${esc(t("u_download"))}</dt><dd><a href="${esc(downloadAdresse())}" target="_blank" rel="noopener">${esc(t("u_download_text"))}</a></dd>` : ""}
+      ${!AM_HANDY && !AM_APP ? `<dt>${esc(t("u_neue_version"))}</dt><dd><button class="knopf klein" type="button" id="nv-knopf" title="${esc(t("h_nv_knopf"))}">${esc(t("nv_knopf"))}</button>
+        <p class="klein nv-hinweis">${esc(t("nv_hinweis"))}</p><div id="nv-ergebnis" class="nv-ergebnis" aria-live="polite"></div></dd>` : ""}
       <dt>${esc(t("u_letzter"))}</dt><dd>${esc(s.letzter_lauf ? datum(s.letzter_lauf) : t("u_keiner"))}</dd></dl>
       <h3 style="margin-top:24px">${esc(t("u_erweitern"))}</h3><p>${esc(t("u_erweitern_text"))}</p>`;
     return;
@@ -4877,6 +5076,23 @@ async function ladeHilfe() {
   } finally { if (hilfeAnfrage === ctrl) hilfeAnfrage = null; }
 }
 $(".reiter").addEventListener("click", e => { const b = e.target.closest("[data-doc]"); if (b) { S.doc = b.dataset.doc; ladeHilfe(); } });
+// Nach neuer Version suchen: die einzige Stelle, die den Server danach fragen lässt – nur auf Klick, nie beim Start/im Hintergrund
+$("#doku").addEventListener("click", async e => {
+  if (e.target.closest("[data-nv-leitfaden]")) { S.doc = "leitfaden"; ladeHilfe(); return; }
+  const b = e.target.closest("#nv-knopf"); if (!b || b.disabled || AM_HANDY || AM_APP) return;
+  const aus = $("#nv-ergebnis"); b.disabled = true; aus.innerHTML = enteHTML(t("nv_sucht"), true);
+  try {
+    const r = await api("/api/neue-version", { methode: "POST", daten: {}, timeout: 30000 });
+    if (!aus.isConnected) return;
+    if (r.ergebnis === "neuer") {
+      const d = r.datum ? new Date(r.datum + "T12:00:00").toLocaleDateString(t("datum"), { dateStyle: "long" }) : "";
+      const seite = downloadAdresse();                      // Link immer aus web_adresse.txt, nie aus der Antwort
+      aus.innerHTML = `<p><b>${esc(t("nv_neuer", r.version, d))}</b></p>${seite ? `<p><a class="knopf klein haupt" href="${esc(seite)}" target="_blank" rel="noopener">${esc(t("nv_zur_seite"))} →</a></p>` : ""}
+        <p class="klein">${esc(t("nv_leitfaden"))} <button class="knopf klein leise" type="button" data-nv-leitfaden>${esc(t("tab_leitfaden"))}</button></p>`;
+    } else aus.innerHTML = `<p>${esc(r.ergebnis === "aktuell" ? t("nv_aktuell", r.version) : r.ergebnis === "voraus" ? t("nv_voraus", r.version, r.eigene) : r.meldung || t("nv_aktuell", r.version))}</p>`;
+  } catch (err) { if (aus.isConnected) aus.innerHTML = `<p>${esc(err.message)}</p>`; }
+  finally { b.disabled = false; }
+});
 
 /* ===================== Automatische Übersetzung (nur Vorschläge, nur nach Zustimmung) ===================== */
 // Die Seite selbst spricht mit keinem fremden Rechner: Sie fragt nur den eigenen Server (/api/uebersetzen),
@@ -4939,10 +5155,10 @@ async function alleUebersetzen(knopf, auftraege) {
       knopf.textContent = t("uebersetze_n", ++n, auftraege.length);
       if (!String(a.de || "").trim()) continue;
       const v = await holeVorschlag(a.de); if (!v) break;
-      if (a.fuellen(v)) gefuellt++;
+      if (await a.fuellen(v)) gefuellt++;                       // fuellen darf auch speichern (Ideen: /api/idee-wort)
     }
     toast(t("uebersetzt_n", gefuellt, auftraege.length));
-  } catch (e) { fehlerToast(e); }
+  } catch (e) { toast(`${e.message} ${t("uebersetzt_n", gefuellt, auftraege.length)}`, { fehler: true }); }   // z. B. Tageskontingent: sauber aufhören
   finally { S.beschaeftigt = false; knopf.disabled = false; knopf.textContent = alt; }
 }
 const ueSchlange = []; let ueArbeitet = false, ueFehlerGezeigt = false;
@@ -5387,6 +5603,7 @@ $("#beenden").addEventListener("click", async () => {
 function offenerDialog() { return $$("[data-dialogfenster]").filter(x => !x.hidden).pop() || null; }
 function oeffneDialog(name, opt = {}) {
   if (name === "import-export") return oeffneImportExport(opt.vorwahl);
+  if (name === "wortliste") return oeffneWortliste();
   if (name === "gans-werkzeug") return oeffneGansWerkzeug(opt);
   if (name === "ki-bild") return oeffneKiBild(opt);
   if (name === "programmstart") return oeffneStartWahl();
@@ -5400,6 +5617,7 @@ function schliesseDialog(el) {
   if (el.id === "gw-fenster") gwAufraeumen();
   if (el.id === "ki-fenster") KI = null;
   if (el.id === "ie-fenster") ieVerwerfen();
+  if (el.id === "wl-fenster") WL = null;
   if (el.id === "farben-fenster") farbenVerwerfen();
   if (el.id === "tool-fenster") { if (TOOL_DLG && TOOL_DLG.art === "erst") toolsErstabfrageSenden([]); TOOL_DLG = null; }   // zu = „Später“
 }
@@ -5521,6 +5739,146 @@ $("#ie-inhalt").addEventListener("click", async e => {
       zeige();
     } catch (err) { fehlerToast(err); b.disabled = false; }
   }
+});
+
+/* ----- Wortliste: viele Ideen auf einmal (Datei oder eingefügter Text → Vorschau → anlegen → Rückgängig) ----- */
+// Der Server (erweiterungen.py, Abschnitt „Wortliste“) liest und prüft jede Zeile – beim Anlegen noch einmal. Die Seite
+// zeigt nur an: Jeder Text aus der Datei und aus der Antwort geht über esc() (auch „<img onerror=…>“ bleibt Text).
+const WL_ACCEPT = ".txt,.csv,.tsv,text/plain,text/csv,text/tab-separated-values";   // der Server verlässt sich nie auf den Typ
+const WL_MAX_BYTES = 1024 * 1024;
+const WL_TRENNER = ["auto", "tab", "semikolon", "komma", "gleich", "strich", "keiner"];
+const WL_STANDARD = { trenner: "auto", kopf: "auto", tauschen: false, einspaltig: "de", gans: true };
+const WL_KODIERUNG = { "utf-8": "UTF-8", "utf-16-le": "UTF-16", "utf-16-be": "UTF-16", cp1252: "Windows-1252" };
+let WL = null;
+function oeffneWortliste() {
+  WL = { roh: null, text: "", opt: { ...WL_STANDARD }, erg: null, wahl: new Set(), status: "", lauf: 0, wahlZurueck: false };
+  zeichneWL(); $("#wl-fenster").hidden = false;
+}
+const wlKlasse = s => s === "neu" ? "neu" : s === "fehler" ? "fehler" : "konflikt";
+function wlZeileHTML(z, n) {
+  const fehler = z.status === "fehler", e = WL.erg;
+  return `<tr class="${wlKlasse(z.status)}">
+    <td><label class="wl-haken" title="${esc(t(fehler ? "h_wl_fehler" : "h_wl_haken"))}"><input type="checkbox" data-wl-n="${n}"${WL.wahl.has(n) ? " checked" : ""}${fehler ? " disabled" : ""} aria-label="${esc(t("wl_zeile_n", z.nr))}"></label></td>
+    <td>${esc(z.nr)}</td>
+    <td data-label="${esc(t("wl_sp_de"))}" lang="de">${esc(z.de)}</td>
+    <td data-label="${esc(t("wl_sp_wort_von", e.zs_name))}" ${zsAttr(e.zs)}>${esc(z.wort)}</td>
+    <td data-label="${esc(t("wl_sp_notiz"))}">${esc(z.notiz)}</td>
+    <td><span class="chip-s ${wlKlasse(z.status)}">${esc(t("wl_s_" + z.status))}</span>${z.status !== "neu" ? `<div class="klein">${esc(z.text)}</div>` : ""}${(z.hinweise || []).map(h => `<span class="wl-hinweis">${esc(h)}</span>`).join("")}${fehler && z.roh ? `<div class="klein umbruch">${esc(z.roh)}</div>` : ""}</td></tr>`;
+}
+function wlOptionenHTML() {
+  const o = WL.opt;
+  const wahl = (name, werte) => `<label class="feld" title="${esc(t("h_wl_" + name))}"><span>${esc(t("wl_o_" + name))}</span><select class="eingabe" data-wl-opt="${name}">${werte.map(w =>
+    `<option value="${w}"${w === o[name] ? " selected" : ""}>${esc(t("wl_" + name + "_" + w))}</option>`).join("")}</select></label>`;
+  const schalter = name => `<label class="schalter" title="${esc(t("h_wl_" + name))}"><input type="checkbox" data-wl-opt="${name}"${o[name] ? " checked" : ""}><span class="spur"></span><span>${esc(t("wl_o_" + name))}</span></label>`;
+  return `<div class="wl-optionen">${wahl("trenner", WL_TRENNER)}${wahl("kopf", ["auto", "ja", "nein"])}${wahl("einspaltig", ["de", "zs"])}${schalter("tauschen")}${schalter("gans")}</div>`;
+}
+const wlEigeneWahl = () => !!(WL && WL.erg) && WL.erg.zeilen.some((z, n) => !!z.wahl !== WL.wahl.has(n));
+function zeichneWL() {
+  if (!WL) return;
+  const ziel = $("#wl-inhalt");
+  if (!WL.erg) {
+    if (WL.status === "pruefe") { ziel.innerHTML = enteHTML(t("wl_pruefe")); return; }
+    ziel.innerHTML = `<p class="unter">${esc(t("wl_text"))}</p>
+      <div class="wl-start">
+        <div class="ziehfeld" data-zieh="wortliste" data-wl-aktion="waehlen" role="button" tabindex="0" title="${esc(t("h_wl_datei"))}">
+          <b>${esc(t("wl_waehlen"))}</b><span class="klein">${esc(t("wl_waehlen_text"))}</span></div>
+        <div><label class="feldname" for="wl-text">${esc(t("wl_einfuegen"))}</label>
+          <textarea class="eingabe" id="wl-text" rows="6" spellcheck="false" autocomplete="off" placeholder="${esc(t("wl_einfuegen_ph"))}">${esc(WL.text)}</textarea>
+          <div class="knopfzeile abstand"><button class="knopf haupt" data-wl-aktion="text">${esc(t("wl_pruefen"))}</button></div></div></div>
+      <details class="wl-beispiele abstand"><summary>${esc(t("wl_beispiele"))}</summary>
+        <ul class="klein">${[1, 2, 3, 4, 5].map(i => `<li><code>${esc(t("wl_bsp_" + i))}</code> – ${esc(t("wl_bsp_" + i + "_text"))}</li>`).join("")}</ul>
+        <p class="klein">${esc(t("wl_grenzen"))}</p></details>`;
+    return;
+  }
+  const e = WL.erg, z = e.zahlen, k = e.erkannt, n = WL.wahl.size;
+  const waehlbar = e.zeilen.filter(x => x.status !== "fehler").length;
+  const erkannt = [WL_KODIERUNG[k.kodierung] || k.kodierung, t("wl_trenner_" + k.trenner), t(k.kopf ? "wl_mit_kopf" : "wl_ohne_kopf")]
+    .concat(k.getauscht || k.tauschen ? [t("wl_getauscht")] : []).join(" · ");
+  ziel.innerHTML = `${e.hinweise.length ? `<div class="hinweisbox warn" role="status">${e.hinweise.map(h => `<p>${esc(h)}</p>`).join("")}</div>` : ""}
+    <p class="klein"><b>${esc(t("wl_erkannt"))}</b> ${esc(erkannt)}</p>
+    ${wlOptionenHTML()}
+    ${WL.wahlZurueck ? `<p class="klein" role="status">${esc(t("wl_wahl_zurueck"))}</p>` : ""}
+    <div class="wl-zahlen" role="status"><span>${esc(t("wl_z_zeilen", z.zeilen))}</span><span class="chip-s neu">${esc(t("wl_z_neu", z.neu))}</span>
+      <span class="chip-s konflikt">${esc(t("wl_z_doppelt", z.doppelt))}</span><span class="chip-s fehler">${esc(t("wl_z_fehler", z.fehler))}</span>
+      ${z.hinweise ? `<span class="chip-s gleich">${esc(t("wl_z_hinweise", z.hinweise))}</span>` : ""}</div>
+    <div class="ie-rollen wl-rollen"><table class="ie-tabelle wl-tabelle"><thead><tr>
+      <th><label class="wl-haken" title="${esc(t("h_wl_alle"))}"><input type="checkbox" data-wl-alle${waehlbar && n === waehlbar ? " checked" : ""} aria-label="${esc(t("h_wl_alle"))}"></label></th>
+      <th>${esc(t("wl_sp_nr"))}</th><th>${esc(t("wl_sp_de"))}</th><th>${esc(t("wl_sp_wort_von", e.zs_name))}</th><th>${esc(t("wl_sp_notiz"))}</th><th>${esc(t("wl_sp_status"))}</th></tr></thead>
+      <tbody>${e.zeilen.map(wlZeileHTML).join("")}</tbody></table></div>
+    <div class="knopfzeile abstand"><button class="knopf leise" data-wl-aktion="andere">${esc(t("wl_andere"))}</button>
+      <div class="rechts"><button class="knopf haupt" data-wl-aktion="anlegen" title="${esc(t("h_wl_anlegen"))}"${n && !WL.status ? "" : " disabled"}>${esc(t("wl_anlegen", n))}</button></div></div>`;
+}
+async function wlPruefen(roh) {
+  if (!WL) return;
+  if (roh) WL.roh = roh;
+  if (!WL.roh) return;
+  if ((WL.roh.size ?? WL.roh.byteLength) > WL_MAX_BYTES) { toast(t("wl_zu_gross", WL_MAX_BYTES / 1048576), { fehler: true }); return; }
+  const lauf = ++WL.lauf, o = WL.opt;
+  WL.status = "pruefe"; if (!WL.erg) zeichneWL();
+  try {
+    const r = await api(url("/api/wortliste-pruefen", { trenner: o.trenner, kopf: o.kopf, tauschen: o.tauschen ? 1 : 0, einspaltig: o.einspaltig, gans: o.gans ? 1 : 0 }),
+      { methode: "POST", roh: WL.roh });
+    if (!WL || lauf !== WL.lauf) return;                          // inzwischen neu geprüft oder Fenster zu
+    WL.wahlZurueck = wlEigeneWahl();                              // neue Prüfung = wieder die vorgeschlagene Auswahl
+    WL.erg = r; WL.wahl = new Set(r.zeilen.flatMap((x, n) => x.wahl ? [n] : []));
+  } catch (e) { if (!WL || lauf !== WL.lauf) return; fehlerToast(e); }
+  WL.status = ""; zeichneWL();
+}
+function wlDatei(dateien) { const f = dateien[0]; if (!f || !WL) return; WL.erg = null; wlPruefen(f); }
+ZIEH_ZIELE.wortliste = wlDatei;
+function wlKnopf() {
+  const b = $('[data-wl-aktion="anlegen"]'); if (!b || !WL) return;
+  b.textContent = t("wl_anlegen", WL.wahl.size); b.disabled = !WL.wahl.size || !!WL.status;
+}
+async function wlAnlegen(knopf) {
+  if (!WL || !WL.erg || WL.status) return;                         // Doppelklick-Sperre
+  const zeilen = WL.erg.zeilen.filter((z, n) => WL.wahl.has(n) && z.status !== "fehler").map(z => ({ nr: z.nr, de: z.de, wort: z.wort, notiz: z.notiz }));
+  if (!zeilen.length) return;
+  WL.status = "anlegen"; knopf.disabled = true;
+  try {
+    const r = await api("/api/wortliste-uebernehmen", { methode: "POST", daten: { zs: WL.erg.zs, zeilen } });
+    IDEEN = r; zaehler(); if (ansicht() === "ideen") zeichneIdeen();
+    if (!WL) return;
+    if (!r.angelegt) { WL.status = ""; toast(t("wl_nichts_angelegt"), { fehler: true }); return wlPruefen(); }
+    $("#wl-fenster").hidden = true; WL = null;
+    let text = t("wl_fertig", r.angelegt);
+    if (r.uebersprungen.length) text += " " + t("wl_uebersprungen", r.uebersprungen.length);
+    if (IDEEN.ideen.some(ideeOhneWort)) text += " " + t("wl_tipp_uebersetzen");
+    toast(text, { aktion: { label: t("zurueck_knopf"), fn: () => wlRueckgaengig(r.wl) } });
+  } catch (e) {
+    if (!WL) return;
+    WL.status = "";
+    if (e.status === 409 && e.daten && e.daten.code === "zs_geaendert") { toast(e.message); return wlPruefen(); }   // Vorschau neu laden
+    fehlerToast(e); zeichneWL();
+  }
+}
+async function wlRueckgaengig(wl) {
+  try {
+    const r = await api("/api/wortliste-rueckgaengig", { methode: "POST", daten: { wl } });
+    IDEEN = r; zaehler(); if (ansicht() === "ideen") zeichneIdeen();
+    toast(t("wl_rueck_fertig", r.entfernt) + (r.geaendert ? " " + t("wl_rueck_geblieben", r.geaendert) : ""));
+  } catch (e) { fehlerToast(e); }
+}
+const wlNeuPruefen = entprellt(() => { if (WL && WL.roh) wlPruefen(); }, 300);
+$("#wl-inhalt").addEventListener("input", e => { if (e.target.id === "wl-text" && WL) WL.text = e.target.value; });
+$("#wl-inhalt").addEventListener("keydown", e => { if (e.key === "Enter" && e.target.matches('[data-wl-aktion="waehlen"]')) e.target.click(); });
+$("#wl-inhalt").addEventListener("change", e => {
+  if (!WL) return;
+  const o = e.target.dataset.wlOpt;
+  if (o) { WL.opt[o] = e.target.type === "checkbox" ? e.target.checked : e.target.value; wlNeuPruefen(); return; }
+  if (e.target.hasAttribute("data-wl-alle") && WL.erg) {
+    WL.wahl = new Set(e.target.checked ? WL.erg.zeilen.flatMap((z, n) => z.status === "fehler" ? [] : [n]) : []);
+    zeichneWL(); return;
+  }
+  if (e.target.dataset.wlN !== undefined) { const n = Number(e.target.dataset.wlN); if (e.target.checked) WL.wahl.add(n); else WL.wahl.delete(n); wlKnopf(); }
+});
+$("#wl-inhalt").addEventListener("click", e => {
+  const b = e.target.closest("[data-wl-aktion]"); if (!b || !WL) return;
+  const a = b.dataset.wlAktion;
+  if (a === "waehlen") dateiWaehlen(WL_ACCEPT, wlDatei);
+  if (a === "text") { WL.text = $("#wl-text").value; WL.erg = null; wlPruefen(new TextEncoder().encode(WL.text)); }
+  if (a === "andere") { WL.lauf++; WL.roh = null; WL.erg = null; WL.status = ""; WL.wahlZurueck = false; WL.opt = { ...WL_STANDARD }; zeichneWL(); }
+  if (a === "anlegen") wlAnlegen(b);
 });
 
 /* ----- GANS-Werkzeug: Foto zuschneiden, „GANS + Wort“ daraufsetzen ----- */
@@ -5950,7 +6308,14 @@ function ideeFehlt(i) {
   return [!i.bild && t("idee_teil_bild"), !String(i.de || "").trim() && t("idee_teil_de"), !String(i.es || "").trim() && t("idee_teil_es")].filter(Boolean);
 }
 // Gleiche Wörter erkennen („Gans alt“ = „gans-alt“ = „GANS ALT“; Rückseite: Hauptwort vor „/“) – wie wort_schluessel()
+const WS_MERK = new Map();                                      // 500 Ideen × alle Karten: jeden Text nur einmal umrechnen
 function wortSchluessel(text, rueckseite = false) {
+  const merk = (rueckseite ? "1" : "0") + String(text || "");
+  if (WS_MERK.has(merk)) return WS_MERK.get(merk);
+  if (WS_MERK.size > 20000) WS_MERK.clear();
+  const s = wortSchluesselRechnen(text, rueckseite); WS_MERK.set(merk, s); return s;
+}
+function wortSchluesselRechnen(text, rueckseite) {
   let s = String(text || "");
   if (rueckseite) s = s.split("/")[0].replace(/\|/g, " ");
   s = s.toLowerCase().replace(/ä/g, "ae").replace(/ö/g, "oe").replace(/ü/g, "ue").replace(/ß/g, "ss")
@@ -6028,7 +6393,21 @@ function zeichneIdeen() {
       <button class="knopf klein" data-u-art="${u.art}" data-u-id="${esc(u.id)}" title="${esc(t("h_unfertig_weiter"))}">${esc(t("unfertig_weiter"))}</button></div>`).join("")}</div>`
       : `<p class="klein">${esc(t("ideen_unfertig_leer"))}</p>`}`;
   $$("#ideen-inhalt .idee").forEach(zeigeDoppelte);
+  $("#ideen-uebersetzen").hidden = !IDEEN.ideen.some(ideeOhneWort);
 }
+const ideeOhneWort = i => !!String(i.de || "").trim() && !String(i.es || "").trim();
+// „🌐 Alle übersetzen“ (z. B. nach einer Wortliste ohne Übersetzung): gleiche Zustimmung wie überall; der Server trägt das
+// Wort nur ein, wenn das Feld beim Speichern noch leer ist, und merkt es als „automatisch – prüfen“.
+$("#ideen-uebersetzen").addEventListener("click", async e => {
+  if (!IDEEN || S.beschaeftigt) return;
+  const knopf = e.currentTarget;
+  await alleUebersetzen(knopf, IDEEN.ideen.filter(ideeOhneWort).map(i => ({ de: i.de, fuellen: async v => {
+    if (!v.vorschlag) return false;
+    const r = await api("/api/idee-wort", { methode: "POST", daten: { id: i.id, es: v.vorschlag } });
+    IDEEN = r; return r.gefuellt;
+  } })));
+  zaehler(); if (ansicht() === "ideen") zeichneIdeen();
+});
 function ideeWerte(el) {
   const es = $('[data-i-feld="es"]', el);
   return { id: el.dataset.idee || "", de: $('[data-i-feld="de"]', el).value, es: es.value, notiz: $('[data-i-feld="notiz"]', el).value, es_auto: es.dataset.auto || "" };
@@ -6501,7 +6880,15 @@ const lernRest = n => n && n.zaehler ? n.zaehler.neu + n.zaehler.lernen + n.zaeh
 function lernStimme(code) {                                 // Vorlesen nur mit einer Stimme des Systems (offline) für die Sprache
   if (!window.speechSynthesis || !speechSynthesis.getVoices) return null;
   const ziel = code === "no" ? ["nb", "no", "nn"] : [code];
-  return speechSynthesis.getVoices().find(v => v.localService !== false && ziel.includes(String(v.lang || "").toLowerCase().replace("_", "-").split("-")[0])) || null;
+  const lang = v => String(v.lang || "").toLowerCase().replace("_", "-");
+  if (code === "de") for (const r of ["de-de", "de-at", "de-ch"]) {   // Deutsch: de-DE → de-AT → de-CH → andere de
+    const v = speechSynthesis.getVoices().find(x => x.localService !== false && lang(x) === r); if (v) return v;
+  }
+  return speechSynthesis.getVoices().find(v => v.localService !== false && ziel.includes(lang(v).split("-")[0])) || null;
+}
+function vorlesen(text, stimme) {                            // gemeinsamer Weg für jedes 🔊 (vorher Laufendes abbrechen)
+  if (!stimme || !text || !window.speechSynthesis) return;
+  speechSynthesis.cancel(); const s = new SpeechSynthesisUtterance(text); s.voice = stimme; s.lang = stimme.lang; speechSynthesis.speak(s);
 }
 if (window.speechSynthesis && speechSynthesis.addEventListener) speechSynthesis.addEventListener("voiceschanged", () => { if (LS && LS.n.karte && ansicht() === "lernen") zeichneSitzung(); });
 async function lernStart(stapel) {
@@ -6520,7 +6907,9 @@ function lernKarteHTML(k) {
   const vorn = k.richtung === "r" ? `<p class="lern-frage">${esc(t("ln_frage_r"))}</p>${kopf}${wort}` : `<p class="lern-frage">${esc(t("ln_frage_v", zsName(k.sprache)))}</p>${bild}`;
   const zusatz = `${k.notiz ? `<div class="lern-notiz klein">${esc(k.notiz)}</div>` : ""}${k.problem ? `<div class="lern-problem"><p>${esc(t("ln_problem_hinweis"))}</p>
     <button class="knopf klein" type="button" data-ln="bearbeiten" data-bild="${esc(k.bild)}">${esc(t("ln_karte_bearbeiten"))}</button></div>` : ""}`;
-  const hinten = LS.gezeigt ? (k.richtung === "r" ? `${bild}<div class="lern-de" lang="de">${esc(k.de)}</div>` : `${kopf}${wort}<div class="lern-de" lang="de">${esc(k.de)}</div>`) + zusatz : "";
+  const deKnopf = LS.gezeigt && k.de && lernStimme("de") ? ` <button type="button" class="knopf klein lern-de-ton" data-ln="vorlesen-de" title="${esc(t("h_ln_vorlesen_de"))}" aria-label="${esc(t("h_ln_vorlesen_de"))}">🔊</button>` : "";
+  const deZeile = `<div class="lern-de"><span lang="de">${esc(k.de)}</span>${deKnopf}</div>`;
+  const hinten = LS.gezeigt ? (k.richtung === "r" ? `${bild}${deZeile}` : `${kopf}${wort}${deZeile}`) + zusatz : "";
   return `<div class="lern-karte${LS.gezeigt ? " gezeigt" : ""}" data-ln-karte${LS.gezeigt ? "" : ` role="button" tabindex="0" aria-label="${esc(t("ln_zeigen"))}"`}>
     <div class="lern-vorn">${vorn}</div><div class="lern-hinten" aria-live="polite">${hinten}</div></div>`;
 }
@@ -6592,9 +6981,9 @@ $("#lern-inhalt").addEventListener("click", async e => {
   if (a === "beenden") return lernBeenden();
   if (a === "bearbeiten") return oeffneEditor(b.dataset.bild);
   if (a === "vorlesen" && LS && LS.n.karte) {
-    const k = LS.n.karte, v = lernStimme(k.sprache); if (!v) return;
-    speechSynthesis.cancel(); const s = new SpeechSynthesisUtterance(k.wort); s.voice = v; s.lang = v.lang; speechSynthesis.speak(s); return;
+    const k = LS.n.karte; vorlesen(k.wort, lernStimme(k.sprache)); return;
   }
+  if (a === "vorlesen-de" && LS && LS.n.karte && LS.gezeigt) { vorlesen(LS.n.karte.de, lernStimme("de")); return; }
   if (a === "problemkarten") { S.lernFilter = "problem"; S.lernAuswahl = null; location.hash = "#karten"; return; }
   if (a === "stapel-neu") return lernStapelDialog();
   if (a === "stapel-bearbeiten") return lernStapelDialog(b.dataset.stapel);

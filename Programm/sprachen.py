@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-ME GOOS-TA DEUTSCH – Sprachen der Kartenrückseite (Tool „Sprachen“)   Version 2.1 (20.10.2026)
+ME GOOS-TA DEUTSCH – Sprachen der Kartenrückseite (Tool „Sprachen“)   Version 2.2 (21.10.2026)
 =============================================================================================
 Die Rückseite einer Karte ist normalerweise Spanisch (wie in Mexiko gesprochen) – immer da, nicht entfernbar. Weitere
 Sprachen sind ein Tool: jede Sprache wird einzeln installiert (spart Platz) und bestimmt dann als „Zielsprache“ die

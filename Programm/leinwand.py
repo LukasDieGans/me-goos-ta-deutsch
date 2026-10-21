@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-ME GOOS-TA DEUTSCH – Pillow-Leinwand                                Version 2.1 (20.10.2026)
+ME GOOS-TA DEUTSCH – Pillow-Leinwand                                Version 2.2 (21.10.2026)
 =============================================================================================
 Ein kleiner Nachbau der ReportLab-Zeichenfläche (canvas) auf einem Pillow-Bild. Damit zeichnet dieselbe Routine wie
 der Druck (gans_lernkarten.zeichne_rueckseite) die Rückseiten-Vorschau, wenn pypdfium2 fehlt – vor allem in der

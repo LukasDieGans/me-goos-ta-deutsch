@@ -1,6 +1,6 @@
 @echo off
 rem ===========================================================================
-rem  Me Goos-ta Deutsch - start for Windows                        Version 2.1
+rem  Me Goos-ta Deutsch - start for Windows                        Version 2.2
 rem
 rem  Just double-click. The first start sets everything up: a Python of its
 rem  own in your user folder (no administrator rights needed) and the packages
@@ -124,8 +124,17 @@ if errorlevel 1 goto :fehler_python
 > "%MGD_NEU%\mgd-version.txt" echo %PY_VER%
 if exist "%PYDIR%\" rd /s /q "%PYDIR%" >nul 2>&1
 if exist "%PYDIR%\" goto :fehler_besetzt
-move "%MGD_NEU%" "%PYDIR%" >nul
-if not exist "%PY%" goto :fehler_entpacken
+rem Verschieben kann kurz scheitern ("Zugriff verweigert"), solange der Virenscanner das frische Python noch
+rem prueft - vor allem auf ARM-Rechnern. Dann bis zu 15-mal nach 2 Sekunden neu versuchen.
+set "VERSUCH=0"
+:verschieben
+move "%MGD_NEU%" "%PYDIR%" >nul 2>&1
+if exist "%PY%" goto :verschoben
+set /a VERSUCH+=1
+if %VERSUCH% GEQ 15 goto :fehler_entpacken
+"%SYS32%\ping.exe" -n 3 127.0.0.1 >nul
+goto :verschieben
+:verschoben
 del /f /q "%MGD_ZIP%" >nul 2>&1
 echo   %T_OK%
 
