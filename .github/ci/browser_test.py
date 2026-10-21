@@ -720,12 +720,49 @@ def b2_start(s, u):
            info["sw"] and info["isoliert"] and info["lang"] == "en" and bilder == 10, f"{info} · Karten {bilder}", t0=t0)
 
 
+# Beobachter für _app_datei: welche Abrufe der Seite starten/enden und welche Toasts erscheinen (nur Lesen, die App bleibt gleich)
+HOLEN_JS = """name => {
+  window.__mgdAlt = APP_DATEI; window.__mgdName = name; window.__mgdHolt = []; window.__mgdToasts = window.__mgdToasts || [];
+  if (!window.__mgdFetch) {
+    window.__mgdFetch = window.fetch;
+    window.fetch = function (...a) {
+      const e = { url: decodeURIComponent(String((a[0] && a[0].url) || a[0])).slice(-100), fertig: false, t0: Date.now() };
+      window.__mgdHolt.push(e);
+      const p = window.__mgdFetch.apply(this, a);
+      p.then(r => { e.fertig = true; e.status = r.status; e.ms = Date.now() - e.t0; },
+             f => { e.fertig = true; e.fehler = String(f).slice(0, 100); });
+      return p;
+    };
+    new MutationObserver(l => l.forEach(m => m.addedNodes.forEach(n => window.__mgdToasts.push((n.textContent || '').slice(0, 120)))))
+      .observe(document.getElementById('toasts'), { childList: true });
+  }
+}"""
+GEHOLT_JS = "() => window.__mgdHolt.filter(e => e.url.includes(window.__mgdName))"
+BEFUND_JS = """() => ({ abrufe: window.__mgdHolt.filter(e => e.url.includes(window.__mgdName)),
+  andere: window.__mgdHolt.filter(e => !e.fertig && !e.url.includes(window.__mgdName)).map(e => e.url).slice(-3),
+  toasts: (window.__mgdToasts || []).slice(-3), fenster: !document.getElementById('app-fenster').hidden })"""
+
+
 def _app_datei(s, auswahl):
-    """Link anklicken → app.js holt die Datei → Fenster „Teilen / Speichern“ → (Name, Bytes)."""
-    s.js("() => { window.__mgdAlt = APP_DATEI; }")
-    s.page.click(auswahl)
-    s.warte("() => !!APP_DATEI && APP_DATEI !== window.__mgdAlt && !document.getElementById('app-fenster').hidden"
-            " && !!document.querySelector('#app-inhalt a[download][href^=\"blob:\"]')", zeit=ZEIT_APP)
+    """Link anklicken → app.js holt die Datei → Fenster „Teilen / Speichern“ → (Name, Bytes). Startet der Klick keinen Abruf
+    (Ansicht wurde gerade neu gezeichnet), wird einmal neu geklickt; hängt der Abruf selbst, scheitert die Prüfung mit Befund."""
+    s.page.wait_for_selector(auswahl)
+    name = s.page.eval_on_selector(auswahl, "a => decodeURIComponent(a.getAttribute('href')).split('?')[0].split('/').pop()")
+    s.js(HOLEN_JS, name)
+    for versuch in (1, 2):
+        s.page.click(auswahl)
+        try:
+            s.warte(GEHOLT_JS + ".length", zeit=15_000)
+            break
+        except TimeoutError:
+            if versuch == 2:
+                raise TimeoutError(f"Klick auf {name} startete keinen Abruf (2 Versuche) · {s.js(BEFUND_JS)}") from None
+            log(f"  · [{s.kurz}] Klick auf {name} startete keinen Abruf – neu geklickt · {s.js(BEFUND_JS)}")
+    try:
+        s.warte("() => !!APP_DATEI && APP_DATEI !== window.__mgdAlt && !document.getElementById('app-fenster').hidden"
+                " && !!document.querySelector('#app-inhalt a[download][href^=\"blob:\"]')", zeit=ZEIT_APP)
+    except TimeoutError as f:
+        raise TimeoutError(f"{name} kam nicht im Fenster „Teilen / Speichern“ an · {s.js(BEFUND_JS)} · {f}") from None
     d = s.js("""async () => { const b = new Uint8Array(await APP_DATEI.arrayBuffer()); let t = '';
       for (let i = 0; i < b.length; i += 32768) t += String.fromCharCode.apply(null, b.subarray(i, i + 32768));
       return { name: APP_DATEI.name, daten: btoa(t), titel: document.getElementById('app-titel').textContent }; }""")
