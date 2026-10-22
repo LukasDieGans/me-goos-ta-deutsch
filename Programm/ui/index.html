@@ -618,7 +618,13 @@ table.kompakt { width: 100%; border-collapse: collapse; table-layout: fixed; fon
   display: grid; place-items: center; text-align: center; color: var(--nacht-3); font-size: 13px; }
 .idee .bildfeld img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .idee .bildfeld.drueber { outline: 3px solid var(--nacht-2); }
+.idee .bildfeld[role="button"] { cursor: pointer; }
+.idee .bildfeld[role="button"]:hover, .idee .bildfeld[role="button"]:focus-visible { outline: 2px dashed var(--nacht-3); outline-offset: -6px; }
+.idee .bildfeld .leer-text { display: grid; gap: 4px; padding: 8px; }
+.idee .bildfeld .leer-text small { font-size: 12px; }
 .idee input.eingabe, .idee textarea.eingabe { width: 100%; }
+.idee textarea.eingabe { resize: vertical; min-height: 56px; font-weight: 400; }
+.idee .bild-knoepfe > .knopf { flex: 1 1 auto; justify-content: center; white-space: nowrap; }  /* nebeneinander oder gleich breit untereinander */
 .idee .feldname { font-size: 12px; font-weight: 700; color: var(--nacht-2); }
 .idee .fehlt { font-size: 12.5px; color: var(--nacht-3); }
 .idee .knoepfe { display: flex; gap: 6px; flex-wrap: wrap; margin-top: auto; }
@@ -2000,8 +2006,8 @@ Object.assign(TXT.de, {
   gw_weiss: "Weiß mit Rand", gw_schwarz: "Schwarz mit Rand", gw_gelb: "Gelb mit Rand",
   gw_hilfe: "Bild ziehen = Ausschnitt verschieben · Text ziehen = Text verschieben · Mausrad = Zoom",
   gw_datei: n => `Dateiname: ${n}`, gw_als_karte: "Als neue Karte (Schritt 1)", gw_als_idee: "Als Idee speichern",
-  gw_fuer_idee: "Für diese Idee übernehmen", gw_herunterladen: "Herunterladen", gw_text_fehlt: "Noch ein Wort nach GANS – dann ist dein Bild komplett!",
-  gw_ok_karte: "Tolles Bild! Es wartet in Schritt 1 – dort kurz prüfen und übernehmen.", gw_ok_idee: "Als Idee gespeichert – gute Idee!",
+  gw_fuer_idee: "Für diese Idee übernehmen", gw_unveraendert: "Bild unverändert übernehmen", gw_herunterladen: "Herunterladen", gw_text_fehlt: "Noch ein Wort nach GANS – dann ist dein Bild komplett!",
+  gw_ok_karte: "Tolles Bild! Es wartet in Schritt 1 – dort kurz prüfen und übernehmen.", gw_ok_idee: "Als Idee gespeichert – gute Idee!", gw_ok_bild_idee: "Das Bild ist bei deiner Idee – gans nah an der fertigen Karte!",
   gw_s_poppins: "Poppins Bold (wie die Karten)", gw_s_poppins_m: "Poppins Medium", gw_s_impact: "Impact (Meme)",
   gw_s_arial: "Arial Black", gw_s_comic: "Comic Sans", gw_s_georgia: "Georgia (Serifen)", gw_mitte: "Text mittig",
   // KI-Bild (realistische Gans, offline)
@@ -2039,6 +2045,8 @@ Object.assign(TXT.de, {
   ki_laeuft: p => `Die Gans entsteht … ${p} %`, ki_hintergrund: "Du kannst das Fenster schließen – es rechnet im Hintergrund weiter.",
   ki_startwert: s => `Startwert ${s} – gleiche Beschreibung + gleicher Startwert ergibt dasselbe Bild.`,
   ki_wort_setzen: "✍️ Wort aufs Bild setzen …", ki_als_karte: "Ohne Wort als neue Karte", ki_fuer_karte: "Für diese Karte übernehmen",
+  ki_fuer_idee: "Ohne Wort für die Idee übernehmen", ki_ok_idee: "Das KI-Bild ist jetzt das Bild deiner Idee – gans schön!",
+  ki_idee_info: "Für deine Idee: Die Beschreibung kommt aus der Bildidee und wird dort gemerkt, sobald du erzeugst.",
   ki_ok_editor: "Das neue Bild steht im Karten-Editor bereit – kurz prüfen und übernehmen.",
   ki_modell_fehlt: "Das KI-Bildmodell fehlt noch (ca. 3,5 GB, einmalig). Danach läuft alles offline.", ki_modell_laden: "Tool „KI-Bilder“ installieren …",
   ki_anderer_lauf: "Gerade läuft noch etwas anderes – deine Gans stellt sich einfach hinten an.",
@@ -2050,7 +2058,8 @@ Object.assign(TXT.de, {
   ideen_unter: "Eine Idee braucht nur ein Bild, ein Wort auf Deutsch oder auf {zs}. Ergänze sie nach und nach – fertig wird sie mit „Als Karte aufnehmen“ und steht dann unter Meine Karten.",
   idee_neu: "+ Neue Idee", ideen_eigene: "Meine Ideen", ideen_unfertig: "Unfertige Karten aus „Neue Karte“",
   ideen_leer: "Noch keine Ideen? Kein Problem – leg einfach eine an oder gestalte ein GANS-Bild.", ideen_unfertig_leer: "Keine unfertigen Karten – alles erledigt!",
-  idee_bild_fehlt: "Noch kein Bild", idee_bild_laden: "Bild wählen …", idee_bild_gestalten: "GANS-Bild gestalten …",
+  idee_bild_fehlt: "Noch kein Bild", idee_bild_tipp: "Klicken oder ein Bild hierher ziehen", idee_bild_laden: "🖼️ Bild wählen …", idee_bild_ki: "🪄 Mit KI erzeugen …",
+  idee_bild_idee: "Bildidee", idee_bild_idee_ph: "Wie könnte das Bild aussehen? z. B. Gans mit Sonnenbrille am Strand",
   idee_de: "Text auf dem Bild (Deutsch)", idee_es: "Wort auf {zs}", idee_notiz: "Notiz", idee_de_ph: "z. B. Gans alt", idee_es_ph: "z. B. viejo",
   idee_aufnehmen: "Als Karte aufnehmen", idee_weg: "Verwerfen", idee_fehlt_noch: l => `Fast eine Karte! Es fehlt nur noch: ${l}`,
   idee_teil_bild: "Bild", idee_teil_de: "Text auf dem Bild", idee_teil_es: "Wort auf {zs}",
@@ -2186,8 +2195,8 @@ Object.assign(TXT.en, {
   gw_weiss: "White with outline", gw_schwarz: "Black with outline", gw_gelb: "Yellow with outline",
   gw_hilfe: "Drag the image = move the crop · drag the text = move the text · mouse wheel = zoom",
   gw_datei: n => `File name: ${n}`, gw_als_karte: "As a new card (step 1)", gw_als_idee: "Save as idea",
-  gw_fuer_idee: "Use for this idea", gw_herunterladen: "Download", gw_text_fehlt: "One more word after GANS – then your image is complete!",
-  gw_ok_karte: "Great image! It is waiting in step 1 – check it there and take it over.", gw_ok_idee: "Saved as an idea – good idea!",
+  gw_fuer_idee: "Use for this idea", gw_unveraendert: "Use image unchanged", gw_herunterladen: "Download", gw_text_fehlt: "One more word after GANS – then your image is complete!",
+  gw_ok_karte: "Great image! It is waiting in step 1 – check it there and take it over.", gw_ok_idee: "Saved as an idea – good idea!", gw_ok_bild_idee: "The image is with your idea – one goose-step closer to a finished card!",
   gw_s_poppins: "Poppins Bold (like the cards)", gw_s_poppins_m: "Poppins Medium", gw_s_impact: "Impact (meme)",
   gw_s_arial: "Arial Black", gw_s_comic: "Comic Sans", gw_s_georgia: "Georgia (serif)", gw_mitte: "Centre text",
   // AI image (realistic goose, offline)
@@ -2225,6 +2234,8 @@ Object.assign(TXT.en, {
   ki_laeuft: p => `The goose is taking shape … ${p} %`, ki_hintergrund: "You can close the window – it keeps working in the background.",
   ki_startwert: s => `Seed ${s} – same description + same seed gives the same image.`,
   ki_wort_setzen: "✍️ Put the word on the image …", ki_als_karte: "As a new card without word", ki_fuer_karte: "Use for this card",
+  ki_fuer_idee: "Use for the idea without word", ki_ok_idee: "The AI image is now your idea’s image – looking goose-tastic!",
+  ki_idee_info: "For your idea: the description comes from the image idea and is saved there as soon as you create.",
   ki_ok_editor: "The new image is waiting in the card editor – check it quickly and apply.",
   ki_modell_fehlt: "The AI image model is still missing (about 3.5 GB, one time). After that everything runs offline.", ki_modell_laden: "Install the “AI images” tool …",
   ki_anderer_lauf: "Something else is running right now – your goose simply joins the queue.",
@@ -2235,7 +2246,8 @@ Object.assign(TXT.en, {
   ideen_unter: "An idea only needs an image, a German or a {zs} word. Complete it bit by bit – “Make it a card” finishes it and it moves to My cards.",
   idee_neu: "+ New idea", ideen_eigene: "My ideas", ideen_unfertig: "Unfinished cards from “New card”",
   ideen_leer: "No ideas yet? No problem – just add one or design a GANS image.", ideen_unfertig_leer: "No unfinished cards – all done!",
-  idee_bild_fehlt: "No image yet", idee_bild_laden: "Choose image …", idee_bild_gestalten: "Design GANS image …",
+  idee_bild_fehlt: "No image yet", idee_bild_tipp: "Click or drag an image here", idee_bild_laden: "🖼️ Choose image …", idee_bild_ki: "🪄 Create with AI …",
+  idee_bild_idee: "Image idea", idee_bild_idee_ph: "What could the image look like? e.g. goose with sunglasses on the beach",
   idee_de: "Text on the image (German)", idee_es: "{zs} word", idee_notiz: "Note", idee_de_ph: "e.g. Gans alt", idee_es_ph: "e.g. viejo",
   idee_aufnehmen: "Make it a card", idee_weg: "Discard", idee_fehlt_noch: l => `Almost a card! All that is missing: ${l}`,
   idee_teil_bild: "image", idee_teil_de: "text on the image", idee_teil_es: "{zs} word",
@@ -2369,8 +2381,8 @@ Object.assign(TXT.es, {
   gw_weiss: "Blanco con borde", gw_schwarz: "Negro con borde", gw_gelb: "Amarillo con borde",
   gw_hilfe: "Arrastrar la imagen = mover el recorte · arrastrar el texto = mover el texto · rueda = zoom",
   gw_datei: n => `Nombre del archivo: ${n}`, gw_als_karte: "Como carta nueva (paso 1)", gw_als_idee: "Guardar como idea",
-  gw_fuer_idee: "Usar para esta idea", gw_herunterladen: "Descargar", gw_text_fehlt: "Falta una palabra después de GANS, ¡y tu imagen queda completa!",
-  gw_ok_karte: "¡Qué buena imagen! Te espera en el paso 1: revísala y tómala allí.", gw_ok_idee: "Guardada como idea. ¡Buena idea!",
+  gw_fuer_idee: "Usar para esta idea", gw_unveraendert: "Usar la imagen sin cambios", gw_herunterladen: "Descargar", gw_text_fehlt: "Falta una palabra después de GANS, ¡y tu imagen queda completa!",
+  gw_ok_karte: "¡Qué buena imagen! Te espera en el paso 1: revísala y tómala allí.", gw_ok_idee: "Guardada como idea. ¡Buena idea!", gw_ok_bild_idee: "¡La imagen ya está en tu idea! Un paso más cerca de la carta lista.",
   gw_s_poppins: "Poppins Bold (como las cartas)", gw_s_poppins_m: "Poppins Medium", gw_s_impact: "Impact (meme)",
   gw_s_arial: "Arial Black", gw_s_comic: "Comic Sans", gw_s_georgia: "Georgia (con serifa)", gw_mitte: "Centrar texto",
   // Imagen IA (ganso realista, sin conexión)
@@ -2408,6 +2420,8 @@ Object.assign(TXT.es, {
   ki_laeuft: p => `El ganso va tomando forma … ${p} %`, ki_hintergrund: "Puedes cerrar la ventana; sigue trabajando en segundo plano.",
   ki_startwert: s => `Semilla ${s}: misma descripción + misma semilla da la misma imagen.`,
   ki_wort_setzen: "✍️ Poner la palabra en la imagen …", ki_als_karte: "Como carta nueva sin palabra", ki_fuer_karte: "Usar para esta carta",
+  ki_fuer_idee: "Usar para la idea sin palabra", ki_ok_idee: "¡Listo! La imagen IA ya es la imagen de tu idea. ¡Quedó de lujo!",
+  ki_idee_info: "Para tu idea: la descripción viene de la idea de imagen y se guarda allí en cuanto creas.",
   ki_ok_editor: "La imagen nueva te espera en el editor de cartas; revísala y aplícala.",
   ki_modell_fehlt: "Aún falta el modelo de imágenes IA (unos 3,5 GB, una sola vez). Después todo funciona sin conexión.", ki_modell_laden: "Instalar la herramienta «Imágenes IA» …",
   ki_anderer_lauf: "Ahora mismo se está ejecutando otra cosa; tu ganso simplemente se forma en la fila.",
@@ -2418,7 +2432,8 @@ Object.assign(TXT.es, {
   ideen_unter: "Una idea solo necesita una imagen, una palabra en alemán o en {zs}. Complétala poco a poco; con «Hacer carta» queda lista y pasa a Mis cartas.",
   idee_neu: "+ Idea nueva", ideen_eigene: "Mis ideas", ideen_unfertig: "Cartas sin terminar de «Carta nueva»",
   ideen_leer: "¿Aún no hay ideas? No pasa nada: crea una o diseña una imagen GANS.", ideen_unfertig_leer: "No hay cartas sin terminar. ¡Todo listo!",
-  idee_bild_fehlt: "Aún sin imagen", idee_bild_laden: "Elegir imagen …", idee_bild_gestalten: "Diseñar imagen GANS …",
+  idee_bild_fehlt: "Aún sin imagen", idee_bild_tipp: "Haz clic o arrastra una imagen aquí", idee_bild_laden: "🖼️ Elegir imagen …", idee_bild_ki: "🪄 Crear con IA …",
+  idee_bild_idee: "Idea de imagen", idee_bild_idee_ph: "¿Cómo podría verse la imagen? p. ej. ganso con lentes de sol en la playa",
   idee_de: "Texto de la imagen (alemán)", idee_es: "Palabra en {zs}", idee_notiz: "Nota", idee_de_ph: "p. ej. Gans alt", idee_es_ph: "p. ej. viejo",
   idee_aufnehmen: "Hacer carta", idee_weg: "Descartar", idee_fehlt_noch: l => `¡Casi es una carta! Solo falta: ${l}`,
   idee_teil_bild: "imagen", idee_teil_de: "texto de la imagen", idee_teil_es: "palabra en {zs}",
@@ -2622,8 +2637,11 @@ Object.assign(TXT.de, {
   h_ki_uebersetzen: "Schickt nur diese Beschreibung an den Übersetzungsdienst (MyMemory oder DeepL) – nur mit eingeschalteter Übersetzung",
   h_ersatz_uebernehmen: "Ersetzt das Bild der Karte – das bisherige wird in bilder/_entfernt/ aufgehoben, „Rückgängig“ holt es zurück",
   h_ersatz_verwerfen: "Das neue Bild nicht verwenden – die Karte bleibt, wie sie ist",
-  h_idee_neu: "Leere Idee anlegen – ein Bild oder ein Wort reicht für den Anfang", h_idee_bild: "Ein Bild für diese Idee wählen – oder einfach hierher ziehen",
-  h_idee_gestalten: "Aus einem Gänse-Foto ein Bild mit „GANS + Wort“ bauen", h_idee_es: "Das Wort für die Rückseite – 🌐 schlägt eins vor", h_es_feld: "Das Wort auf Spanisch für die Rückseite – gemeint ist immer das in Mexiko gesprochene Spanisch",
+  h_idee_neu: "Leere Idee anlegen – ein Bild oder ein Wort reicht für den Anfang", h_idee_bild: "Eigenes Foto oder fertiges Bild wählen (oder hierher ziehen) – danach „GANS + Wort“ daraufsetzen oder es unverändert übernehmen",
+  h_idee_ki: "Ein realistisches Gänse-Foto zur Bildidee erzeugen – offline auf diesem Rechner (Tool „KI-Bilder“; fehlt es, fragt das Programm vorher)",
+  h_idee_bild_idee: "Dein Merkzettel fürs Bild. „🪄 Mit KI erzeugen“ nimmt ihn als Beschreibung – die KI versteht Englisch am besten (im KI-Fenster übersetzt ein Klick).",
+  h_gw_unveraendert: "Nimmt das gewählte Bild genau so, wie es ist – ohne Zuschnitt und ohne Text (z. B. wenn der Text schon draufsteht)",
+  h_idee_es: "Das Wort für die Rückseite – 🌐 schlägt eins vor", h_es_feld: "Das Wort auf Spanisch für die Rückseite – gemeint ist immer das in Mexiko gesprochene Spanisch",
   h_idee_aufnehmen: "Macht aus der fertigen Idee eine Karte unter „Meine Karten“ (braucht Bild, Text und Wort)", h_idee_weg: "Diese Idee verwerfen",
   h_unfertig_weiter: "Öffnet diese Karte genau dort, wo es weitergeht",
 });
@@ -2652,8 +2670,11 @@ Object.assign(TXT.en, {
   h_ki_uebersetzen: "Sends only this description to the translation service (MyMemory or DeepL) – only with translation switched on",
   h_ersatz_uebernehmen: "Replaces the card’s image – the previous one is kept in bilder/_entfernt/, “Undo” brings it back",
   h_ersatz_verwerfen: "Don’t use the new image – the card stays as it is",
-  h_idee_neu: "Create an empty idea – an image or a word is enough to start", h_idee_bild: "Choose an image for this idea – or just drag it here",
-  h_idee_gestalten: "Turn a goose photo into an image with “GANS + word”", h_idee_es: "The word for the back – 🌐 suggests one", h_es_feld: "The word in Spanish for the back – always meaning Spanish as spoken in Mexico",
+  h_idee_neu: "Create an empty idea – an image or a word is enough to start", h_idee_bild: "Choose your own photo or a finished image (or drag it here) – then add “GANS + word” or use it unchanged",
+  h_idee_ki: "Create a realistic goose photo from the image idea – offline on this computer (“AI images” tool; if it’s missing, the program asks first)",
+  h_idee_bild_idee: "Your note for the image. “🪄 Create with AI” uses it as the description – the AI understands English best.",
+  h_gw_unveraendert: "Takes the chosen image exactly as it is – no cropping, no text (e.g. if the text is already on it)",
+  h_idee_es: "The word for the back – 🌐 suggests one", h_es_feld: "The word in Spanish for the back – always meaning Spanish as spoken in Mexico",
   h_idee_aufnehmen: "Turns the finished idea into a card under “My cards” (needs image, text and word)", h_idee_weg: "Discard this idea",
   h_unfertig_weiter: "Opens this card right where it continues",
 });
@@ -2682,8 +2703,11 @@ Object.assign(TXT.es, {
   h_ki_uebersetzen: "Envía solo esta descripción al servicio de traducción (MyMemory o DeepL), solo con la traducción activada",
   h_ersatz_uebernehmen: "Reemplaza la imagen de la carta; la anterior se guarda en bilder/_entfernt/ y «Deshacer» la devuelve",
   h_ersatz_verwerfen: "No usar la imagen nueva; la carta se queda como está",
-  h_idee_neu: "Crear una idea vacía; para empezar basta una imagen o una palabra", h_idee_bild: "Elegir una imagen para esta idea, o simplemente arrastrarla aquí",
-  h_idee_gestalten: "Convertir una foto de ganso en una imagen con «GANS + palabra»", h_idee_es: "La palabra para el reverso; 🌐 te sugiere una", h_es_feld: "La palabra en español para el reverso; siempre el español que se habla en México",
+  h_idee_neu: "Crear una idea vacía; para empezar basta una imagen o una palabra", h_idee_bild: "Elige tu foto o una imagen terminada (o arrástrala aquí); después ponle «GANS + palabra» o úsala sin cambios",
+  h_idee_ki: "Crear una foto realista de ganso a partir de la idea de imagen, sin conexión en esta computadora (herramienta «Imágenes IA»; si falta, el programa pregunta antes)",
+  h_idee_bild_idee: "Tu nota para la imagen. «🪄 Crear con IA» la usa como descripción; la IA entiende mejor el inglés (en la ventana de IA se traduce con un clic).",
+  h_gw_unveraendert: "Toma la imagen elegida tal cual, sin recorte ni texto (p. ej. si ya tiene el texto)",
+  h_idee_es: "La palabra para el reverso; 🌐 te sugiere una", h_es_feld: "La palabra en español para el reverso; siempre el español que se habla en México",
   h_idee_aufnehmen: "Convierte la idea terminada en una carta en «Mis cartas» (necesita imagen, texto y palabra)", h_idee_weg: "Descartar esta idea",
   h_unfertig_weiter: "Abre esta carta justo donde sigue",
 });
@@ -2938,7 +2962,7 @@ Object.assign(TXT.de, {
   verbesserung_unter_touch: "Wähle eine oder mehrere Karten aus und lass ihre Bilder schon vorab verbessern. Fertig verbesserte Bilder sind grün markiert; Antippen eines Bildes zeigt Vorher und Nachher. Beim Erzeugen werden noch fehlende Bilder ohnehin verbessert.",
   vergleich_hilfe_touch: "Schieberegler bewegen oder mit dem Finger übers Bild wischen.",
   ie_import_text_touch: "Eine exportierte ZIP-Datei (oder eine Kartenliste als CSV) wählen. Zuerst siehst du eine Vorschau – übernommen wird erst danach.",
-  gw_leer_touch: "Gänse-Foto wählen",
+  gw_leer_touch: "Gänse-Foto wählen", idee_bild_tipp_touch: "Antippen, um ein Bild zu wählen",
   gw_hilfe_touch: "Bild mit dem Finger ziehen = Ausschnitt verschieben · Text ziehen = Text verschieben · Regler „Zoom“ = vergrößern",
   wk_tour_1_touch: "Gänse-Bilder auswählen – oder mit „🎨 GANS-Bild gestalten“ selbst eins bauen.",
 });
@@ -2949,7 +2973,7 @@ Object.assign(TXT.en, {
   verbesserung_unter_touch: "Select one or more cards and have their images enhanced in advance. Finished images are marked green; tap an image to see before and after. Generating enhances any missing images anyway.",
   vergleich_hilfe_touch: "Move the slider or swipe across the image with your finger.",
   ie_import_text_touch: "Choose an exported ZIP file (or a card list as CSV). You see a preview first – nothing is taken over before that.",
-  gw_leer_touch: "Choose a goose photo",
+  gw_leer_touch: "Choose a goose photo", idee_bild_tipp_touch: "Tap to choose an image",
   gw_hilfe_touch: "Drag the image with your finger = move the crop · drag the text = move the text · “Zoom” slider = enlarge",
   wk_tour_1_touch: "Choose goose pictures – or build one yourself with “🎨 Design a GANS image”.",
 });
@@ -2960,7 +2984,7 @@ Object.assign(TXT.es, {
   verbesserung_unter_touch: "Elige una o varias cartas y mejora sus imágenes por adelantado. Las imágenes listas se marcan en verde; al tocar una imagen ves el antes y el después. Al generar, las imágenes que falten se mejoran de todos modos.",
   vergleich_hilfe_touch: "Mueve el control deslizante o desliza el dedo sobre la imagen.",
   ie_import_text_touch: "Elige un ZIP exportado (o una lista de cartas en CSV). Primero ves una vista previa; nada se toma antes.",
-  gw_leer_touch: "Elige una foto de ganso",
+  gw_leer_touch: "Elige una foto de ganso", idee_bild_tipp_touch: "Toca para elegir una imagen",
   gw_hilfe_touch: "Arrastrar la imagen con el dedo = mover el recorte · arrastrar el texto = mover el texto · control «Zoom» = ampliar",
   wk_tour_1_touch: "Elige imágenes de gansos, o crea una con «🎨 Diseñar imagen GANS».",
 });
@@ -4676,8 +4700,8 @@ document.addEventListener("click", async e => {
   const ki = e.target.closest("[data-ws-ki]");
   if (ki) {
     const x = S.ws.fertig.find(f => f.id === ki.dataset.wsKi); if (!x || !x.ki) return;
-    const k = x.ki; KI_MERK.letzt = { id: k.id, startwert: k.startwert, karte: k.karte || "", wort: k.wort || "", beschreibung: k.beschreibung || "" };
-    schliesseDialog($("#ws-fenster")); oeffneKiBild({ karte: KI_MERK.letzt.karte, ergebnis: KI_MERK.letzt }); return;
+    const k = x.ki; KI_MERK.letzt = { id: k.id, startwert: k.startwert, karte: k.karte || "", idee: k.idee ?? null, wort: k.wort || "", beschreibung: k.beschreibung || "" };
+    schliesseDialog($("#ws-fenster")); oeffneKiBild({ karte: KI_MERK.letzt.karte, idee: KI_MERK.letzt.idee, ergebnis: KI_MERK.letzt }); return;
   }
   const pr = e.target.closest("[data-ws-protokoll]");
   if (pr) {
@@ -5891,8 +5915,8 @@ const GW_FARBEN = { weiss: ["#FFFFFF", "#111111"], schwarz: ["#111111", "#FFFFFF
 const GW_FORMATE = { quadrat: [1, 1], karte: [88, 63], hoch: [63, 88] };
 let GW = null;
 function gwNeu(opt) {
-  return { bild: null, blobUrl: "", format: GW_FORMATE[opt.format] ? opt.format : "quadrat", zoom: 1, cx: 0, cy: 0, text: opt.text || "", tx: .5, ty: .84, groesse: .13,
-    schrift: "poppins", farbe: "weiss", idee: opt.idee || null, karte: opt.karte || "", ziehen: null };
+  return { bild: null, blobUrl: "", datei: null, format: GW_FORMATE[opt.format] ? opt.format : "quadrat", zoom: 1, cx: 0, cy: 0, text: opt.text || "", tx: .5, ty: .84, groesse: .13,
+    schrift: "poppins", farbe: "weiss", idee: opt.idee ?? null, karte: opt.karte || "", ziehen: null };      // idee: id, "" = neue Idee, null = keine
 }
 function gwAufraeumen() { if (GW && GW.blobUrl) URL.revokeObjectURL(GW.blobUrl); GW = null; }
 function oeffneGansWerkzeug(opt = {}) {
@@ -5929,7 +5953,8 @@ function zeichneGwFenster() {
       <div class="knopfzeile"><button class="knopf klein leise" data-gw-aktion="mitte">${esc(t("gw_mitte"))}</button>
         <button class="knopf klein leise" data-gw-aktion="waehlen">${esc(t("gw_anderes"))}</button></div>
       <div class="knopfzeile">${GW.karte ? `<button class="knopf haupt" data-gw-aktion="fuer-karte">${esc(t("ki_fuer_karte"))}</button>`
-        : GW.idee ? `<button class="knopf haupt" data-gw-aktion="idee">${esc(t("gw_fuer_idee"))}</button>`
+        : GW.idee !== null ? `<button class="knopf haupt" data-gw-aktion="idee">${esc(t("gw_fuer_idee"))}</button>${GW.datei ? `
+          <button class="knopf" data-gw-aktion="unveraendert" title="${esc(t("h_gw_unveraendert"))}">${esc(t("gw_unveraendert"))}</button>` : ""}`
         : `<button class="knopf haupt" data-gw-aktion="karte">${esc(t("gw_als_karte"))}</button><button class="knopf" data-gw-aktion="idee">${esc(t("gw_als_idee"))}</button>`}
         <button class="knopf leise" data-gw-aktion="laden">${esc(t("gw_herunterladen"))}</button></div>
     </div></div>`;
@@ -5997,7 +6022,7 @@ async function gwFoto(dateien) {
   try { await new Promise((ok, nein) => { img.onload = ok; img.onerror = nein; img.src = urlNeu; }); }
   catch (e) { URL.revokeObjectURL(urlNeu); return toast(t("gw_leer_unter"), { fehler: true }); }
   if (GW.blobUrl) URL.revokeObjectURL(GW.blobUrl);
-  GW.bild = img; GW.blobUrl = urlNeu; GW.zoom = 1; GW.cx = img.naturalWidth / 2; GW.cy = img.naturalHeight / 2;
+  GW.bild = img; GW.blobUrl = urlNeu; GW.datei = f; GW.zoom = 1; GW.cx = img.naturalWidth / 2; GW.cy = img.naturalHeight / 2;
   try { await document.fonts.load(`700 40px Poppins`); await document.fonts.load(`500 40px Poppins`); } catch (e) { /* Ersatzschrift */ }
   zeichneGwFenster(); const feld = $("#gw-text"); if (feld && !feld.value) feld.focus();
 }
@@ -6031,6 +6056,7 @@ $("#gw-inhalt").addEventListener("click", async e => {
   const a = b.dataset.gwAktion;
   if (a === "waehlen") return dateiWaehlen(BILD_ACCEPT_WEB, gwFoto);
   if (a === "mitte") { GW.tx = .5; return gwMalen(); }
+  if (a === "unveraendert") return gwUnveraendert(b);
   if (!gwRest()) { toast(t("gw_text_fehlt"), { fehler: true }); const f = $("#gw-text"); if (f) f.focus(); return; }
   b.disabled = true;
   try {
@@ -6047,17 +6073,23 @@ $("#gw-inhalt").addEventListener("click", async e => {
       const karte = GW.karte, f = new File([blob], gwDateiname(), { type: "image/jpeg" });
       schliesseDialog($("#gw-fenster")); oeffneEditor(karte); await ladeErsatz(karte, f); toast(t("ki_ok_editor"));
     }
-    if (a === "idee") {
-      const ziel = GW.idee, alt = ziel && IDEEN ? IDEEN.ideen.find(i => i.id === ziel) : null;
-      let r = await api(url("/api/idee-bild", { id: ziel || "" }), { methode: "POST", roh: blob });
-      if (!alt || !alt.de) r = await api("/api/idee", { methode: "POST", daten: { id: r.id, de: gwDeText(), es: alt ? alt.es : "", notiz: alt ? alt.notiz : "" } });
-      IDEEN = r; zaehler(); schliesseDialog($("#gw-fenster"));
-      if (ansicht() === "ideen") zeichneIdeen(); else { location.hash = "#ideen"; }
-      toast(t("gw_ok_idee"));
-    }
+    if (a === "idee") await gwFuerIdee(blob, true);
   } catch (err) { fehlerToast(err); }
   finally { b.disabled = false; }
 });
+async function gwFuerIdee(bild, mitText) {         // Bild für die Idee (bzw. neue Idee); Text nur, wenn sie noch keinen hat
+  const ziel = GW.idee, alt = ziel && IDEEN ? IDEEN.ideen.find(i => i.id === ziel) : null;
+  let r = await api(url("/api/idee-bild", { id: ziel || "" }), { methode: "POST", roh: bild });
+  if ((!alt || !alt.de) && (mitText || gwRest())) r = await api("/api/idee", { methode: "POST", daten: { id: r.id, de: gwDeText(), es: alt ? alt.es : "", notiz: alt ? alt.notiz : "" } });
+  IDEEN = r; if (!ziel) ideeEntwurf = false; zaehler(); schliesseDialog($("#gw-fenster"));
+  if (ansicht() === "ideen") zeichneIdeen(); else { location.hash = "#ideen"; }
+  toast(t(ziel ? "gw_ok_bild_idee" : "gw_ok_idee"));
+}
+async function gwUnveraendert(b) {                 // gewähltes Bild ohne Zuschnitt und Text (z. B. steht der Text schon drauf)
+  if (!GW || !GW.datei) return;
+  b.disabled = true;
+  try { await gwFuerIdee(GW.datei, false); } catch (err) { fehlerToast(err); } finally { b.disabled = false; }
+}
 
 /* ----- KI-Bild: realistische Gans aus Wort + Beschreibung (ki_bild.py, offline auf diesem Rechner) ----- */
 let KI = null;                                                     // offenes Fenster „Gans mit KI erzeugen“
@@ -6073,12 +6105,14 @@ function kiDateiname(e) {
     .normalize("NFKD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
   return (s || "gans") + "-ki.png";
 }
-async function oeffneKiBild(opt = {}) {
+const kiGleichesZiel = (a, b) => (a.karte || "") === (b.karte || "") && (a.idee ?? null) === (b.idee ?? null);
+async function oeffneKiBild(opt = {}) {                              // opt.idee: id der Idee ("" = neue Idee), sonst null
   if (S.status && S.status.web_app) return toast(t("ki_nur_rechner"));
-  KI = { karte: opt.karte || "", wort: opt.wort ?? kiGemerkt("wort"), beschreibung: opt.beschreibung ?? kiGemerkt("beschreibung"),
-    ohne: true, info: null, hilfe: false, prompt: false, ergebnis: null };
+  const e = opt.ergebnis || {};                                      // wieder geöffnet („Ansehen“): Eingaben dieses Bilds
+  KI = { karte: opt.karte || "", idee: opt.karte ? null : opt.idee ?? null, wort: opt.wort ?? (e.wort ? kiRest(e.wort) : kiGemerkt("wort")),
+    beschreibung: opt.beschreibung ?? (e.beschreibung || kiGemerkt("beschreibung")), ohne: true, info: null, hilfe: false, prompt: false, ergebnis: null };
   if (opt.ergebnis) KI.ergebnis = opt.ergebnis;
-  else if (KI_MERK.letzt && (KI_MERK.letzt.karte || "") === KI.karte) KI.ergebnis = KI_MERK.letzt;
+  else if (KI_MERK.letzt && kiGleichesZiel(KI_MERK.letzt, KI)) KI.ergebnis = KI_MERK.letzt;
   $("#ki-fenster").hidden = false; zeichneKi();
   try { const i = await api("/api/ki-bild"); if (!KI) return; KI.info = i; KI.ohne = i.ohne_menschen; } catch (e) { fehlerToast(e); }
   if (KI) zeichneKi();
@@ -6119,6 +6153,7 @@ function kiErgebnisHTML() {
       <p class="klein" style="margin:0">${esc(t("ki_startwert", e.startwert))}</p>
       <div class="knopfzeile"><button type="button" class="knopf haupt" data-ki="wort-setzen">${esc(t("ki_wort_setzen"))}</button>
         ${e.karte ? `<button type="button" class="knopf" data-ki="fuer-karte">${esc(t("ki_fuer_karte"))}</button>`
+          : (e.idee ?? null) !== null ? `<button type="button" class="knopf" data-ki="fuer-idee">${esc(t("ki_fuer_idee"))}</button>`
           : `<button type="button" class="knopf" data-ki="als-karte">${esc(t("ki_als_karte"))}</button>`}
         <button type="button" class="knopf leise" data-ki="erzeugen">${esc(t("ki_neu_wuerfeln"))}</button>
         <a class="knopf leise" href="${esc(bild)}" download="${esc(kiDateiname(e))}">${esc(t("gw_herunterladen"))}</a></div>`;
@@ -6148,6 +6183,7 @@ function zeichneKi() {
   $("#ki-inhalt").innerHTML = `<div class="ki-raster">
     <div class="ki-form">
       <p class="klein" style="margin:0">${esc(t("ki_intro"))}</p>
+      ${KI.idee !== null ? `<p class="klein ki-idee-info" style="margin:0">💡 ${esc(t("ki_idee_info"))}</p>` : ""}
       <div><label class="titel" for="ki-wort">${esc(t("ki_wort"))}</label>
         <div class="gw-text"><b>GANS</b><input id="ki-wort" autocomplete="off" spellcheck="false" maxlength="40" placeholder="${esc(t("ki_wort_ph"))}" value="${esc(kiRest())}"></div>
         <div class="klein" style="margin-top:4px">${esc(t("ki_wort_hinweis"))}</div></div>
@@ -6186,9 +6222,9 @@ function kiFortschritt() {                                           // nach jed
 function kiLaufFertig(L) {
   const k = L.ki || {};
   if (L.code === 0 && k.fertig) {
-    KI_MERK.letzt = { id: k.id, startwert: k.startwert, karte: k.karte || "", wort: k.wort || "", beschreibung: k.beschreibung || "" };
+    KI_MERK.letzt = { id: k.id, startwert: k.startwert, karte: k.karte || "", idee: k.idee ?? null, wort: k.wort || "", beschreibung: k.beschreibung || "" };
     if (KI && !$("#ki-fenster").hidden) { KI.ergebnis = KI_MERK.letzt; kiFortschritt(); toast(t("ki_fertig_toast")); }
-    else toast(t("ki_fertig_toast"), { aktion: { label: t("ki_ansehen"), fn: () => oeffneKiBild({ karte: KI_MERK.letzt.karte, ergebnis: KI_MERK.letzt }) } });
+    else toast(t("ki_fertig_toast"), { aktion: { label: t("ki_ansehen"), fn: () => oeffneKiBild({ karte: KI_MERK.letzt.karte, idee: KI_MERK.letzt.idee, ergebnis: KI_MERK.letzt }) } });
   } else if (KI_MERK.stopp) toast(t("ki_abgebrochen"));
   else { const z = (L.zeilen || []).filter(x => /^✕/.test(x)).pop(); toast(z ? z.replace(/^✕\s*/, "") : t("ki_fehler"), { fehler: true }); }
   KI_MERK.stopp = false;
@@ -6209,7 +6245,7 @@ function kiTextSpaeter(ms = 400) {                                    // Länge 
 }
 async function kiToolHolen() {                            // Modell fehlt → Tool „KI-Bilder“ installieren, danach geht das Fenster mit den Eingaben wieder auf
   if (!KI) return;
-  const d = { karte: KI.karte, wort: KI.wort, beschreibung: KI.beschreibung };
+  const d = { karte: KI.karte, idee: KI.idee, wort: KI.wort, beschreibung: KI.beschreibung };
   await ladeTools();
   return brauchtTool("ki-bild", () => oeffneKiBild(d));
 }
@@ -6220,11 +6256,20 @@ async function kiStarten(knopf) {
   if (knopf) knopf.disabled = true;
   try {
     const st = await api("/api/lauf", { methode: "POST", daten: { art: "ki-bild", beschreibung: KI.beschreibung.trim(), wort: kiDeText(),
-      ohne_menschen: KI.ohne, karte: KI.karte } });
+      ohne_menschen: KI.ohne, karte: KI.karte, ...(KI.idee !== null ? { idee: KI.idee } : {}) } });
     KI.ergebnis = null; KI_MERK.stopp = false; KI.wartet = st.wartet ? st.id : null;
-    starteBeobachtung(st);
+    starteBeobachtung(st); kiIdeeMerken();
     const box = $("#ki-ergebnis"); if (box && window.innerWidth < 860) box.scrollIntoView({ behavior: "smooth", block: "nearest" });
   } catch (e) { if (knopf) knopf.disabled = false; if (toolFehlt(e)) return kiToolHolen(); fehlerToast(e); }
+}
+async function kiIdeeMerken() {                       // Beschreibung, mit der erzeugt wird, als Bildidee der Idee merken
+  if (!KI || !KI.idee || !IDEEN) return;
+  const i = IDEEN.ideen.find(x => x.id === KI.idee), b = KI.beschreibung.trim().replace(/\s+/g, " ");
+  if (!i || (i.bild_idee || "") === b) return;
+  try {
+    IDEEN = await api("/api/idee", { methode: "POST", daten: { id: i.id, de: i.de, es: i.es, notiz: i.notiz, bild_idee: b } });
+    const f = $(`.idee[data-idee="${i.id}"] [data-i-feld="bild_idee"]`); if (f && document.activeElement !== f) f.value = b;
+  } catch (e) { /* nur Merkhilfe */ }
 }
 async function kiUebersetzen(b) {
   const text = KI.beschreibung.trim(); if (!text) { toast(t("ki_beschreibung_fehlt"), { fehler: true }); return; }
@@ -6275,7 +6320,13 @@ $("#ki-inhalt").addEventListener("click", async e => {
     if (a === "wort-setzen" && erg) {                                  // 4.7: Wort mit „GANS-Bild gestalten“ daraufsetzen
       const f = await kiBildDatei(erg), wort = kiRest(erg.wort || KI.wort);
       schliesseDialog($("#ki-fenster"));
-      oeffneGansWerkzeug({ text: wort ? "GANS " + wort : "", karte: erg.karte, format: "karte" }); await gwFoto([f]);
+      oeffneGansWerkzeug({ text: wort ? "GANS " + wort : "", karte: erg.karte, idee: erg.karte ? null : erg.idee ?? null, format: "karte" }); await gwFoto([f]);
+    }
+    if (a === "fuer-idee" && erg) {                                    // ohne Wort direkt als Bild der Idee (Text = Wort, falls sie keinen hat)
+      const r = await api("/api/ki-bild-uebernehmen", { methode: "POST", daten: { id: erg.id, idee: erg.idee || "" } });
+      IDEEN = r; if (!erg.idee) ideeEntwurf = false; zaehler(); schliesseDialog($("#ki-fenster"));
+      if (ansicht() === "ideen") zeichneIdeen(); else location.hash = "#ideen";
+      toast(t("ki_ok_idee"));
     }
     if (a === "als-karte" && erg) {
       await api("/api/ki-bild-uebernehmen", { methode: "POST", daten: { id: erg.id } });
@@ -6293,8 +6344,8 @@ $("#ki-inhalt").addEventListener("click", async e => {
 document.addEventListener("click", e => {
   if (e.target.closest("[data-lauf-stopp]") && kiLauf()) KI_MERK.stopp = true;
   const an = e.target.closest("[data-ki-ansehen]"), L = kiLauf();
-  if (an && L && L.ki) oeffneKiBild({ karte: L.ki.karte || "", ergebnis: { id: L.ki.id, startwert: L.ki.startwert, karte: L.ki.karte || "",
-    wort: L.ki.wort || "", beschreibung: L.ki.beschreibung || "" } });
+  if (an && L && L.ki) oeffneKiBild({ karte: L.ki.karte || "", idee: L.ki.idee ?? null, ergebnis: { id: L.ki.id, startwert: L.ki.startwert, karte: L.ki.karte || "",
+    idee: L.ki.idee ?? null, wort: L.ki.wort || "", beschreibung: L.ki.beschreibung || "" } });
 }, true);
 
 /* ----- Ideen für neue Karten ----- */
@@ -6359,11 +6410,14 @@ async function ideeNachDeutsch(el, knopf, still = false) {
   finally { if (knopf) knopf.disabled = false; }
 }
 function ideeHTML(i) {
-  const fehlt = ideeFehlt(i), id = i.id || "";
+  const fehlt = ideeFehlt(i), id = i.id || "", mitKi = !(S.status && S.status.ki_bild === false);
+  // Bild: ein Weg für Fotos und fertige Bilder (Gestalter mit Vorschau → „GANS + Wort“ oder unverändert) + KI-Bild aus der Bildidee
   return `<article class="idee${fehlt.length ? "" : " fertig"}" data-idee="${esc(id)}">
-    <div class="bildfeld" data-zieh="idee">${i.bild ? `<img alt="" src="${url("/api/idee-bild", { id, v: i.v || 0 })}">` : `<span>${esc(t("idee_bild_fehlt"))}</span>`}</div>
-    <div class="knopfzeile"><button class="knopf klein" data-i-aktion="bild" title="${esc(t("h_idee_bild"))}">${esc(t("idee_bild_laden"))}</button>
-      <button class="knopf klein" data-i-aktion="gestalten" title="${esc(t("h_idee_gestalten"))}">${esc(t("idee_bild_gestalten"))}</button></div>
+    ${i.bild ? `<div class="bildfeld" data-zieh="idee"><img alt="" src="${url("/api/idee-bild", { id, v: i.v || 0 })}"></div>`
+      : `<div class="bildfeld" data-zieh="idee" data-i-aktion="bild" role="button" tabindex="0" title="${esc(t("h_idee_bild"))}"><span class="leer-text"><b>${esc(t("idee_bild_fehlt"))}</b><small>${esc(t("idee_bild_tipp"))}</small></span></div>`}
+    <label class="feldname">${esc(t("idee_bild_idee"))}<textarea class="eingabe" data-i-feld="bild_idee" rows="2" maxlength="300" placeholder="${esc(t("idee_bild_idee_ph"))}" title="${esc(t("h_idee_bild_idee"))}">${esc(i.bild_idee || "")}</textarea></label>
+    <div class="knopfzeile bild-knoepfe"><button class="knopf klein" data-i-aktion="bild" title="${esc(t("h_idee_bild"))}">${esc(t("idee_bild_laden"))}</button>
+      ${mitKi ? `<button class="knopf klein" data-i-aktion="ki" title="${esc(t("h_idee_ki"))}">${esc(t("idee_bild_ki"))}</button>` : ""}</div>
     <label class="feldname">${esc(t("idee_de"))}<span class="mit-knopf"><input class="eingabe" data-i-feld="de" lang="de" maxlength="120" autocomplete="off" placeholder="${esc(t("idee_de_ph"))}" value="${esc(i.de)}" title="${esc(t("idee_de_titel"))}">
       <button type="button" class="knopf klein leise symbolknopf" data-i-aktion="nach-de" title="${esc(t("idee_nach_de_titel"))}" aria-label="${esc(t("idee_nach_de_titel"))}">🌐</button></span></label>
     <div data-teil="vorschlag-de">${deVorschlagHTML(S.vorschlaege["d:" + id])}</div>
@@ -6379,7 +6433,7 @@ function ideeHTML(i) {
 }
 function zeichneIdeen() {
   if (!IDEEN) return;
-  const eigene = (ideeEntwurf ? [{ id: "", de: "", es: "", notiz: "", bild: false }] : []).concat(IDEEN.ideen);
+  const eigene = (ideeEntwurf ? [{ id: "", de: "", es: "", notiz: "", bild_idee: "", bild: false }] : []).concat(IDEEN.ideen);
   const unfertig = [
     ...IDEEN.entwuerfe.map(d => ({ art: "entwurf", id: d.id, titel: d.de || d.original, text: t("unfertig_entwurf"), bild: url("/api/entwurf-bild", { id: d.id, art: "original", v: S.v }) })),
     ...IDEEN.offen.map(k => ({ art: "offen", id: k.bild, titel: k.de || k.bild, text: t("unfertig_offen") + (zsMehrere() ? ` (${ZS.kurz})` : ""), bild: url("/bild/" + encodeURIComponent(k.bild), { v: S.v }) })),
@@ -6410,11 +6464,12 @@ $("#ideen-uebersetzen").addEventListener("click", async e => {
 });
 function ideeWerte(el) {
   const es = $('[data-i-feld="es"]', el);
-  return { id: el.dataset.idee || "", de: $('[data-i-feld="de"]', el).value, es: es.value, notiz: $('[data-i-feld="notiz"]', el).value, es_auto: es.dataset.auto || "" };
+  return { id: el.dataset.idee || "", de: $('[data-i-feld="de"]', el).value, es: es.value, notiz: $('[data-i-feld="notiz"]', el).value, es_auto: es.dataset.auto || "",
+    bild_idee: $('[data-i-feld="bild_idee"]', el).value };
 }
 async function ideeSpeichern(el) {
   const w = ideeWerte(el);
-  if (!w.id && !w.de.trim() && !w.es.trim()) return;
+  if (!w.id && !w.de.trim() && !w.es.trim() && !w.bild_idee.trim()) return;
   try {
     const r = await api("/api/idee", { methode: "POST", daten: w });
     IDEEN = r; zaehler();
@@ -6429,13 +6484,18 @@ async function ideeSpeichern(el) {
     return w.id;
   } catch (e) { $('[data-teil="meldungen"]', el).innerHTML = pruefliste([{ stufe: "fehler", text: e.message }]); return null; }
 }
-async function ideeBild(dateien, zone) {
-  const el = zone.closest(".idee"), f = dateien[0]; if (!f) return;
+async function ideeZiel(el) { return el.dataset.idee || (await ideeSpeichern(el)) || ""; }   // id der Idee ("" = neue Idee)
+async function ideeBild(dateien, zone) {     // jedes Bild (Knopf, Klick ins Feld, Hineinziehen) → Gestalter mit Vorschau
+  const el = zone.closest(".idee"), f = dateien[0]; if (!el || !f) return;
   if (f.size > MAX_MB * 1048576) return toast(t("zu_gross", f.name, MAX_MB), { fehler: true });
-  try { IDEEN = await api(url("/api/idee-bild", { id: el.dataset.idee || "" }), { methode: "POST", roh: f }); ideeEntwurf = false; zaehler(); zeichneIdeen(); }
-  catch (e) { fehlerToast(e); }
+  const de = $('[data-i-feld="de"]', el).value, ziel = await ideeZiel(el);
+  oeffneGansWerkzeug({ idee: ziel, text: de, format: "karte" }); await gwFoto([f]);
 }
 ZIEH_ZIELE.idee = ideeBild;
+async function ideeKi(el) {                   // KI-Bild für diese Idee: Wort + Bildidee als Beschreibung
+  const w = ideeWerte(el), ziel = await ideeZiel(el);
+  return oeffneKiBild({ idee: ziel, wort: kiRest(w.de), beschreibung: w.bild_idee.trim() });
+}
 $("#idee-neu").addEventListener("click", () => {
   if (!IDEEN) return; ideeEntwurf = true; zeichneIdeen();
   const f = $('.idee[data-idee=""] [data-i-feld="de"]'); if (f) f.focus();
@@ -6447,8 +6507,11 @@ $("#ideen-inhalt").addEventListener("change", e => {
   if (e.target.dataset.iFeld === "es" && e.target.value.trim() && !$('[data-i-feld="de"]', el).value.trim()
       && S.ue && S.ue.zugestimmt && S.ue.automatisch) ideeNachDeutsch(el, null, true);
 });
-$("#ideen-inhalt").addEventListener("input", e => { const el = e.target.closest(".idee"); if (el && e.target.matches("[data-i-feld]")) zeigeDoppelte(el); });
-$("#ideen-inhalt").addEventListener("keydown", e => { if (e.key === "Enter" && e.target.matches("[data-i-feld]")) { e.preventDefault(); e.target.blur(); } });
+$("#ideen-inhalt").addEventListener("input", e => { const el = e.target.closest(".idee"); if (el && e.target.matches('[data-i-feld="de"], [data-i-feld="es"]')) zeigeDoppelte(el); });
+$("#ideen-inhalt").addEventListener("keydown", e => {
+  if (e.key === "Enter" && e.target.matches("[data-i-feld]")) { e.preventDefault(); e.target.blur(); }
+  if ((e.key === "Enter" || e.key === " ") && e.target.matches('.bildfeld[role="button"]')) { e.preventDefault(); e.target.click(); }
+});
 $("#ideen-inhalt").addEventListener("click", async e => {
   const u = e.target.closest("[data-u-art]");
   if (u) { if (u.dataset.uArt === "offen") oeffneEditor(u.dataset.uId); else { S.offeneEntwuerfe.add(u.dataset.uId); location.hash = "#bild"; } return; }
@@ -6460,11 +6523,8 @@ $("#ideen-inhalt").addEventListener("click", async e => {
   const b = e.target.closest("[data-i-aktion]"); if (!b) return;
   const a = b.dataset.iAktion, id = el.dataset.idee;
   if (a === "nach-de") return ideeNachDeutsch(el, b);
-  if (a === "bild") return dateiWaehlen(BILD_ACCEPT_WEB, d => ideeBild(d, $(".bildfeld", el)));
-  if (a === "gestalten") {
-    const de = $('[data-i-feld="de"]', el).value;
-    return oeffneGansWerkzeug({ idee: id || (await ideeSpeichern(el)) || null, text: de });
-  }
+  if (a === "bild") return dateiWaehlen(BILD_ACCEPT_WEB, d => ideeBild(d, el));
+  if (a === "ki") return ideeKi(el);
   if (a === "uebersetzen") {
     b.disabled = true;
     try {

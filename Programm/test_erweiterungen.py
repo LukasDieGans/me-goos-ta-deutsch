@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-ME GOOS-TA DEUTSCH – Selbsttest der Erweiterungen                   Version 2.2 (21.10.2026)
+ME GOOS-TA DEUTSCH – Selbsttest der Erweiterungen                   Version 2.3 (22.10.2026)
 Prüft Import/Export, Ideen, Programmstart-Wahl, die Schutzregeln des Deinstallierens und die Hilfe – wie der Selbsttest in
 einer Kopie des Projekts mit den Beispielkarten und einem eigenen Datenordner (nichts Eigenes wird berührt, nichts
 wird wirklich deinstalliert, kein Browser wird geöffnet). Ergänzt test_gans_lernkarten.py (der bleibt unverändert).
@@ -4960,6 +4960,182 @@ def test_wortliste_oberflaeche(p, tmp):
         pruefe(name, gut, detail)
 
 
+E45_PROZESS = r'''
+import hashlib, io, json, os, sys, zipfile
+from pathlib import Path
+sys.path.insert(0, sys.argv[1])
+os.environ.pop("MGD_IM_PROZESS", None)
+p, tmp = Path(sys.argv[1]), Path(sys.argv[2])
+import gans_ui as ui, gans_lernkarten as gl, erweiterungen as erw
+from PIL import Image
+gl.setze_sprache("de")
+erw.IDEEN_DATEI, erw.IDEEN_ORDNER = tmp / "ideen.json", tmp / "ideen"
+E = []
+def ok(name, gut, detail=""):
+    E.append([name, bool(gut), str(detail)[:700]])
+def direkt(weg, daten, am_handy=False, methode="POST"):
+    s, k, i = ui.verarbeite(methode, weg, "", json.dumps(daten).encode() if methode == "POST" else b"",
+                            {"X-GL-Sprache": "de", "Content-Type": "application/json"}, am_handy=am_handy)
+    try:
+        return s, json.loads(i)
+    except ValueError:
+        return s, {}
+def idee(iid):
+    return next((i for i in json.loads(erw.IDEEN_DATEI.read_text(encoding="utf-8"))["ideen"] if i["id"] == iid), {})
+def png(farbe=(90, 160, 60)):
+    b = io.BytesIO(); Image.new("RGB", (448, 320), farbe).save(b, "PNG"); return b.getvalue()
+# --- Bildidee: eigenes Feld, nur geändert, wenn mitgeschickt ---
+s1, r1 = direkt("/api/idee", {"de": "", "es": "", "bild_idee": "  goose   on a\nred bike  "})
+iid = r1.get("id", "")
+s2, r2 = direkt("/api/idee", {"id": iid, "de": "Gans klar", "es": "claro", "notiz": "n"})
+s3, r3 = direkt("/api/ideen", {}, methode="GET")
+liste = next((i for i in r3.get("ideen", []) if i["id"] == iid), {}) if s3 == 200 else {}
+ok("Bildidee allein legt eine Idee an (Leerraum zusammengefasst), Speichern ohne bild_idee behält sie, /api/ideen liefert sie",
+   s1 == 200 and s2 == 200 and idee(iid).get("bild_idee") == "goose on a red bike" and liste.get("bild_idee") == "goose on a red bike"
+   and (idee(iid)["de"], idee(iid)["es"]) == ("Gans klar", "claro"), (s1, s2, idee(iid), liste))
+s4, _ = direkt("/api/idee", {"id": iid, "de": "Gans klar", "es": "claro", "notiz": "n", "bild_idee": "x" * 400})
+lang = idee(iid).get("bild_idee", "")
+s5, r5 = direkt("/api/idee", {"id": iid, "de": "Gans klar", "es": "claro", "notiz": "n", "bild_idee": "=HYPERLINK(1)"})
+s6, _ = direkt("/api/idee", {"id": iid, "de": "Gans klar", "es": "claro", "notiz": "n", "bild_idee": ""})
+ok("Bildidee: höchstens 300 Zeichen (= KI-Beschreibung), Formel → 400, leer = gelöscht",
+   s4 == 200 and len(lang) == erw.BILD_IDEE_MAX == 300 and s5 == 400 and r5.get("fehler") and s6 == 200 and idee(iid).get("bild_idee") == "",
+   (s4, len(lang), s5, s6))
+direkt("/api/idee", {"id": iid, "de": "Gans klar", "es": "claro", "notiz": "n", "bild_idee": "goose wearing sunglasses"})
+# --- Export/Import: Bildidee reist mit; ältere Exporte ohne Feld lassen die vorhandene stehen ---
+z, _ = erw.export_zip(inhalt="ideen")
+ex = json.loads(zipfile.ZipFile(io.BytesIO(z)).read("ideen.json"))["ideen"]
+def importiere(ideen, ersetzen):
+    b = io.BytesIO()
+    with zipfile.ZipFile(b, "w") as zz:
+        zz.writestr("ideen.json", json.dumps({"ideen": ideen}))
+    roh = b.getvalue()
+    v = erw.import_speichern(io.BytesIO(roh).read, len(roh))
+    st = [e["status"] for e in v["ideen"]]
+    if ersetzen is not None:
+        erw.import_uebernehmen({"id": v["id"], "ersetzen": ersetzen})
+    return st
+eigen = next(i for i in ex if i["id"] == iid)
+st_gleich = importiere([eigen], None)
+st_anders = importiere([dict(eigen, bild_idee="goose on a sled")], {"standard": True})
+nach_import = idee(iid).get("bild_idee")
+alt = {k: v for k, v in eigen.items() if k != "bild_idee"}
+st_alt = importiere([dict(alt, es="evidente")], {"standard": True})
+ok("Export enthält bild_idee; eigener Export „gleich“, andere Bildidee → Konflikt + Ersetzen; älterer Export ohne Feld behält sie",
+   eigen.get("bild_idee") == "goose wearing sunglasses" and st_gleich == ["gleich"] and st_anders == ["konflikt"]
+   and nach_import == "goose on a sled" and st_alt == ["konflikt"] and idee(iid).get("es") == "evidente"
+   and idee(iid).get("bild_idee") == "goose on a sled", (st_gleich, st_anders, nach_import, st_alt, idee(iid)))
+# --- Wortliste: Fingerabdruck ohne Bildidee wie vor 2.3, mit Bildidee = von Hand geändert ---
+w = {"de": "Gans a", "es": "b", "notiz": "", "bild": ""}
+vorher = hashlib.sha1(json.dumps(["Gans a", "b", "", ""], ensure_ascii=False).encode("utf-8")).hexdigest()[:16]
+ok("Wortliste: Fingerabdruck ohne Bildidee unverändert (Rückgängig wie bisher), mit Bildidee anders",
+   erw._wl_fingerabdruck(w) == vorher and erw._wl_fingerabdruck(dict(w, bild_idee="x")) != vorher)
+# --- KI-Bild für eine Idee: Lauf merkt sich die Ziel-Idee ---
+ui._ki_modell_da = lambda: None
+lauf = ui._ki_bild_lauf({"beschreibung": "goose wearing sunglasses", "wort": "Gans klar", "idee": iid}, "de")
+meta = json.loads((ui.ki_bild_ordner() / f"{lauf.ki_id}.json").read_text(encoding="utf-8"))
+ohne = ui._ki_bild_lauf({"beschreibung": "x", "wort": ""}, "de")
+karte = next(k["bild"] for k in ui.karten_daten()["karten"])
+mit_karte = ui._ki_bild_lauf({"beschreibung": "x", "karte": karte, "idee": iid}, "de")
+fehler = []
+for falsch in ("../x", "ABCDEF123456", 12, "0" * 13):
+    try:
+        ui._ki_bild_lauf({"beschreibung": "x", "idee": falsch}, "de")
+    except ui.Meldung as m:
+        fehler.append(m.status)
+ok("KI-Lauf: Ziel-Idee in Meta + Lauf-Status (ki_meta), ohne → None, Karte geht vor, ungültige id → 400",
+   lauf.ki_meta.get("idee") == iid and meta.get("idee") == iid and ohne.ki_meta.get("idee") is None
+   and mit_karte.ki_meta.get("idee") is None and mit_karte.ki_meta.get("karte") == karte and fehler == [400] * 4,
+   (lauf.ki_meta, meta.get("idee"), ohne.ki_meta, mit_karte.ki_meta, fehler))
+# --- Übernehmen „ohne Wort für die Idee“ ---
+kid = lauf.ki_id
+(ui.ki_bild_ordner() / f"{kid}.png").write_bytes(png())
+s7, r7 = direkt("/api/ki-bild-uebernehmen", {"id": kid, "idee": iid})
+n_vorher = len(json.loads(erw.IDEEN_DATEI.read_text(encoding="utf-8"))["ideen"])
+s8, r8 = direkt("/api/ki-bild-uebernehmen", {"id": kid, "idee": ""})
+neu = idee(r8.get("id", ""))
+s9, _ = direkt("/api/ki-bild-uebernehmen", {"id": kid, "idee": "../boese"})
+s10, r10 = direkt("/api/ki-bild-uebernehmen", {"id": kid})
+sh, rh = direkt("/api/ki-bild-uebernehmen", {"id": kid, "idee": iid}, am_handy=True)
+ok("KI-Bild → Idee: Bild gesetzt (Text bleibt), \"\" = neue Idee mit Text = Wort, ungültige id → 400, ohne idee wie bisher Entwurf, Handy-Zugang erlaubt",
+   s7 == 200 and idee(iid).get("bild") and idee(iid).get("de") == "Gans klar" and r7.get("id") == iid
+   and s8 == 200 and neu.get("bild") and neu.get("de") == "Gans klar" and len(r8.get("ideen", [])) == n_vorher + 1
+   and s9 == 400 and s10 == 200 and r10.get("de") == "Gans klar" and "ideen" not in r10 and sh == 200,
+   (s7, idee(iid), s8, neu, s9, s10, str(r10)[:120], sh))
+direkt("/api/entwurf-weg", {"id": r10.get("id")})
+# --- Bild für eine Idee ohne Text: Wort wird Text (Formel nie) ---
+leer = direkt("/api/idee", {"bild_idee": "just a pond"})[1]["id"]
+erw.idee_bild_setzen(leer, png((10, 10, 200)), de="=1+1")
+formel = idee(leer).get("de")
+erw.idee_bild_setzen(leer, png((10, 200, 10)), de="Gans nass")
+ok("idee_bild_setzen(de=…): Text nur, wenn die Idee keinen hat; Formel wird nie Text",
+   formel == "" and idee(leer).get("de") == "Gans nass" and idee(leer).get("bild_idee") == "just a pond", (formel, idee(leer)))
+print("#e45 " + json.dumps(E, ensure_ascii=False))
+'''
+
+
+def test_bild_ki_ideen(p, tmp):
+    """E45 (2.3): Ideen – ein Bild-Knopf (Foto/fertiges Bild → GANS-Werkzeug mit „GANS + Wort“ oder unverändert), KI-Bild
+    für die Idee (Ziel im Lauf, „ohne Wort für die Idee übernehmen“) und das Feld „Bildidee“ (Merkzettel/KI-Beschreibung:
+    API, Export/Import, Wortliste-Rückgängig); Texte de/en/es + Hover."""
+    print("\n[E45] Ideen: Bild wählen, KI-Bild für die Idee, Bildidee")
+    seite = (HIER / "ui" / "index.html").read_text(encoding="utf-8")
+    txt = {"de": [], "en": [], "es": []}
+    a = seite.index("const TXT = {")
+    for m in re.finditer(r"\n(de|en|es)\s*:\s*\{", seite[a:seite.index("\n};", a)]):
+        txt[m.group(1)] += js_schluessel(seite, a + m.end() - 1)
+    for m in re.finditer(r"Object\.assign\(TXT\.(de|en|es),\s*\{", seite):
+        txt[m.group(1)] += js_schluessel(seite, m.end() - 1)
+    noetig = ["idee_bild_laden", "idee_bild_ki", "idee_bild_tipp", "idee_bild_tipp_touch", "idee_bild_idee", "idee_bild_idee_ph",
+              "h_idee_bild", "h_idee_ki", "h_idee_bild_idee", "gw_unveraendert", "h_gw_unveraendert", "ki_fuer_idee", "ki_ok_idee",
+              "ki_idee_info"]
+    fehlt = [f"{s}.{k}" for s in txt for k in noetig if k not in txt[s]]
+    pruefe("Texte de/en/es: Bild wählen, Mit KI erzeugen, Bildidee (+ Hover, _touch), unverändert, für die Idee; alter Knopf weg",
+           not fehlt and "idee_bild_gestalten" not in seite and "h_idee_gestalten" not in seite
+           and 'data-i-aktion="gestalten"' not in seite, fehlt[:8])
+
+    def funktion(name):
+        i = seite.index(f"function {name}(")
+        return seite[i:seite.index("\n}", i)]
+    import erweiterungen as erw
+    karte = funktion("ideeHTML")
+    pruefe("Ideen-Karte: ein Knopf „Bild wählen“ (+ leeres Bildfeld klickbar), „Mit KI erzeugen“ wie im Editor, Feld Bildidee (300)",
+           karte.count('data-i-aktion="bild"') == 2 and 'data-i-aktion="ki"' in karte and 'role="button" tabindex="0"' in karte
+           and f'data-i-feld="bild_idee" rows="2" maxlength="{erw.BILD_IDEE_MAX}"' in karte and "S.status.ki_bild === false" in karte
+           and karte.index('data-i-feld="bild_idee"') < karte.index('data-i-aktion="ki"') < karte.index('data-i-feld="de"')
+           and "bild_idee:" in funktion("ideeWerte") and "!w.bild_idee.trim()" in funktion("ideeSpeichern"), "")
+    bild, ki_idee = funktion("ideeBild"), funktion("ideeKi")
+    pruefe("Jedes Bild (Knopf, Klick, Hineinziehen) → GANS-Werkzeug mit Vorschau (Kartenformat, Text der Idee); KI mit Wort + Bildidee",
+           "ZIEH_ZIELE.idee = ideeBild;" in seite and 'oeffneGansWerkzeug({ idee: ziel, text: de, format: "karte" }); await gwFoto([f]);' in bild
+           and "MAX_MB" in bild and "dateiWaehlen(BILD_ACCEPT_WEB, d => ideeBild(d, el))" in seite
+           and "oeffneKiBild({ idee: ziel, wort: kiRest(w.de), beschreibung: w.bild_idee.trim() })" in ki_idee, "")
+    gw = funktion("zeichneGwFenster")
+    pruefe("GANS-Werkzeug: für eine Idee „Für diese Idee übernehmen“ + „Bild unverändert übernehmen“ (Originaldatei, ohne Text-Pflicht)",
+           "GW.idee !== null" in gw and 'data-gw-aktion="unveraendert"' in gw and "GW.datei = f;" in funktion("gwFoto")
+           and "gwFuerIdee(GW.datei, false)" in funktion("gwUnveraendert") and "idee: opt.idee ?? null" in funktion("gwNeu")
+           and seite.index('if (a === "unveraendert") return gwUnveraendert(b);') < seite.index("if (!gwRest()) { toast(t(\"gw_text_fehlt\")"), "")
+    erg, start = funktion("kiErgebnisHTML"), funktion("kiStarten")
+    i = seite.index('if (a === "fuer-idee" && erg)')
+    pruefe("KI-Fenster: Ziel-Idee beim Start mitgeschickt + als Bildidee gemerkt, Ergebnis „Ohne Wort für die Idee übernehmen“",
+           "{ idee: KI.idee }" in start and "kiIdeeMerken()" in start and 'data-ki="fuer-idee"' in erg
+           and '"/api/ki-bild-uebernehmen", { methode: "POST", daten: { id: erg.id, idee: erg.idee || "" } }' in seite[i:i + 300]
+           and 'idee: erg.karte ? null : erg.idee ?? null, format: "karte"' in seite and "idee: KI.idee," in funktion("kiToolHolen")
+           and seite.count("idee: KI_MERK.letzt.idee") == 2 and 'ki_idee_info' in funktion("zeichneKi"), "")
+    ideen, daten = tmp / "ideen-e45", tmp / "daten-e45"
+    ideen.mkdir()
+    daten.mkdir()
+    env = dict(os.environ, PYTHONIOENCODING="utf-8", MGD_DATEN=str(daten), MGD_START_ID="test")
+    env.pop("MGD_IM_PROZESS", None)
+    r = subprocess.run([sys.executable, "-c", E45_PROZESS, str(p), str(ideen)], cwd=p, env=env,
+                       capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=300)
+    m = re.search(r"^#e45 (.*)$", r.stdout, re.M)
+    if not m:
+        print((r.stdout + r.stderr)[-3000:])
+        pruefe("E45-Prozess lief durch", False, (r.stdout + r.stderr)[-600:])
+        return
+    for name, gut, detail in json.loads(m.group(1)):
+        pruefe(name, gut, detail)
+
+
 def test_fix_download_release(tmp):
     """E44 (Fix 2.2, 21.10.2026): Download-Seite bei alter App – ein Service Worker der App 2.0 kennt download/ nicht und
     liefert dort den Startbildschirm der App, dessen relatives app.js er übers Netz holt → download/app.js (Rettung:
@@ -5090,6 +5266,7 @@ def main():
         test_wortliste(p, Path(tmp))
         test_wortliste_oberflaeche(p, Path(tmp))
         test_fix_download_release(Path(tmp))
+        test_bild_ki_ideen(p, Path(tmp))
     ok =sum(1 for e in tg.ergebnisse if e[1])
     print(f"\n{ok} von {len(tg.ergebnisse)} Prüfungen bestanden ({time.time() - t0:.0f} s).")
     if ok == len(tg.ergebnisse):

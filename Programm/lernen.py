@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-ME GOOS-TA DEUTSCH – Karten lernen (Tool „lernen“)                  Version 2.2 (21.10.2026)
+ME GOOS-TA DEUTSCH – Karten lernen (Tool „lernen“)                  Version 2.3 (22.10.2026)
 =============================================================================================
 Verteiltes Wiederholen mit aktivem Abrufen: Die Karte zeigt erst die Frage, man erinnert sich, dreht um und bewertet
 (1 Nochmal · 2 Schwer · 3 Gut · 4 Einfach). Geplant wird mit FSRS-6 (Free Spaced Repetition Scheduler, Standard in

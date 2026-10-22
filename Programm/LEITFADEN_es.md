@@ -1,6 +1,6 @@
 # Me Goos-ta Deutsch – Guía
 
-Actualizada: 21/10/2026 · programa e interfaz versión 2.2 · Alemán: `LEITFADEN.md` · Inglés: `LEITFADEN_en.md`
+Actualizada: 22/10/2026 · programa e interfaz versión 2.3 · Alemán: `LEITFADEN.md` · Inglés: `LEITFADEN_en.md`
 
 ¡Qué bueno que estás aquí! Esta guía te acompaña desde el primer doble clic hasta la carta terminada, paso a paso y sin tecnicismos. No tienes que leerla de principio a fin: salta a la parte que necesites. Y tranquilo: aquí nadie te apura; cada paso va a tu ritmo, como un ganso que pasea a gusto.
 
@@ -150,17 +150,17 @@ Con **«🎨 Diseñar imagen GANS»** (paso 1, Ideas o Herramientas) conviertes 
 3. Escribe el texto después de **GANS**: aparece en mayúsculas («GANS SEHR HEISS»). Arrastra el texto sobre la imagen para colocarlo; tamaño, fuente y color los eliges tú.
 4. **«Como carta nueva (paso 1)»** pasa la imagen al paso 1, **«Guardar como idea»** crea una idea y **«Descargar»** guarda el archivo. El nombre sigue la regla de las cartas: `gans-sehr-heiss.jpg`.
 
-Si la imagen viene de **«Crear ganso con IA»**, ya está colocada: recorte «Carta horizontal» y palabra ya escrita. Abierto desde el editor de cartas, el botón principal es **«Usar para esta carta»**: la imagen con la palabra pasa a ser la imagen nueva de esa carta.
+Si la imagen viene de **«Crear ganso con IA»**, ya está colocada: recorte «Carta horizontal» y palabra ya escrita. Abierto desde el editor de cartas, el botón principal es **«Usar para esta carta»**: la imagen con la palabra pasa a ser la imagen nueva de esa carta. Desde una **idea** («🖼️ Elegir imagen …», un clic en el recuadro vacío o arrastrando) tu imagen también ya está colocada, con el texto de la idea: **«Usar para esta idea»** pone la imagen con la palabra y **«Usar la imagen sin cambios»** toma el archivo tal cual, sin recorte ni texto; práctico si el chiste ya está en la imagen.
 
 ## Crear ganso con IA
 
-¿No tienes una foto que encaje? **«🪄 Crear ganso con IA»** (paso 1) o **«🪄 Con IA …»** (editor de cartas) te pinta una foto realista de ganso, sin conexión y en tu propia computadora. Una sola vez instalas la herramienta **«Imágenes IA»** (Herramientas → Herramientas opcionales) con el modelo Segmind Vega + VegaRT (licencia Apache-2.0, unos 3,5 GB); después ya no hace falta internet.
+¿No tienes una foto que encaje? **«🪄 Crear ganso con IA»** (paso 1), **«🪄 Con IA …»** (editor de cartas) o **«🪄 Crear con IA …»** (Ideas) te pinta una foto realista de ganso, sin conexión y en tu propia computadora. Una sola vez instalas la herramienta **«Imágenes IA»** (Herramientas → Herramientas opcionales) con el modelo Segmind Vega + VegaRT (licencia Apache-2.0, unos 3,5 GB); después ya no hace falta internet.
 
 1. Escribe la **palabra de la carta** después de «GANS», p. ej. «alt». No se pinta en la imagen (el modelo no escribe texto limpio), sino que la pones limpia después.
 2. **Descripción en inglés:** ¿cómo y dónde está el ganso? Por ejemplo «swimming on a lake at sunset», «sleeping in a nest of straw», «standing in fresh snow». Puedes agregar luz, estación, clima o ambiente («morning fog», «golden hour»), y mejor di lo que debe verse y no lo que no. ¿Sin inglés a la mano? Escribe en español y haz clic en **«🌐 Al inglés»** (solo con la traducción activada; se envía solo esta descripción). «… de 75 tokens» muestra si todo llega al modelo.
 3. **«Sin personas»** (recomendado, activado de forma predeterminada) mantiene lejos a la gente, con la redacción y un prompt negativo suave; tarda unos 20 segundos más. No se puede descartar del todo: si aun así aparece alguien, pide otra variante.
 4. **«🪄 Crear ganso»**: en una laptop normal, una imagen tarda unos 1–2 minutos. Después de cada paso ves una vista previa; puedes cerrar la ventana y seguir trabajando, o **cancelar** en cualquier momento.
-5. ¿Te gusta el ganso? **«✍️ Poner la palabra en la imagen …»** lo abre en «Diseñar imagen GANS»; desde ahí como carta nueva o, desde el editor de cartas, para esa carta. **«Como carta nueva sin palabra»** o **«Usar para esta carta»** toma la imagen directamente; se revisa como cualquier foto. **«🎲 Otra variante»** pinta una nueva versión y **«Descargar»** guarda la imagen. Misma descripción + misma semilla da la misma imagen.
+5. ¿Te gusta el ganso? **«✍️ Poner la palabra en la imagen …»** lo abre en «Diseñar imagen GANS»; desde ahí como carta nueva o, desde el editor de cartas o una idea, para esa carta o idea. **«Como carta nueva sin palabra»**, **«Usar para esta carta»** o **«Usar para la idea sin palabra»** toma la imagen directamente; se revisa como cualquier foto. **«🎲 Otra variante»** pinta una nueva versión y **«Descargar»** guarda la imagen. Misma descripción + misma semilla da la misma imagen.
 
 | Lo hace bien | Ahí le cuesta |
 | --- | --- |
@@ -212,9 +212,10 @@ gans-arg-hunger.jpg;Gans arg Hunger;muchísima hambre / me muero de hambre;Wendu
 
 ## Juntar ideas
 
-Las buenas ideas llegan de repente, y aquí tienen su lugar. Una idea solo necesita **una imagen, una palabra en alemán o una en {{español}}**; lo demás puede venir después.
+Las buenas ideas llegan de repente, y aquí tienen su lugar. Una idea solo necesita **una imagen, una palabra en alemán o una en {{español}}, o una idea de imagen**; lo demás puede venir después.
 
-- **«+ Idea nueva»** crea una idea vacía; basta con escribir, se guarda al salir del campo. La imagen se agrega con «Elegir imagen …», arrastrándola al recuadro o con «Diseñar imagen GANS …».
+- **«+ Idea nueva»** crea una idea vacía; basta con escribir, se guarda al salir del campo. Para la imagen hay un solo camino: **«🖼️ Elegir imagen …»**, un clic en el recuadro vacío o arrastrarla abre «Diseñar imagen GANS»; ahí le pones «GANS + palabra» o usas una imagen terminada sin cambios.
+- **Idea de imagen:** tu nota de cómo podría verse una imagen que encaje. **«🪄 Crear con IA …»** (herramienta «Imágenes IA») la usa como descripción, junto con la palabra de la idea; la descripción con la que creas queda guardada en la idea de imagen. Después **«✍️ Poner la palabra en la imagen …»** o **«Usar para la idea sin palabra»**: la imagen va directo a la idea. La IA entiende mejor el inglés; en la ventana de IA, «🌐 Al inglés» traduce con un clic.
 - **¿Ya existe la palabra?** Mientras escribes, el programa revisa al instante si ya existe como carta o idea; mayúsculas, diéresis y «Gans» no importan. Así «Gans alt» no se hace dos veces por accidente.
 - **🌐 junto al texto alemán** convierte la palabra en {{español}} en una sugerencia para el texto de la imagen («viejo» se vuelve «Gans alt»). Ideal cuando primero se te ocurre la palabra en {{español}}.
 - Cuando están la imagen, el texto de la imagen y la palabra en {{español}}, se activa **«Hacer carta»**: la idea pasa las mismas revisiones que en los pasos 1 y 2 y después aparece en **Mis cartas**.

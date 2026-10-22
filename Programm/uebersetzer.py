@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-ME GOOS-TA DEUTSCH – Automatische Übersetzung (Vorschläge)            Version 2.2 (21.10.2026)
+ME GOOS-TA DEUTSCH – Automatische Übersetzung (Vorschläge)            Version 2.3 (22.10.2026)
 =============================================================================================
 Schlägt für den Text einer Karte das Wort auf Spanisch vor (Deutsch → Spanisch, wie in Mexiko gesprochen) – bzw.
 in der gewählten Zielsprache (sprachen.py: 15 Sprachen, Dienst-Codes im Katalog; richtung="de-<code>" / "<code>-de").
@@ -48,8 +48,8 @@ import urllib.request
 from collections import deque
 from pathlib import Path
 
-VERSION = "2.2 (21.10.2026)"
-USER_AGENT = "Me-Goos-ta-Deutsch/2.2 (Lernkarten-Programm; privat)"
+VERSION = "2.3 (22.10.2026)"
+USER_AGENT = "Me-Goos-ta-Deutsch/2.3 (Lernkarten-Programm; privat)"
 ZEITLIMIT = 10                    # Sekunden je Anfrage
 MAX_ANTWORT = 1_500_000           # Bytes (eine Wiktionary-Seite hat selten mehr als 200 KB)
 MAX_QUELLE = 80                   # Zeichen, die höchstens gesendet werden

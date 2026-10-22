@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-ME GOOS-TA DEUTSCH – QR-Code                                        Version 2.2 (21.10.2026)
+ME GOOS-TA DEUTSCH – QR-Code                                        Version 2.3 (22.10.2026)
 =============================================================================================
 QR-Code ohne Zusatzpaket, Zeile für Zeile wie `qrMatrix()`/`qrSvg()` in ui/index.html (gleiche Matrix für denselben
 Text): Byte-Modus, Fehlerkorrektur M, Version 1–6 (bis 106 Zeichen), Reed-Solomon über GF(256) mit 0x11D,

@@ -1,6 +1,6 @@
 # Me Goos-ta Deutsch – Guide
 
-Updated: 21 Oct 2026 · program and interface version 2.2 · German: `LEITFADEN.md` · Spanish: `LEITFADEN_es.md`
+Updated: 22 Oct 2026 · program and interface version 2.3 · German: `LEITFADEN.md` · Spanish: `LEITFADEN_es.md`
 
 Great to have you here! This guide takes you from the first double-click to the finished card – step by step and without jargon. You don’t have to read it cover to cover: just jump to the part you need right now. And relax – no need to waddle along in single file; take every step at your own pace.
 
@@ -150,17 +150,17 @@ With **“🎨 Design a GANS image”** (step 1, Ideas or Tools) you turn a goos
 3. Type the text after **GANS** – it appears in capitals (“GANS SEHR HEISS”). Drag the text on the image to place it; size, font and colour are up to you.
 4. **“As a new card (step 1)”** hands the image to step 1, **“Save as idea”** creates an idea, **“Download”** saves the file. The file name follows the card rule: `gans-sehr-heiss.jpg`.
 
-If the image comes from **“Create a goose with AI”**, it is already in place – crop “Card landscape”, word filled in. Opened from the card editor, the main button is **“Use for this card”**: the labelled image becomes this card’s new image.
+If the image comes from **“Create a goose with AI”**, it is already in place – crop “Card landscape”, word filled in. Opened from the card editor, the main button is **“Use for this card”**: the labelled image becomes this card’s new image. From an **idea** (“🖼️ Choose image …”, a click on the empty image area or dragging) your image is also already in place, with the idea’s text filled in: **“Use for this idea”** puts the labelled image in, **“Use image unchanged”** takes the file exactly as it is – no cropping, no text, handy when the pun is already on it.
 
 ## Create a goose with AI
 
-No fitting photo at hand? **“🪄 Create a goose with AI”** (step 1) or **“🪄 With AI …”** (card editor) paints a realistic goose photo for you – offline, right on your computer. Once, you install the **“AI images”** tool (Tools → Optional tools) with the Segmind Vega + VegaRT model (Apache-2.0 license, about 3.5 GB); after that no internet is needed.
+No fitting photo at hand? **“🪄 Create a goose with AI”** (step 1), **“🪄 With AI …”** (card editor) or **“🪄 Create with AI …”** (Ideas) paints a realistic goose photo for you – offline, right on your computer. Once, you install the **“AI images”** tool (Tools → Optional tools) with the Segmind Vega + VegaRT model (Apache-2.0 license, about 3.5 GB); after that no internet is needed.
 
 1. Enter the **word on the card** after “GANS”, e.g. “alt”. It is not painted into the image – the model doesn’t write clean text – but put on neatly afterwards.
 2. **Description in English:** how and where is the goose? For example “swimming on a lake at sunset”, “sleeping in a nest of straw”, “standing in fresh snow”. Feel free to add light, season, weather or mood (“morning fog”, “golden hour”) – and say what should be visible rather than what shouldn’t. If the interface runs in German or Spanish, **“🌐 To English”** translates your description (only with translation switched on; only this description is sent). “… of 75 tokens” shows whether everything reaches the model.
 3. **“No people”** (recommended, on by default) keeps people away – through the wording and a gentle negative prompt; it costs about 20 seconds more. It can’t rule them out completely: if someone still shows up, just roll again.
 4. **“🪄 Create goose”** – on a normal laptop one image takes about 1–2 minutes. After each step you see a preview; you can close the window and keep working, or **stop** at any time.
-5. Like the goose? **“✍️ Put the word on the image …”** opens it in “Design a GANS image” – from there as a new card or, from the card editor, for this card. **“As a new card without word”** or **“Use for this card”** takes the image directly; it is checked like any photo. **“🎲 Roll again”** paints a new variant, **“Download”** saves the image. Same description + same seed gives the same image.
+5. Like the goose? **“✍️ Put the word on the image …”** opens it in “Design a GANS image” – from there as a new card or, from the card editor or an idea, for this card or idea. **“As a new card without word”**, **“Use for this card”** or **“Use for the idea without word”** takes the image directly; it is checked like any photo. **“🎲 Roll again”** paints a new variant, **“Download”** saves the image. Same description + same seed gives the same image.
 
 | What it does well | Where it struggles |
 | --- | --- |
@@ -212,9 +212,10 @@ gans-arg-hunger.jpg;Gans arg Hunger;muchísima hambre / me muero de hambre;Wendu
 
 ## Collecting ideas
 
-Good ideas often pop up in between – here they have their place. An idea only needs **an image, a German or a {{Spanish}} word**; the rest can come later.
+Good ideas often pop up in between – here they have their place. An idea only needs **an image, a German or a {{Spanish}} word – or an image idea**; the rest can come later.
 
-- **“+ New idea”** creates an empty idea; typing text is enough, it is saved when you leave the field. Add an image with “Choose image …”, by dragging it onto the image area or with “Design GANS image …”.
+- **“+ New idea”** creates an empty idea; typing text is enough, it is saved when you leave the field. There is one way for the image: **“🖼️ Choose image …”**, a click on the empty image area or dragging opens “Design a GANS image” – there you put “GANS + word” on it or use a finished image unchanged.
+- **Image idea:** your note on what a fitting image could look like. **“🪄 Create with AI …”** (“AI images” tool) uses it as the description, together with the idea’s word; the description you create with stays saved in the image idea. Then **“✍️ Put the word on the image …”** or **“Use for the idea without word”** – the image goes straight to the idea. The AI understands English best; in other languages “🌐 To English” in the AI window translates with one click.
 - **Does the word already exist?** While you type, the program instantly checks whether the word already exists as a card or idea – upper and lower case, umlauts and “Gans” don’t matter. So “Gans alt” doesn’t accidentally get made twice.
 - **🌐 next to the German text** turns the {{Spanish}} word into a suggestion for the text on the image (“viejo” becomes “Gans alt”). Perfect when the {{Spanish}} word comes to mind first.
 - Once image, text on the image and {{Spanish}} word are there, **“Make it a card”** becomes active: the idea goes through the same checks as in steps 1 and 2 and then appears under **My cards**.

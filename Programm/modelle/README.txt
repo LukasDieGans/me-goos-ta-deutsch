@@ -1,4 +1,4 @@
-KI-MODELLE FÜR DIE BILDVERBESSERUNG – Me Goos-ta Deutsch 2.2
+KI-MODELLE FÜR DIE BILDVERBESSERUNG – Me Goos-ta Deutsch 2.3
 =============================================================
 
 realesrgan-x4plus.npz   (Standard, beste Qualität – 30 MB; gehört zum Tool „Bildverbesserung“ und ist nicht

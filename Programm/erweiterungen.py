@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-ME GOOS-TA DEUTSCH – Erweiterungen der Oberfläche                   Version 2.2 (21.10.2026)
+ME GOOS-TA DEUTSCH – Erweiterungen der Oberfläche                   Version 2.3 (22.10.2026)
 =============================================================================================
 Zusätzliche Funktionen, die gans_ui.py einbindet (verbinde(gans_ui)). Fehlt diese Datei, läuft die Oberfläche
 genau wie bisher – nur ohne diese Funktionen.
@@ -52,6 +52,7 @@ MAX_IMPORT_ENTPACKT = 1500 * 1024 * 1024     # Summe der entpackten Größen (Sc
 MAX_CSV = 5 * 1024 * 1024
 IDEEN_DATEI = HIER / "ideen.json"
 IDEEN_ORDNER = HIER / "ideen"
+BILD_IDEE_MAX = 300                          # Zeichen der Bildidee (= Länge der KI-Bild-Beschreibung)
 FORMEL_ANFANG = ("=", "+", "-", "@")
 _ideen_lock = threading.Lock()
 _import_lock = threading.Lock()
@@ -303,7 +304,7 @@ def export_zip(umfang="alle", inhalt="karten"):
         if mit_ideen:
             ideen = []
             for i in _ideen_lesen()["ideen"]:
-                eintrag = {k: i.get(k, "") for k in ("id", "de", "es", "es_auto", "notiz", "bild")}
+                eintrag = {k: i.get(k, "") for k in ("id", "de", "es", "es_auto", "notiz", "bild", "bild_idee")}
                 p = _idee_bildpfad(i)
                 if p and not p.is_symlink():
                     z.write(p, f"ideen/{p.name}", compress_type=zipfile.ZIP_STORED)
@@ -392,7 +393,8 @@ def _ideen_aus_json(roh):
     aus = []
     for e in liste[:MAX_IMPORT_EINTRAEGE]:
         if isinstance(e, dict):
-            aus.append({k: e.get(k) if isinstance(e.get(k), str) else "" for k in ("id", "de", "es", "es_auto", "notiz", "bild")})
+            aus.append({k: e.get(k) if isinstance(e.get(k), str) else ""
+                        for k in ("id", "de", "es", "es_auto", "notiz", "bild", "bild_idee")})
     return aus
 
 
@@ -552,7 +554,8 @@ def _ideen_bewerten(erg, pfad=None):
         for n, roh in enumerate(erg["ideen"]):
             e = dict(art="idee", schluessel=f"i:{n}", id=roh["id"] if re.fullmatch(r"[0-9a-f]{12}", roh["id"] or "") else "",
                      de=_text(roh["de"], 120), es=_text(roh["es"]), notiz=_text(roh["notiz"]),
-                     es_auto=_text(roh["es_auto"]), bild="", status="neu", text=tx("i_neu"), ziel=None, bild_neu=False)
+                     es_auto=_text(roh["es_auto"]), bild_idee=_text(roh.get("bild_idee")), bild="", status="neu",
+                     text=tx("i_neu"), ziel=None, bild_neu=False)
             name = roh["bild"] if gl.sicherer_name(roh["bild"] or "") else ""
             if name and name in erg["ideen_bilder"] and z is not None:
                 zname, groesse = erg["ideen_bilder"][name]
@@ -563,9 +566,9 @@ def _ideen_bewerten(erg, pfad=None):
                     e["bild"] = name
                 except ValueError as f:
                     e.update(status="fehler", text=str(f))
-            if e["status"] != "fehler" and _formel(e["de"], e["es"], e["notiz"]):
+            if e["status"] != "fehler" and _formel(e["de"], e["es"], e["notiz"], e["bild_idee"]):
                 e.update(status="fehler", text=gl.pm("k_formel", "fehler")["text"])
-            if e["status"] != "fehler" and not (e["de"] or e["es"] or e["bild"]):
+            if e["status"] != "fehler" and not (e["de"] or e["es"] or e["bild"] or e["bild_idee"]):
                 e.update(status="fehler", text=tx("idee_leer"))
             if e["status"] == "fehler":
                 aus.append(e)
@@ -578,7 +581,8 @@ def _ideen_bewerten(erg, pfad=None):
                         break
             if gleich is not None:
                 identisch = (gleich.get("de", ""), gleich.get("es", ""), gleich.get("notiz", "")) == (e["de"], e["es"], e["notiz"]) \
-                    and bool(gleich.get("bild")) == bool(e["bild"])
+                    and bool(gleich.get("bild")) == bool(e["bild"]) \
+                    and (not e["bild_idee"] or gleich.get("bild_idee", "") == e["bild_idee"])   # ältere Exporte ohne Bildidee
                 e.update(ziel=gleich["id"], hier=dict(de=gleich.get("de", ""), es=gleich.get("es", "")))
                 if identisch:
                     e.update(status="gleich", text=tx("i_gleich"))
@@ -710,6 +714,8 @@ def _idee_importieren(e, bild_bytes):
             i = dict(id=neue_id, zeit=time.time(), bild="")
             d["ideen"].insert(0, i)
         i.update(de=e["de"], es=e["es"], notiz=e["notiz"], es_auto=e["es_auto"] if e["es_auto"] == e["es"] else "")
+        if e.get("bild_idee"):                                  # ältere Exporte kennen die Bildidee nicht → vorhandene bleibt
+            i["bild_idee"] = e["bild_idee"]
         if bild_bytes:
             fmt, _ = bild_pruefen(bild_bytes)
             roh, endung = _als_kartenbild(bild_bytes, fmt)
@@ -779,26 +785,31 @@ def ideen_liste():
     offen = [dict(bild=k["bild"], de=k["de"], notiz=k["notiz"]) for k in kd["karten"] if k["offen"]]
     ohne = [dict(bild=n) for n in kd["ohne_karte"]]
     ideen = [dict(id=i["id"], de=i.get("de", ""), es=i.get("es", ""), es_auto=i.get("es_auto", ""),
-                  notiz=i.get("notiz", ""), bild=bool(_idee_bildpfad(i)), zeit=i.get("zeit", 0),
-                  v=i.get("v", 0)) for i in d["ideen"]]
+                  notiz=i.get("notiz", ""), bild_idee=i.get("bild_idee", ""), bild=bool(_idee_bildpfad(i)),
+                  zeit=i.get("zeit", 0), v=i.get("v", 0)) for i in d["ideen"]]
     return dict(ideen=ideen, entwuerfe=entwuerfe, offen=offen, ohne=ohne)
 
 
 def idee_speichern(daten):
+    """Texte einer Idee speichern (ohne id: neue Idee). „bild_idee“ (Merkzettel, wie das Bild aussehen könnte – auch
+    Beschreibung für ein KI-Bild) ändert sich nur, wenn es mitgeschickt wird."""
     de, es, notiz = _text(daten.get("de"), 120), _text(daten.get("es")), _text(daten.get("notiz"))
-    if _formel(de, es, notiz):
+    bild_idee = _text(daten.get("bild_idee"), BILD_IDEE_MAX) if "bild_idee" in daten else None
+    if _formel(de, es, notiz, bild_idee):
         raise ValueError(gl.pm("k_formel", "fehler")["text"])
     with _ideen_lock:
         d = _ideen_lesen()
         if daten.get("id"):
             i = _idee_finden(d, daten["id"])
         else:
-            if not (de or es):
+            if not (de or es or bild_idee):
                 raise ValueError(tx("idee_leer"))
             i = dict(id=secrets.token_hex(6), zeit=time.time(), bild="")
             d["ideen"].insert(0, i)
         es_auto = _text(daten.get("es_auto")) if "es_auto" in daten else i.get("es_auto", "")
         i.update(de=de, es=es, notiz=notiz, es_auto=es_auto if es_auto and es_auto == es else "")
+        if bild_idee is not None:
+            i["bild_idee"] = bild_idee
         _ideen_schreiben(d)
     return dict(id=i["id"], **ideen_liste())
 
@@ -825,10 +836,14 @@ def idee_wort_fuellen(daten):
     return dict(id=i["id"], gefuellt=gefuellt, **ideen_liste())
 
 
-def idee_bild_setzen(iid, daten: bytes):
-    """Bild einer Idee setzen (ohne id: neue Idee mit diesem Bild)."""
+def idee_bild_setzen(iid, daten: bytes, de=""):
+    """Bild einer Idee setzen (ohne id: neue Idee mit diesem Bild). de: Text auf dem Bild, nur falls die Idee noch
+    keinen hat (KI-Bild „ohne Wort für die Idee“)."""
     fmt, _ = bild_pruefen(daten)
     roh, endung = _als_kartenbild(daten, fmt)
+    de = _text(de, 120)
+    if _formel(de):
+        de = ""
     with _ideen_lock:
         d = _ideen_lesen()
         if iid:
@@ -836,6 +851,8 @@ def idee_bild_setzen(iid, daten: bytes):
         else:
             i = dict(id=secrets.token_hex(6), zeit=time.time(), de="", es="", notiz="", bild="")
             d["ideen"].insert(0, i)
+        if de and not i.get("de"):
+            i["de"] = de
         alt = _idee_bildpfad(i)
         name = f"{i['id']}-{secrets.token_hex(3)}{endung}"
         _atomar(IDEEN_ORDNER / name, roh)
@@ -1275,7 +1292,10 @@ def wortliste_pruefen(roh: bytes, q):
 
 
 def _wl_fingerabdruck(i):
-    roh = json.dumps([i.get("de", ""), i.get("es", ""), i.get("notiz", ""), i.get("bild", "")], ensure_ascii=False)
+    teile = [i.get("de", ""), i.get("es", ""), i.get("notiz", ""), i.get("bild", "")]
+    if i.get("bild_idee"):                         # eigene Bildidee = von Hand geändert (ohne sie: Wert wie vor 2.3)
+        teile.append(i["bild_idee"])
+    roh = json.dumps(teile, ensure_ascii=False)
     return hashlib.sha1(roh.encode("utf-8")).hexdigest()[:16]
 
 

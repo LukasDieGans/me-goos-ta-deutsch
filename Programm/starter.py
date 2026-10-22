@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-ME GOOS-TA DEUTSCH – Startprogramm                                   Version 2.2 (21.10.2026)
+ME GOOS-TA DEUTSCH – Startprogramm                                   Version 2.3 (22.10.2026)
 =============================================================================================
 Wird aufgerufen von den Startdateien „Me Goos-ta Deutsch - Windows.cmd“ / „Me Goos-ta Deutsch - Mac.command“
 oder vom Desktop-Symbol. Es erkennt selbst, ob es der erste Start ist:
@@ -48,7 +48,7 @@ HIER = Path(__file__).resolve().parent              # …/Programm
 WURZEL = HIER.parent                                 # Ordner mit den Startdateien
 sys.path.insert(0, str(HIER))
 
-VERSION = "2.2 (21.10.2026)"
+VERSION = "2.3 (22.10.2026)"
 PRODUKT = "Me Goos-ta Deutsch"
 WIN, MAC = os.name == "nt", sys.platform == "darwin"
 START_WIN = "Me Goos-ta Deutsch - Windows.cmd"
@@ -1461,7 +1461,7 @@ def linux_eintrag(skript):
 
 
 MAC_INFO = {"CFBundleName": PRODUKT, "CFBundleDisplayName": PRODUKT, "CFBundleIdentifier": "de.me-goos-ta-deutsch.app",
-            "CFBundleVersion": "2.2", "CFBundleShortVersionString": "2.2", "NSHighResolutionCapable": True,
+            "CFBundleVersion": "2.3", "CFBundleShortVersionString": "2.3", "NSHighResolutionCapable": True,
             "LSUIElement": True}
 
 

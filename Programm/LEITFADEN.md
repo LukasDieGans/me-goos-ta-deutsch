@@ -1,6 +1,6 @@
 # Me Goos-ta Deutsch – Leitfaden
 
-Stand: 21.10.2026 · Programm und Oberfläche Version 2.2 · Englisch: `LEITFADEN_en.md` · Spanisch: `LEITFADEN_es.md`
+Stand: 22.10.2026 · Programm und Oberfläche Version 2.3 · Englisch: `LEITFADEN_en.md` · Spanisch: `LEITFADEN_es.md`
 
 Schön, dass du da bist! Dieser Leitfaden begleitet dich vom ersten Doppelklick bis zur fertigen Karte – Schritt für Schritt und ohne Fachchinesisch. Du musst ihn nicht von vorn bis hinten lesen: Spring einfach zu dem Teil, den du gerade brauchst. Und keine Sorge – das ist hier kein Gänsemarsch, du kannst jeden Schritt in deinem Tempo gehen.
 
@@ -150,17 +150,17 @@ Mit **„🎨 GANS-Bild gestalten“** (Schritt 1, Ideen oder Werkzeuge) baust d
 3. Text nach **GANS** eintippen – er erscheint in Großbuchstaben („GANS SEHR HEISS“). Den Text auf dem Bild ziehen, um ihn zu platzieren; Größe, Schrift und Farbe sind wählbar.
 4. **„Als neue Karte (Schritt 1)“** übergibt das Bild an Schritt 1, **„Als Idee speichern“** legt eine Idee an, **„Herunterladen“** speichert die Datei. Der Dateiname folgt der Regel der Karten: `gans-sehr-heiss.jpg`.
 
-Kommt das Bild aus **„Gans mit KI erzeugen“**, ist es schon eingesetzt – Ausschnitt „Karte quer“, Wort vorbelegt. Aus dem Karten-Editor heißt der Hauptknopf dann **„Für diese Karte übernehmen“**: Das beschriftete Bild wird das neue Bild dieser Karte.
+Kommt das Bild aus **„Gans mit KI erzeugen“**, ist es schon eingesetzt – Ausschnitt „Karte quer“, Wort vorbelegt. Aus dem Karten-Editor heißt der Hauptknopf dann **„Für diese Karte übernehmen“**: Das beschriftete Bild wird das neue Bild dieser Karte. Aus einer **Idee** („🖼️ Bild wählen …“, Klick auf die leere Bildfläche oder Hineinziehen) ist dein Bild ebenfalls schon eingesetzt, Text der Idee vorbelegt: **„Für diese Idee übernehmen“** setzt das beschriftete Bild ein, **„Bild unverändert übernehmen“** nimmt die Datei genau so, wie sie ist – ohne Zuschnitt und Text, praktisch, wenn der Wortwitz schon draufsteht.
 
 ## Gans mit KI erzeugen
 
-Kein passendes Foto zur Hand? **„🪄 Gans mit KI erzeugen“** (Schritt 1) bzw. **„🪄 Mit KI …“** (Karten-Editor) malt dir ein realistisches Gänse-Foto – offline, direkt auf deinem Rechner. Einmalig installierst du dafür das Tool **„KI-Bilder“** (Werkzeuge → Tools) mit dem Modell Segmind Vega + VegaRT (Lizenz Apache-2.0, ca. 3,5 GB); danach braucht es kein Internet mehr.
+Kein passendes Foto zur Hand? **„🪄 Gans mit KI erzeugen“** (Schritt 1), **„🪄 Mit KI …“** (Karten-Editor) bzw. **„🪄 Mit KI erzeugen …“** (Ideen) malt dir ein realistisches Gänse-Foto – offline, direkt auf deinem Rechner. Einmalig installierst du dafür das Tool **„KI-Bilder“** (Werkzeuge → Tools) mit dem Modell Segmind Vega + VegaRT (Lizenz Apache-2.0, ca. 3,5 GB); danach braucht es kein Internet mehr.
 
 1. **Wort auf der Karte** nach „GANS“ eintragen, z. B. „alt“. Es kommt nicht ins Bild – das Modell schreibt keinen sauberen Text –, sondern wird danach sauber daraufgesetzt.
 2. **Beschreibung auf Englisch:** Wie und wo ist die Gans? Zum Beispiel „swimming on a lake at sunset“, „sleeping in a nest of straw“, „standing in fresh snow“. Gern Licht, Jahreszeit, Wetter oder Stimmung dazu („morning fog“, „golden hour“) – und lieber sagen, was zu sehen sein soll, als was nicht. Kein Englisch zur Hand? Auf Deutsch schreiben und **„🌐 Ins Englische“** klicken (nur mit eingeschalteter Übersetzung; gesendet wird nur diese Beschreibung). „… von 75 Token“ zeigt, ob alles beim Modell ankommt.
 3. **„Keine Menschen“** (empfohlen, standardmäßig an) hält Menschen fern – über die Formulierung und einen sanften Negativ-Prompt; das kostet etwa 20 Sekunden mehr. Ganz ausschließen lässt es sich nicht: Taucht doch jemand auf, einfach neu würfeln.
 4. **„🪄 Gans erzeugen“** – ein Bild dauert auf einem normalen Laptop etwa 1–2 Minuten. Nach jedem Rechenschritt siehst du eine Vorschau; du kannst das Fenster schließen und weiterarbeiten oder jederzeit **abbrechen**.
-5. Gefällt dir die Gans? **„✍️ Wort aufs Bild setzen …“** öffnet sie in „GANS-Bild gestalten“ – von dort als neue Karte oder, aus dem Karten-Editor, für diese Karte. **„Ohne Wort als neue Karte“** bzw. **„Für diese Karte übernehmen“** übernimmt das Bild direkt; geprüft wird es wie jedes Foto. **„🎲 Neu würfeln“** malt eine neue Variante, **„Herunterladen“** speichert das Bild. Gleiche Beschreibung + gleicher Startwert ergibt dasselbe Bild.
+5. Gefällt dir die Gans? **„✍️ Wort aufs Bild setzen …“** öffnet sie in „GANS-Bild gestalten“ – von dort als neue Karte oder, aus dem Karten-Editor bzw. einer Idee, für diese Karte bzw. Idee. **„Ohne Wort als neue Karte“**, **„Für diese Karte übernehmen“** bzw. **„Ohne Wort für die Idee übernehmen“** übernimmt das Bild direkt; geprüft wird es wie jedes Foto. **„🎲 Neu würfeln“** malt eine neue Variante, **„Herunterladen“** speichert das Bild. Gleiche Beschreibung + gleicher Startwert ergibt dasselbe Bild.
 
 | Das kann es gut | Da schwächelt es |
 | --- | --- |
@@ -212,9 +212,10 @@ gans-arg-hunger.jpg;Gans arg Hunger;muchísima hambre / me muero de hambre;Wendu
 
 ## Ideen sammeln
 
-Gute Ideen kommen oft zwischendurch – hier haben sie ihren Platz. Eine Idee braucht nur **ein Bild, ein Wort auf Deutsch oder auf {{Spanisch}}**; der Rest kann später kommen.
+Gute Ideen kommen oft zwischendurch – hier haben sie ihren Platz. Eine Idee braucht nur **ein Bild, ein Wort auf Deutsch oder auf {{Spanisch}} – oder eine Bildidee**; der Rest kann später kommen.
 
-- **„+ Neue Idee“** legt eine leere Idee an; Text eintippen genügt, gespeichert wird beim Verlassen des Feldes. Ein Bild kommt per „Bild wählen …“, durch Ziehen auf die Bildfläche oder mit „GANS-Bild gestalten …“ dazu.
+- **„+ Neue Idee“** legt eine leere Idee an; Text eintippen genügt, gespeichert wird beim Verlassen des Feldes. Fürs Bild gibt es einen Weg: **„🖼️ Bild wählen …“**, ein Klick auf die leere Bildfläche oder Hineinziehen öffnet „GANS-Bild gestalten“ – dort setzt du „GANS + Wort“ darauf oder übernimmst ein fertiges Bild unverändert.
+- **Bildidee:** dein Merkzettel, wie ein passendes Bild aussehen könnte. **„🪄 Mit KI erzeugen …“** (Tool „KI-Bilder“) nimmt sie als Beschreibung und das Wort der Idee dazu; die Beschreibung, mit der du erzeugst, bleibt in der Bildidee gemerkt. Danach **„✍️ Wort aufs Bild setzen …“** oder **„Ohne Wort für die Idee übernehmen“** – das Bild landet direkt bei der Idee. Die KI versteht Englisch am besten; im KI-Fenster übersetzt „🌐 Ins Englische“ mit einem Klick.
 - **Gibt es das Wort schon?** Beim Tippen prüft das Programm sofort, ob es das Wort schon als Karte oder Idee gibt – Groß- und Kleinschreibung, Umlaute und „Gans“ spielen dabei keine Rolle. So entsteht „Gans alt“ nicht aus Versehen zweimal.
 - **🌐 neben dem deutschen Text** macht aus dem Wort auf {{Spanisch}} einen Vorschlag für den Text auf dem Bild (aus „viejo“ wird „Gans alt“). Ideal, wenn dir zuerst das Wort auf {{Spanisch}} einfällt.
 - Sind Bild, Text auf dem Bild und Wort auf {{Spanisch}} da, wird **„Als Karte aufnehmen“** aktiv: Die Idee durchläuft dieselben Prüfungen wie in Schritt 1 und 2 und steht danach unter **Meine Karten**.

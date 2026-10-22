@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-ME GOOS-TA DEUTSCH – Oberfläche                                     Version 2.2 (21.10.2026)
+ME GOOS-TA DEUTSCH – Oberfläche                                     Version 2.3 (22.10.2026)
 =============================================================================================
 Startet eine lokale Oberfläche im Browser, von der aus alles bedient wird: Meine Karten, Tabelle (Vorder- und
 Rückseite nebeneinander), Bildverbesserung, Schritt 1 „Bilder vorbereiten“ (auch viele auf einmal), Schritt 2
@@ -65,7 +65,7 @@ except ImportError:                                      # Datei fehlt (Testkopi
     sprachen = None
 
 L, T = gl.L, gl.T
-UI_VERSION = "2.2 (21.10.2026)"
+UI_VERSION = "2.3 (22.10.2026)"
 EINSTELLUNGEN = HIER / "ui_einstellungen.json"
 UI_DATEI = HIER / "ui" / "index.html"
 MAX_BILD = gl.MAX_DATEI_MB * 1024 * 1024
@@ -3195,7 +3195,7 @@ def neue_version(abruf=None):
         return dict(ergebnis="fehler", code="nv_format", meldung=tx("nv_format"))
     datum = str(d.get("published_at") or "")[:10]
     datum = datum if re.fullmatch(r"\d{4}-\d{2}-\d{2}", datum) else ""
-    eigene = str(gl.VERSION).split()[0]                         # „2.2 (21.10.2026)“ → „2.2“
+    eigene = str(gl.VERSION).split()[0]                         # „2.3 (22.10.2026)“ → „2.2“
     hier = version_tupel(eigene) or (0, 0, 0)
     version = ".".join(map(str, neu if neu[2] else neu[:2]))
     ergebnis = "neuer" if neu > hier else "aktuell" if neu == hier else "voraus"
@@ -3814,13 +3814,15 @@ def _zahl(wert, unten, oben, vorgabe):
 
 def _ki_bild_lauf(ki, sprache):
     """Lauf für ki_bild.py --erzeugen. ki: beschreibung, wort, ohne_menschen, startwert, karte (Bild für vorhandene
-    Karte), schnell (TAESDXL), für Prüfungen auch breite/hoehe/schritte."""
+    Karte), idee (Bild für eine Idee: deren id, "" = neue Idee; wird nur gemerkt), schnell (TAESDXL), für Prüfungen
+    auch breite/hoehe/schritte."""
     _ki_modell_da()
     karte = str(ki.get("karte") or "")
     if karte:
         sicher_in(pfade()[1], karte)
         if not _karten_zeile(karte):
             raise Meldung("karte_unbekannt", status=404)
+    idee = _ki_idee(ki.get("idee")) if not karte else None
     text = ki_bild_text(ki)
     d = ki_bild_ordner()
     _ki_bild_aufraeumen(d)
@@ -3837,29 +3839,44 @@ def _ki_bild_lauf(ki, sprache):
         if w is not None and (k == "schritte" or w % 32 == 0):
             befehl.append(f"--{k}={w}")
     meta = dict(id=kid, zeit=time.time(), beschreibung=str(ki.get("beschreibung") or "")[:300],
-                wort=str(ki.get("wort") or "")[:60], karte=karte, startwert=startwert, **text)
+                wort=str(ki.get("wort") or "")[:60], karte=karte, idee=idee, startwert=startwert, **text)
     (d / f"{kid}.json").write_text(json.dumps(meta, ensure_ascii=False), encoding="utf-8")
     kurz = (meta["wort"] or meta["beschreibung"] or "…")[:40]
     lauf = Lauf("ki-bild", tx("ki_bild_erzeugen", text=kurz), befehl,
                 f"python3 ki_bild.py --erzeugen \"{text['prompt'][:60]}…\" --startwert {startwert}", sprache=sprache)
     lauf.ki_id = kid
-    lauf.ki_meta = dict(karte=karte, wort=meta["wort"], beschreibung=meta["beschreibung"])
+    lauf.ki_meta = dict(karte=karte, idee=idee, wort=meta["wort"], beschreibung=meta["beschreibung"])
     return lauf
+
+
+def _ki_idee(wert):
+    """Ziel-Idee eines KI-Bilds: None (keine), "" (neue Idee) oder die id einer Idee (12 Hex-Zeichen)."""
+    if wert is None:
+        return None
+    if not isinstance(wert, str) or not re.fullmatch(r"(?:[0-9a-f]{12})?", wert):
+        raise Meldung("ungueltig")
+    return wert
 
 
 def ki_bild_uebernehmen(daten):
     """Fertiges KI-Bild als Entwurf: neue Karte (Schritt 1, Text = Wort) oder – mit „karte“ – neues Bild einer vorhandenen
-    Karte (wie „Bild ändern“). Gespeichert als JPG (Qualität 95); es gelten dieselben Prüfungen wie für Fotos."""
+    Karte (wie „Bild ändern“). Gespeichert als JPG (Qualität 95); es gelten dieselben Prüfungen wie für Fotos.
+    Mit „idee“ (id, "" = neue Idee) wird es direkt das Bild dieser Idee (ohne Entwurf; Text = Wort, falls sie keinen hat)."""
     from PIL import Image
     bild, _, meta_pfad = _ki_pfade(daten.get("id"))
     if not bild.is_file() or not meta_pfad.is_file():
         raise Meldung("ki_bild_fehlt", status=404)
     meta = json.loads(meta_pfad.read_text(encoding="utf-8"))
     karte = str(daten.get("karte", meta.get("karte")) or "")
+    idee = _ki_idee(daten.get("idee")) if not karte else None     # nur ausdrücklich (sonst wie bisher: Karte/Entwurf)
     wort = str(daten.get("wort", meta.get("wort")) or "").strip()[:60]
     puffer = io.BytesIO()
     with Image.open(bild) as im:
         im.convert("RGB").save(puffer, "JPEG", quality=95)
+    if idee is not None:
+        if not erweiterungen:
+            raise Meldung("ungueltig")
+        return erweiterungen.idee_bild_setzen(idee, puffer.getvalue(), de=wort)
     stamm = re.sub(r"[^\w\- ]+", "", wort).strip() or "gans-ki"
     erg = entwurf_anlegen(puffer.getvalue(), f"{stamm}.jpg", karte)
     if wort and not karte:                                       # Kartentext gleich vorschlagen

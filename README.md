@@ -24,6 +24,14 @@ Print them at home, order them from a print shop, or study digitally with Anki, 
 one click away. Everything before and during the setup starts in English; afterwards the language you pick in the
 program counts.
 
+## New in 2.3
+
+**Ideas get their image more easily** – one “🖼️ Choose image …” button (or a click on the empty image area, or
+dragging) for photos and finished images, with a preview: put “GANS + word” on it or use it unchanged · **“🪄 Create
+with AI …”** right on an idea (with the optional “AI images” tool) – the new goose goes straight to the idea · a new
+**“Image idea”** field: your note on what a fitting image could look like, which is also the description for the AI.
+Updating keeps your cards, ideas, settings and learning progress.
+
 ## New in 2.2
 
 **Hear the German** – when you learn, 🔊 now also reads the German text aloud after you reveal the answer (offline
