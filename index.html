@@ -113,6 +113,12 @@ a { color: var(--nacht-2); }
 .navi .fuss { margin-top: auto; padding: 12px; font-size: 12px; color: var(--nacht-3); line-height: 1.6; }
 .navi .fuss .ok::before { content: "●"; color: var(--gut); margin-right: 6px; }
 .navi .fuss .nein::before { content: "●"; color: var(--schnabel-dunkel); margin-right: 6px; }
+.navi .fuss .nv-fuss { border: 0; background: none; padding: 0; font: inherit; color: inherit; text-decoration: underline;
+  cursor: pointer; }
+.navi .fuss .nv-fuss:hover { color: var(--nacht); }
+.verlauf-knoepfe { display: flex; gap: 2px; }
+.verlauf-knoepfe .knopf { min-width: 36px; padding-left: 8px; padding-right: 8px; font-size: 17px; line-height: 1; }
+.verlauf-knoepfe .knopf:disabled { opacity: .35; }
 
 main { padding: 32px 40px 80px; min-width: 0; }
 .ansicht { max-width: 1120px; }
@@ -496,7 +502,8 @@ table.vergleich { width: 100%; border-collapse: collapse; font-size: 14px; }
 .fenster-kopf h2 { margin: 0; flex: 1; }
 .vergleich-bild { position: relative; width: 100%; aspect-ratio: 88 / 63; border-radius: 10px; overflow: hidden; background: var(--himmel);
   user-select: none; touch-action: none; cursor: ew-resize; }
-.vergleich-bild img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.vergleich-bild img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; -webkit-user-drag: none;
+  user-select: none; pointer-events: none; }
 .vergleich-bild .nachher { clip-path: inset(0 0 0 50%); }
 .vergleich-bild .linie { position: absolute; top: 0; bottom: 0; left: 50%; width: 3px; margin-left: -1px; background: var(--weiss);
   box-shadow: 0 0 0 1px rgba(var(--schatten), .35); pointer-events: none; }
@@ -826,6 +833,7 @@ table.kompakt { width: 100%; border-collapse: collapse; table-layout: fixed; fon
   .sprachwahl button { min-height: 44px; min-width: 44px; }
   .zeichen button { min-width: 44px; height: 44px; }
   .marke { min-width: 44px; min-height: 44px; }
+  .navi .fuss .nv-fuss { min-height: 44px; }
   input:not([type="checkbox"]):not([type="radio"]):not([type="color"]):not([type="file"]), select, .f select, .eingabe { min-height: 44px; }
   .geprueft { min-height: 44px; }
   .verb-karte .wahl { width: 44px; height: 44px; }
@@ -1061,6 +1069,10 @@ label.knopf input[type="file"] { display: none; }
     <b>Me Goos-ta Deutsch</b>
   </a>
   <div class="rechts">
+    <div class="verlauf-knoepfe" role="group" data-t-attr="aria-label:vl_gruppe">
+      <button type="button" class="knopf klein leise" id="vl-zurueck" disabled data-t-attr="aria-label:vl_zurueck_kurz"><span aria-hidden="true">↶</span></button>
+      <button type="button" class="knopf klein leise" id="vl-vor" disabled data-t-attr="aria-label:vl_vor_kurz"><span aria-hidden="true">↷</span></button>
+    </div>
     <div class="sprachwahl" role="group" data-t-attr="aria-label:sprache">
       <button type="button" data-sprache="de" lang="de" title="Deutsch">DE</button>
       <button type="button" data-sprache="en" lang="en" title="English">EN</button>
@@ -1266,6 +1278,7 @@ label.knopf input[type="file"] { display: none; }
       <div class="titelzeile"><div class="text"><h1 data-t="werkzeuge_titel"></h1><p class="unter" data-t="werkzeuge_unter"></p></div></div>
       <div class="erzeugen-raster">
         <div>
+          <section class="flaeche" id="update-bereich" hidden></section>
           <section class="flaeche" id="tools-bereich" hidden></section>
           <section class="flaeche"><div class="liste-zeilen" id="werkzeug-liste"></div></section>
           <section class="flaeche" id="ue-einstellungen"></section>
@@ -1307,6 +1320,12 @@ label.knopf input[type="file"] { display: none; }
   <div class="fenster" role="dialog" aria-modal="true" aria-labelledby="vergleich-titel">
     <div class="fenster-kopf"><h2 id="vergleich-titel"></h2><button class="knopf klein leise" data-schliessen data-t="schliessen"></button></div>
     <div id="vergleich-inhalt"></div>
+  </div>
+</div>
+<div class="overlay" id="update-fenster" hidden>
+  <div class="fenster schmal" role="dialog" aria-modal="true" aria-labelledby="update-titel">
+    <div class="fenster-kopf"><h2 id="update-titel" data-t="up_zieht_um_titel"></h2></div>
+    <p id="update-text" aria-live="polite"></p>
   </div>
 </div>
 <div class="overlay" id="zustimmung" hidden>

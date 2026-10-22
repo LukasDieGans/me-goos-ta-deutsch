@@ -5,7 +5,7 @@
    WEB_MELDER, damit die Seite ihn zeigen kann, während der Worker rechnet. */
 import { loadPyodide } from "./pyodide/pyodide.mjs";
 
-const PROGRAMM = "py/programm.zip", PROGRAMM_HASH = "cccfd95e0b397d78", REPORTLAB = "pyodide/reportlab-5.0.1-py3-none-any.whl";
+const PROGRAMM = "py/programm.zip", PROGRAMM_HASH = "eada428199862f3f", REPORTLAB = "pyodide/reportlab-5.0.1-py3-none-any.whl";
 const PAKETE = ["numpy", "pillow", "charset-normalizer"];
 const ORDNER = "/mgd";
 let py = null, gans = null, dreckig = false, uhr = null, schreibt = Promise.resolve(), unterbrechen = null;
