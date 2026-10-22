@@ -1,6 +1,6 @@
 # Me Goos-ta Deutsch – Leitfaden
 
-Stand: 22.10.2026 · Programm und Oberfläche Version 2.3 · Englisch: `LEITFADEN_en.md` · Spanisch: `LEITFADEN_es.md`
+Stand: 22.10.2026 · Programm und Oberfläche Version 2.4 · Englisch: `LEITFADEN_en.md` · Spanisch: `LEITFADEN_es.md`
 
 Schön, dass du da bist! Dieser Leitfaden begleitet dich vom ersten Doppelklick bis zur fertigen Karte – Schritt für Schritt und ohne Fachchinesisch. Du musst ihn nicht von vorn bis hinten lesen: Spring einfach zu dem Teil, den du gerade brauchst. Und keine Sorge – das ist hier kein Gänsemarsch, du kannst jeden Schritt in deinem Tempo gehen.
 
@@ -64,11 +64,19 @@ Die Oberfläche läuft im Hintergrund weiter, auch wenn der Browser-Tab geschlos
 
 Deine Arbeit liegt im Ordner `Programm`: die Kartenliste `karten.csv`, die Bilder in `bilder/`, deine Ideen in `ideen/`, Druckdateien und verbesserte Bilder in `ausgabe/`, die Einstellungen in `ui_einstellungen.json` und ein eigenes Gänse-Bild in `assets/`. Der Download einer neuen Version enthält nichts davon – seine Beispielkarten liegen als `beispiel-karten.csv` und `beispiel-bilder/` bei und werden nur in einem ganz neuen Ordner verwendet. So geht beim Update nichts verloren.
 
-**Die neue Version** gibt es immer auf der Download-Seite – im Programm unter **Hilfe → „Über dieses Programm“**, Link „Neueste Version für Windows, macOS und Linux“. Ob es eine neue Version gibt, verrät dir dort der Knopf **„🔎 Nach neuer Version suchen“**: Erst dein Klick fragt einmal bei GitHub (api.github.com) nach dem neuesten Release – nie von selbst, nie im Hintergrund, ohne Daten über dich oder deine Karten, und nichts wird gespeichert. Ist eine neuere Gans da, führt ein Link zur Download-Seite; „Gans aktuell!“ heißt, du hast schon die neueste. Den Knopf gibt es nur am Rechner (nicht in der Handy-App und nicht über den Handy-Zugang).
+**Am einfachsten: direkt im Programm (seit 2.4).** Unter **Werkzeuge → „Programm aktuell halten“** – auch unten im Menü unter der Versionsnummer („🔎 Nach Updates suchen“) und unter **Hilfe → „Über dieses Programm“** – fragt der Knopf **„🔎 Nach neuer Version suchen“** einmal bei GitHub (api.github.com) nach dem neuesten Release: nur auf deinen Klick, nie von selbst, nie im Hintergrund, ohne Daten über dich oder deine Karten, und nichts wird gespeichert. „Gans aktuell!“ heißt, du hast schon die neueste. Ist eine neuere Gans da:
+
+1. **„⬆️ Jetzt auf … aktualisieren“** lädt das Release von GitHub, vergleicht die Prüfsumme mit der veröffentlichten `SHA256SUMS.txt` und prüft den Inhalt – den Fortschritt zeigt der Auftrag. Geändert wird dabei noch nichts.
+2. **„🔄 Jetzt neu starten und … übernehmen“:** Das Programm beendet sich kurz, ersetzt **im selben Ordner** nur die Programmdateien und startet über die Startdatei von selbst neu (die richtet bei Bedarf Python und Pakete ein, wie beim ersten Start). Kein zweiter Ordner, kein doppelter Speicherplatz, das Desktop-Symbol bleibt, wie es ist.
+3. Ein Hinweis meldet „Update geklappt“. Geht beim Ersetzen etwas schief, legt das Programm alles zurück und die bisherige Version läuft weiter.
+
+Karten, Bilder, Ideen, Lernstand, Einstellungen, Druckdateien und ein eigenes Gänse-Bild bleiben dabei unberührt – sie stehen nie im Download. Das Update im Programm gibt es nur am Rechner (die Handy-App aktualisiert sich selbst; über den Handy-Zugang ist es gesperrt) und nur, wenn der Programmordner beschreibbar ist – sonst führt ein Link zur Download-Seite.
+
+**Von Hand** gibt es die neue Version immer auf der Download-Seite (Hilfe → „Über dieses Programm“, Link „Neueste Version für Windows, macOS und Linux“). Dafür gibt es zwei Wege.
 
 **Am sichersten:** Vorher unter **Import / Export** eine Komplettsicherung herunterladen. Die lässt sich überall wieder einlesen.
 
-**Empfohlen: in einen neuen Ordner entpacken**
+**In einen neuen Ordner entpacken**
 
 1. Die laufende Oberfläche beenden (⏻ oben rechts).
 2. Die neue ZIP freigeben (Windows: Eigenschaften → „Zulassen“) und mit „Alle extrahieren …“ entpacken – Windows schlägt dafür von selbst einen neuen Ordner vor.
@@ -106,11 +114,21 @@ Bibliotheken wie Pillow und NumPy enthalten Programmteile (DLLs), die nicht von 
 | Ideen | Ideen sammeln, ergänzen und als Karte aufnehmen; unfertige Karten weiterbearbeiten |
 | 3 Erzeugen | Ziel wählen, Feinschliff, los – rechts erzählt das Protokoll, was gerade passiert |
 | 4 Prüfen & drucken | Prüfbogen und Checkliste, Drucken zu Hause oder in der Druckerei, digital lernen |
-| Werkzeuge | Tools (Bildverbesserung, Übersetzung, KI-Bilder), Import / Export, GANS-Bild, Programmstart, Am Handy öffnen, Einstellungen der Übersetzung, Selbsttest, Projekt-ZIP, Ordner |
+| Werkzeuge | Programm aktuell halten (Update im selben Ordner), Tools (Bildverbesserung, Übersetzung, KI-Bilder), Import / Export, GANS-Bild, Programmstart, Am Handy öffnen, Einstellungen der Übersetzung, Selbsttest, Projekt-ZIP, Ordner |
 | Hilfe | Dieser Leitfaden in der eingestellten Sprache, die Spezifikation, Programmstand; dauert das Laden einmal zu lange, hilft „Abbrechen“ bzw. „Nochmal versuchen“ |
 | Deinstallieren | Sichern und sauber entfernen |
 
 Die Zahlen im Menü zeigen, was noch offen ist: bei Schritt 1 die Bilder, die noch nicht übernommen sind, bei Schritt 2 die Karten ohne Wort, bei „Ideen“ die Ideen, bei „Tabelle“ die automatisch übersetzten Wörter, die noch auf deinen Blick warten.
+
+## Rückgängig und Wiederholen
+
+Fast jede Änderung lässt sich zurücknehmen: **↶** oben in der Kopfzeile (oder **Strg+Z**, am Mac **⌘+Z**) macht den letzten Schritt rückgängig, **↷** (oder **Strg+Y** bzw. **Strg+Umschalt+Z**) stellt ihn wieder her. Das gilt überall, wo du eigene Daten änderst: Karten speichern, in der Tabelle ändern, pausieren, umsortieren oder aus der Liste nehmen, Bilder vorbereiten (hinzufügen, beschriften, drehen, übernehmen, verwerfen), Bild ändern, Ideen (anlegen, ändern, Bild, entfernen, als Karte aufnehmen), Wortlisten, Import, „Gans ergänzen“ und das Gänse-Bild der Rückseite. Der Hover-Text der Knöpfe verrät, was gerade zurückgenommen würde; nach jedem Rückgängig bietet ein Hinweis den Weg wieder nach vorn an.
+
+- Bis zu **30 Schritte** lassen sich zurücknehmen; Tippen im selben neuen Bild und „🌐 Alle übersetzen“ zählen als ein Schritt.
+- Eine neue Änderung nach „Rückgängig“ ersetzt den Weg nach vorn – wie in jedem Textprogramm.
+- In Textfeldern wirkt Strg+Z wie gewohnt auf den Text selbst; in der Lernsitzung nimmt Strg+Z die letzte Bewertung zurück.
+- Der Verlauf gilt für die laufende Sitzung und beginnt nach dem Beenden neu. Hat sich eine Datei inzwischen anders geändert (z. B. `karten.csv` in Excel), ändert Rückgängig zur Sicherheit nichts, und der Verlauf beginnt neu.
+- Einstellungen (Sprache, Farben, Druckoptionen) und der Lernstand gehören nicht dazu. Nimmt Rückgängig eine Textänderung zurück, beginnt der Lernstand dieser Karte – wie bei jeder Änderung – von vorn.
 
 ## Schritt 1: Bilder vorbereiten
 
@@ -185,6 +203,8 @@ Hier stehen alle Karten, denen noch das Wort auf {{Spanisch}} fehlt – und jede
 | Text auf dem Bild (Deutsch) | Zur Kontrolle im Prüfbogen, wird nicht gedruckt |
 | Notiz | Nur für dich, z. B. die Wortart – wird nicht gedruckt |
 
+**Jede Karte braucht ihre Gans:** Im Text auf dem Bild muss „Gans“ vorkommen – gern auch mitten im Text („Die Gans ist alt“) oder als „Gäns…“ („Gänsehaut“). Fehlt sie, meldet die Prüfung „Hier fehlt noch die Gans“, und beim Speichern setzt das Programm „Gans“ an den Anfang; ein Hinweis sagt Bescheid. Das gilt auch für neue Bilder aus Schritt 1, Ideen, die Karte werden, Änderungen in der Tabelle und importierte Karten. Ältere Karten ohne Gans meldet „Meine Karten“ – **„Gans ergänzen“** setzt die Gans dort bei allen auf einmal davor (lässt sich rückgängig machen).
+
 Die Knöpfe á é í ó ú ñ ü ¿ ¡ fügen spanische Sonderzeichen ein – praktisch mit deutscher Tastatur. Die Rückseite aktualisiert sich beim Tippen. „Karte speichern“ (oder Enter) schreibt die Karte in `karten.csv`; „Später“ lässt sie geduldig warten. Bei mehreren Karten schlägt **„🌐 Alle übersetzen“** für alle leeren Felder ein Wort vor, und **„Alle speichern (n)“** speichert alle bereiten Karten auf einmal.
 
 **Bild ändern:** Unter den Vorschaubildern holt **„Bild ändern …“** ein neues Bild für die Karte – oder zieh es einfach auf die Vorschau. Es wird geprüft wie in Schritt 1, mit Drehen und Ausschnitt; Wort, Text und Notiz bleiben. „Neues Bild übernehmen“ legt das bisherige Bild in `bilder/_entfernt/`, „Rückgängig“ holt es zurück. **„🪄 Mit KI …“** malt stattdessen ein neues Gänse-Bild für diese Karte (siehe „Gans mit KI erzeugen“).
@@ -199,6 +219,7 @@ Die Knöpfe á é í ó ú ñ ü ¿ ¡ fügen spanische Sonderzeichen ein – pr
 | Spanische Fragen beginnen mit „¿“ | z. B. `¿cómo estás?` |
 | Zeichen kann nicht gedruckt werden | Emoji und seltene Zeichen entfernen |
 | Text darf nicht mit = + - @ beginnen | Schutz vor Excel-Formeln (gilt auch für die Notiz) – Zeichen am Anfang entfernen |
+| Hier fehlt noch die Gans | „Gans“ irgendwo in den Text auf dem Bild schreiben – sonst kommt sie beim Speichern an den Anfang |
 | noch gleich dem deutschen Text | Zeit fürs Übersetzen! |
 | steht schon auf Karte … | nur ein Hinweis – doppelte Wörter sind erlaubt |
 

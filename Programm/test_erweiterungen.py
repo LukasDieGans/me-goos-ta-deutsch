@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-ME GOOS-TA DEUTSCH – Selbsttest der Erweiterungen                   Version 2.3 (22.10.2026)
+ME GOOS-TA DEUTSCH – Selbsttest der Erweiterungen                   Version 2.4 (22.10.2026)
 Prüft Import/Export, Ideen, Programmstart-Wahl, die Schutzregeln des Deinstallierens und die Hilfe – wie der Selbsttest in
 einer Kopie des Projekts mit den Beispielkarten und einem eigenen Datenordner (nichts Eigenes wird berührt, nichts
 wird wirklich deinstalliert, kein Browser wird geöffnet). Ergänzt test_gans_lernkarten.py (der bleibt unverändert).
@@ -4512,8 +4512,8 @@ def test_neue_version(p, tmp):
     pruefe("Kein automatischer Abruf: Start, Seite, Status, Karten, Ideen, Werkzeuge, Tools, Hilfe → 0 Anfragen ins Netz",
            len(st[0]) == 9 and st[0][0] == 200 and st[1] == 0 and st[2] == [], str(st)[:400])
     ui = (HIER / "ui" / "index.html").read_text(encoding="utf-8")
-    i = ui.find('$("#doku").addEventListener("click", async e => {')
-    handler = ui[i:ui.index("\n});\n", i)] if i >= 0 else ""
+    i = ui.find("async function sucheNeueVersion(b) {")             # seit 2.4: Werkzeuge, Über und Fußzeile teilen sie
+    handler = ui[i:ui.index("\n}\n", i)] if i >= 0 else ""
     fremd = {}
     for d in HIER.glob("*.py"):
         if d.name.startswith("test_"):
@@ -5210,6 +5210,568 @@ def test_fix_download_release(tmp):
            and mehr == ["nur im Release: neu.txt"], f"{gleich} {anders} {fehlt} {mehr}")
 
 
+E46_PROZESS = r'''
+import io, json, os, sys
+from pathlib import Path
+sys.path.insert(0, sys.argv[1])
+os.environ.pop("MGD_IM_PROZESS", None)
+p, tmp = Path(sys.argv[1]), Path(sys.argv[2])
+import gans_ui as ui, gans_lernkarten as gl, erweiterungen as erw
+from PIL import Image
+gl.setze_sprache("de")
+erw.IDEEN_DATEI, erw.IDEEN_ORDNER = tmp / "ideen.json", tmp / "ideen"
+E = []
+def ok(name, gut, detail=""):
+    E.append([name, bool(gut), str(detail)[:700]])
+def direkt(weg, daten=None, roh=None, abfrage="", methode="POST"):
+    koerper = roh if roh is not None else json.dumps(daten or {}).encode()
+    s, k, i = ui.verarbeite(methode, weg, abfrage, koerper if methode == "POST" else b"",
+                            {"X-GL-Sprache": "de", "Content-Type": "application/json"})
+    try:
+        return s, json.loads(i)
+    except ValueError:
+        return s, {}
+def jpg(farbe):
+    b = io.BytesIO(); Image.new("RGB", (900, 640), farbe).save(b, "JPEG", quality=90); return b.getvalue()
+def karte(bild):
+    return next((k for k in ui.karten_daten()["karten"] if k["bild"] == bild), {})
+codes = lambda m: [x["code"] for x in m]
+# --- Regel: „Gans“ irgendwo (auch „Gäns…“), sonst „Gans“ vorn; leer bleibt leer ---
+faelle = {"Gans alt": "Gans alt", "Die Gans ist alt": "Die Gans ist alt", "Gänsehaut pur": "Gänsehaut pur", "GANS!": "GANS!",
+          "Ente  alt": "Gans Ente alt", "ganz alt": "Gans ganz alt", "": "", "   ": ""}
+erg = {k: gl.mit_gans(k) for k in faelle}
+ok("mit_gans: Gans darf überall stehen (auch Gäns…), sonst „Gans“ vorn; leer bleibt leer", erg == faelle, erg)
+cfg = ui.aktuelle_konfig()[1]
+m1 = codes(gl.pruefe_karte("Die Gans ist alt", "viejo", cfg)["meldungen"])
+m2 = codes(gl.pruefe_karte("Ente alt", "viejo", cfg)["meldungen"])
+_, m3 = gl.pruefe_name("Die Gans schwimmt", ".jpg", set())
+ok("Prüfung: Hinweis n_ohne_gans nur ohne Gans (nicht mehr, wenn sie mitten im Text steht)",
+   "n_ohne_gans" not in m1 and "n_ohne_gans" in m2 and "n_ohne_gans" not in codes(m3), (m1, m2, codes(m3)))
+# --- Schritt 1: übernehmen setzt Gans davor (Dateiname mit Gans), mitten im Text bleibt so ---
+s, d = direkt("/api/entwurf", roh=jpg((40, 90, 160)), abfrage="name=ente.jpg")
+s1, r1 = direkt("/api/entwurf-uebernehmen", {"id": d["id"], "de": "Ente schwimmt", "es": "nada"})
+s, d2 = direkt("/api/entwurf", roh=jpg((90, 40, 160)), abfrage="name=x.jpg")
+s2, r2 = direkt("/api/entwurf-uebernehmen", {"id": d2["id"], "de": "Die Gans fliegt", "es": "vuela"})
+ok("Neue Karte: ohne Gans → „Gans Ente schwimmt“ (gans-ente-schwimmt.jpg) + Hinweis; „Die Gans fliegt“ bleibt (ohne Hinweis)",
+   s1 == 200 and r1.get("name") == "gans-ente-schwimmt.jpg" and karte("gans-ente-schwimmt.jpg").get("de") == "Gans Ente schwimmt"
+   and "Gans Ente schwimmt" in r1.get("gans_hinweis", "") and s2 == 200 and r2.get("name") == "die-gans-fliegt.jpg"
+   and karte("die-gans-fliegt.jpg").get("de") == "Die Gans fliegt" and "gans_hinweis" not in r2, (s1, str(r1)[:200], s2, r2.get("name")))
+# --- Schritt 2 / Editor ---
+s3, r3 = direkt("/api/karte-speichern", {"bild": "die-gans-fliegt.jpg", "de": "Vogel fliegt", "es": "vuela"})
+s4, r4 = direkt("/api/karte-speichern", {"bild": "die-gans-fliegt.jpg", "de": "Mein Gänseblümchen", "es": "margarita"})
+ok("Editor: ohne Gans gespeichert → „Gans Vogel fliegt“ + Hinweis; „Mein Gänseblümchen“ bleibt",
+   s3 == 200 and "gans_hinweis" in r3 and s4 == 200 and "gans_hinweis" not in r4
+   and karte("die-gans-fliegt.jpg").get("de") == "Mein Gänseblümchen", (s3, r3.get("gans_hinweis"), s4, karte("die-gans-fliegt.jpg")))
+# --- Tabelle/Kartenliste: nur geänderte Texte; alte Karte ohne Gans bleibt, bis „Gans ergänzen“ ---
+csv = ui.pfade()[0]
+spalten, zeilen, _ = gl.lies_csv(csv)
+for z in zeilen:
+    if z["bild"].lstrip("#") == "gans-ente-schwimmt.jpg":
+        z["de"] = "Nur Ente"                                    # wie eine alte Karte von vor 2.4
+gl.schreibe_csv(csv, zeilen, spalten)
+kd = ui.karten_daten()
+liste = [dict(k) for k in kd["karten"]]
+for k in liste:
+    if k["bild"] == "die-gans-fliegt.jpg":
+        k["de"] = "Katze"
+s5, r5 = direkt("/api/karten", {"karten": liste})
+hinweis = next((m for m in r5.get("meldungen", []) if m["code"] == "k_ohne_gans"), {})
+ok("Kartenliste speichern: geänderter Text ohne Gans → „Gans Katze“ + Hinweis; unveränderte alte Karte bleibt, Meine Karten meldet sie",
+   s5 == 200 and karte("die-gans-fliegt.jpg").get("de") == "Gans Katze" and karte("gans-ente-schwimmt.jpg").get("de") == "Nur Ente"
+   and "1" in r5.get("gans_hinweis", "") and hinweis.get("anzahl") == 1 and hinweis.get("stufe") == "info", (s5, r5.get("gans_hinweis"), hinweis))
+s6, r6 = direkt("/api/gans-ergaenzen", {})
+ok("„Gans ergänzen“: alte Karte → „Gans Nur Ente“, Meldung, danach kein Hinweis mehr",
+   s6 == 200 and r6.get("anzahl") == 1 and karte("gans-ente-schwimmt.jpg").get("de") == "Gans Nur Ente"
+   and not [m for m in r6["karten"]["meldungen"] if m["code"] == "k_ohne_gans"] and r6.get("meldung"), (s6, r6.get("anzahl"), r6.get("meldung")))
+# --- Idee → Karte, Import ---
+s, ri = direkt("/api/idee", {"de": "Katze klein", "es": "gatito"})
+erw.idee_bild_setzen(ri["id"], jpg((200, 90, 10)))
+s7, r7 = direkt("/api/idee-aufnehmen", {"id": ri["id"]})
+ok("Idee als Karte: „Katze klein“ → „Gans Katze klein“ + Hinweis",
+   s7 == 200 and r7.get("ok") and karte(r7.get("name", "")).get("de") == "Gans Katze klein" and "gans_hinweis" in r7, (s7, str(r7)[:200]))
+import zipfile
+b = io.BytesIO()
+with zipfile.ZipFile(b, "w") as zz:
+    zz.writestr("karten.csv", "bild;de;es;notiz\nhund.jpg;Hund;perro;\ngans-pferd.jpg;Gans Pferd;caballo;\n")
+    zz.writestr("bilder/hund.jpg", jpg((1, 2, 3)))
+    zz.writestr("bilder/gans-pferd.jpg", jpg((3, 2, 1)))
+roh = b.getvalue()
+v = erw.import_speichern(io.BytesIO(roh).read, len(roh))
+r8 = erw.import_uebernehmen({"id": v["id"], "ersetzen": True})
+ok("Import: Karte ohne Gans → „Gans Hund“ (Hinweis mit Anzahl), mit Gans unverändert",
+   karte("hund.jpg").get("de") == "Gans Hund" and karte("gans-pferd.jpg").get("de") == "Gans Pferd"
+   and r8["zahlen"].get("gans") == 1 and "1" in r8.get("gans_hinweis", ""), (karte("hund.jpg"), r8["zahlen"]))
+def lies(roh, **o):
+    return erw.wortliste_lesen(roh, o)
+wl = [z["de"] for z in lies("Die Gans ist alt;viejo\nalt;anciano\nganz neu;nuevo".encode())["zeilen"]]
+ok("Wortliste: „Die Gans ist alt“ bleibt, „alt“ → „Gans alt“, „ganz neu“ → „Gans neu“ (wie bisher)",
+   wl == ["Die Gans ist alt", "Gans alt", "Gans neu"], wl)
+print("#e46 " + json.dumps(E, ensure_ascii=False))
+'''
+
+
+def test_gans_pruefung(p, tmp):
+    """E46 (2.4): Jede Karte braucht ihre Gans – „Gans“ (oder „Gäns…“) irgendwo im deutschen Text, sonst setzt das Speichern
+    „Gans“ an den Anfang und meldet es (neue Karte, Editor, Kartenliste, Idee → Karte, Import); alte Karten ohne Gans
+    meldet „Meine Karten“ mit „Gans ergänzen“; Texte de/en/es."""
+    print("\n[E46] Jede Karte braucht ihre Gans")
+    import gans_lernkarten as gl
+    m = gl.PRUEF_MELDUNGEN["n_ohne_gans"]
+    werte = [m.get(s, "") for s in ("de", "en", "es")] if isinstance(m, dict) else [str(m)]
+    seite = (HIER / "ui" / "index.html").read_text(encoding="utf-8")
+    pruefe("Texte: n_ohne_gans erklärt die neue Regel (de/en/es); Knopf „Gans ergänzen“ nur beim Hinweis k_ohne_gans",
+           len(werte) == 3 and all("Gans" in w and ("Anfang" in w or "start" in w or "principio" in w) for w in werte)
+           and seite.count("data-gans-ergaenzen") == 2 and 'm.code === "k_ohne_gans"' in seite
+           and "if (j && j.gans_hinweis) toast(j.gans_hinweis);" in seite, werte)
+    ideen, daten = tmp / "ideen-e46", tmp / "daten-e46"
+    ideen.mkdir()
+    daten.mkdir()
+    env = dict(os.environ, PYTHONIOENCODING="utf-8", MGD_DATEN=str(daten), MGD_START_ID="test")
+    env.pop("MGD_IM_PROZESS", None)
+    r = subprocess.run([sys.executable, "-c", E46_PROZESS, str(p), str(ideen)], cwd=p, env=env,
+                       capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=300)
+    m = re.search(r"^#e46 (.*)$", r.stdout, re.M)
+    if not m:
+        print((r.stdout + r.stderr)[-3000:])
+        pruefe("E46-Prozess lief durch", False, (r.stdout + r.stderr)[-600:])
+        return
+    for name, gut, detail in json.loads(m.group(1)):
+        pruefe(name, gut, detail)
+
+
+E47_PROZESS = r'''
+import hashlib, io, json, os, sys, time
+from pathlib import Path
+sys.path.insert(0, sys.argv[1])
+os.environ.pop("MGD_IM_PROZESS", None)
+p, tmp = Path(sys.argv[1]), Path(sys.argv[2])
+import gans_ui as ui, gans_lernkarten as gl, erweiterungen as erw, verlauf
+from PIL import Image
+gl.setze_sprache("de")
+erw.IDEEN_DATEI, erw.IDEEN_ORDNER = tmp / "ideen.json", tmp / "ideen"
+E = []
+def ok(name, gut, detail=""):
+    E.append([name, bool(gut), str(detail)[:700]])
+KOPF = {}
+def direkt(weg, daten=None, roh=None, abfrage="", methode="POST", gruppe=""):
+    global KOPF
+    koerper = roh if roh is not None else json.dumps(daten or {}).encode()
+    k = {"X-GL-Sprache": "de", "Content-Type": "application/json"}
+    if gruppe:
+        k["X-GL-Gruppe"] = gruppe
+    s, KOPF, i = ui.verarbeite(methode, weg, abfrage, koerper if methode == "POST" else b"", k)
+    try:
+        return s, json.loads(i)
+    except ValueError:
+        return s, {}
+def stand():
+    return json.loads(KOPF.get("X-MGD-Verlauf", "{}"))
+def jpg(farbe):
+    b = io.BytesIO(); Image.new("RGB", (900, 640), farbe).save(b, "JPEG", quality=90); return b.getvalue()
+def sha(pfad):
+    return hashlib.sha256(Path(pfad).read_bytes()).hexdigest() if Path(pfad).is_file() else None
+def bild_stand():
+    b = ui.pfade()[1]
+    return {str(q.relative_to(b)): sha(q) for q in sorted(b.rglob("*")) if q.is_file()}
+csv, bilder = ui.pfade()[0], ui.pfade()[1]
+direkt("/api/status", methode="GET")
+ok("Ohne Änderung: Kopfzeile X-MGD-Verlauf mit 0/0", stand() == {"z": 0, "w": 0, "za": "", "wa": ""}, stand())
+# --- Karte speichern → zurück → vor ---
+k0 = ui.karten_daten()["karten"][0]
+v0 = csv.read_bytes()
+s1, _ = direkt("/api/karte-speichern", {"bild": k0["bild"], "de": k0["de"] + " neu", "es": "nuevo"})
+v1, st1 = csv.read_bytes(), stand()
+s2, r2 = direkt("/api/rueckgaengig")
+v2, st2 = csv.read_bytes(), stand()
+s3, r3 = direkt("/api/wiederholen")
+v3 = csv.read_bytes()
+ok("Karte speichern → Rückgängig = Kartenliste Byte für Byte wie vorher, Wiederholen = wie nachher; Art „karte“, Zähler stimmen",
+   s1 == s2 == s3 == 200 and v1 != v0 and v2 == v0 and v3 == v1 and st1["z"] == 1 and st1["za"] == "karte"
+   and st2 == {"z": 0, "w": 1, "za": "", "wa": "karte"} and r2.get("art") == "karte" and r3.get("verlauf", {}).get("z") == 1
+   and "karten" in r2, (s1, s2, s3, st1, st2))
+# --- Karte aus der Liste + Bild weg (zwei Schritte) → zweimal zurück → alles da, _entfernt leer ---
+vorher_bilder, vorher_csv = bild_stand(), csv.read_bytes()
+liste = [k for k in ui.karten_daten()["karten"] if k["bild"] != k0["bild"]]
+direkt("/api/karten", {"karten": liste})
+s4, _ = direkt("/api/bild-weg", {"name": k0["bild"]})
+nachher_bilder = bild_stand()
+direkt("/api/rueckgaengig"); direkt("/api/rueckgaengig")
+ok("Karte entfernen + Bild nach _entfernt: zweimal Rückgängig → Kartenliste und Bilder genau wie vorher (auch _entfernt)",
+   s4 == 200 and nachher_bilder != vorher_bilder and bild_stand() == vorher_bilder and csv.read_bytes() == vorher_csv,
+   (s4, sorted(set(nachher_bilder) ^ set(vorher_bilder)), sorted(set(bild_stand()) ^ set(vorher_bilder))))
+direkt("/api/wiederholen"); direkt("/api/wiederholen")
+ok("… und zweimal Wiederholen → wieder ohne Karte, Bild in _entfernt", bild_stand() == nachher_bilder
+   and not any(k["bild"] == k0["bild"] for k in ui.karten_daten()["karten"]), sorted(bild_stand())[:6])
+direkt("/api/rueckgaengig"); direkt("/api/rueckgaengig")
+# --- Bilder vorbereiten: hinzufügen, Tippen (Gruppe), übernehmen → zurück holt den Entwurf wieder ---
+ent = ui.entwurf_ordner()
+s, d = direkt("/api/entwurf", roh=jpg((30, 160, 90)), abfrage="name=gans-wiese.jpg")
+eid = d["id"]
+z_vorher = stand()["z"]
+direkt("/api/entwurf-pruefen", {"id": eid, "de": "Gans W", "es": ""}, gruppe=f"entwurf-{eid}")
+direkt("/api/entwurf-pruefen", {"id": eid, "de": "Gans Wi", "es": ""}, gruppe=f"entwurf-{eid}")
+direkt("/api/entwurf-pruefen", {"id": eid, "de": "Gans Wiese", "es": "prado"}, gruppe=f"entwurf-{eid}")
+ok("Tippen im selben Entwurf (gleiche Gruppe) = ein Schritt", stand()["z"] == z_vorher + 1, (z_vorher, stand()))
+s5, r5 = direkt("/api/entwurf-uebernehmen", {"id": eid, "de": "Gans Wiese", "es": "prado"})
+neu = bilder / r5.get("name", "?")
+da_nach = neu.is_file() and not (ent / f"{eid}.bild").exists()
+direkt("/api/rueckgaengig")
+zurueck = not neu.exists() and (ent / f"{eid}.bild").is_file() and json.loads((ent / f"{eid}.json").read_text(encoding="utf-8"))["de"] == "Gans Wiese"
+direkt("/api/rueckgaengig")
+getippt = json.loads((ent / f"{eid}.json").read_text(encoding="utf-8")).get("de")
+direkt("/api/rueckgaengig")
+ok("Karte übernehmen → Rückgängig: Karte + Bild weg, Entwurf wieder da (Text „Gans Wiese“); weiter zurück: Tippen, dann Hinzufügen",
+   s5 == 200 and da_nach and zurueck and getippt == "Gans wiese" and not (ent / f"{eid}.bild").exists(), (s5, da_nach, zurueck, getippt))
+direkt("/api/wiederholen"); direkt("/api/wiederholen"); direkt("/api/wiederholen")
+ok("… dreimal Wiederholen → Karte wieder da", neu.is_file() and not (ent / f"{eid}.bild").exists(), neu.name)
+# --- Ideen: anlegen, löschen → zurück ---
+s, ri = direkt("/api/idee", {"de": "Gans Idee", "es": "idea"})
+iid = ri.get("id")
+erw.idee_bild_setzen  # vorhanden
+s6, _ = direkt("/api/idee-bild", roh=jpg((250, 200, 0)), abfrage=f"id={iid}")
+bild_idee = erw._idee_bildpfad(next(i for i in erw._ideen_lesen()["ideen"] if i["id"] == iid))
+direkt("/api/idee-weg", {"id": iid})
+weg = not any(i["id"] == iid for i in erw._ideen_lesen()["ideen"])
+direkt("/api/rueckgaengig")
+wieder = next((i for i in erw._ideen_lesen()["ideen"] if i["id"] == iid), None)
+ok("Idee mit Bild löschen → Rückgängig: Idee samt Bild zurück", s6 == 200 and bool(bild_idee) and weg and bool(wieder)
+   and bool(erw._idee_bildpfad(wieder)), (s6, bild_idee, weg, wieder))
+# --- Gänse-Bild ---
+gans = ui.GANS_ORDNER
+s7, _ = direkt("/api/gans-bild", roh=jpg((255, 255, 255)))
+da = any((gans / n).is_file() for n in ui.GANS_NAMEN)
+direkt("/api/rueckgaengig")
+ok("Gänse-Bild laden → Rückgängig: wieder die gezeichnete Gans", s7 == 200 and da and not any((gans / n).is_file() for n in ui.GANS_NAMEN), (s7, da))
+# --- Konflikt: Datei inzwischen anders → nichts geändert, Verlauf leer ---
+k1 = ui.karten_daten()["karten"][1]
+direkt("/api/karte-speichern", {"bild": k1["bild"], "de": k1["de"], "es": "otro"})
+fremd = csv.read_bytes() + b"\n"
+csv.write_bytes(fremd)
+s8, r8 = direkt("/api/rueckgaengig")
+ok("Konflikt (Kartenliste von außen geändert): 409, nichts überschrieben, Verlauf geleert",
+   s8 == 409 and csv.read_bytes() == fremd and stand()["z"] == 0 and stand()["w"] == 0 and r8.get("fehler"), (s8, r8, stand()))
+s9, r9 = direkt("/api/rueckgaengig")
+s10, _ = direkt("/api/wiederholen")
+ok("Nichts im Verlauf: 409 mit freundlichem Text", s9 == 409 and s10 == 409 and r9.get("fehler"), (s9, r9))
+# --- Grenze: höchstens MAX_SCHRITTE ---
+for i in range(verlauf.MAX_SCHRITTE + 5):
+    direkt("/api/karte-status", {"bild": k1["bild"], "geprueft": i % 2 == 0})
+ok(f"Begrenzt: höchstens {verlauf.MAX_SCHRITTE} Schritte", stand()["z"] == verlauf.MAX_SCHRITTE == 30, stand())
+# --- neuer Schritt nach Rückgängig löscht Wiederholen ---
+direkt("/api/rueckgaengig")
+w1 = stand()["w"]
+direkt("/api/karte-status", {"bild": k1["bild"], "geprueft": False})
+direkt("/api/karte-status", {"bild": k1["bild"], "geprueft": True})
+ok("Neue Änderung nach Rückgängig: Wiederholen verfällt", w1 == 1 and stand()["w"] == 0, (w1, stand()))
+# --- ohne Sicherung gelöscht → Verlauf geleert (nie halb zurück) ---
+v = ui._verlauf()
+opfer = next(q for q in bilder.glob("*.jpg"))
+roh = opfer.read_bytes()
+with v.schritt("test"):
+    opfer.unlink()
+ok("Datei ohne Sicherung gelöscht → Verlauf geleert (nie halb zurück)", v.info()["z"] == 0 and v.unvollstaendig == 1, v.info())
+opfer.write_bytes(roh)
+# --- Lesen ändert nichts am Verlauf; Lernen/Einstellungen sind keine Schritte ---
+direkt("/api/karte-status", {"bild": k1["bild"], "geprueft": False})
+z = stand()["z"]
+direkt("/api/karten", methode="GET"); direkt("/api/sprache", {"sprache": "de"})
+ok("Lesen und Spracheinstellung sind keine Schritte", stand()["z"] == z == 1, (z, stand()))
+# --- Speicher: nur Kopien der geänderten Dateien; Beenden räumt auf ---
+ordner = ui.pfade()[2] / ".verlauf"
+groesse = sum(q.stat().st_size for q in ordner.rglob("*") if q.is_file())
+v.leeren()
+ok("Kopien im Ausgabeordner (.verlauf), leeren räumt alles weg", groesse > 0 and not ordner.exists(), groesse)
+print("#e47 " + json.dumps(E, ensure_ascii=False))
+'''
+
+
+def test_rueckgaengig(p, tmp):
+    """E47 (2.4): Rückgängig und Wiederholen überall – jede ändernde Anfrage (Karten, Bilder, Bilder vorbereiten, Ideen,
+    Gänse-Bild) ist ein Schritt; Rückgängig/Wiederholen stellen die Dateien Byte für Byte her, Gruppen fassen Tippen
+    zusammen, Konflikte ändern nichts, höchstens 30 Schritte; Oberfläche: ↶ ↷ in der Kopfzeile, Strg+Z/Strg+Y."""
+    print("\n[E47] Rückgängig und Wiederholen")
+    seite = (HIER / "ui" / "index.html").read_text(encoding="utf-8")
+    g = (HIER / "gans_ui.py").read_text(encoding="utf-8")
+    import ast
+    wege = re.findall(r'"(/api/[a-z-]+)": "[a-z_]+"', g[g.index("VERLAUF_WEGE = {"):g.index("}", g.index("VERLAUF_WEGE = {"))])
+    arten = set(re.findall(r'": "([a-z_]+)"', g[g.index("VERLAUF_WEGE = {"):g.index("}", g.index("VERLAUF_WEGE = {"))]))
+    fehlt = [a for a in sorted(arten) if seite.count(f"vl_art_{a}:") != 3]
+    pruefe("Kopfzeile ↶ ↷ (deaktiviert ohne Schritt), Strg+Z/Strg+Y nicht in Textfeldern/Fenstern/Lernsitzung, Stand aus jeder Antwort",
+           'id="vl-zurueck"' in seite and 'id="vl-vor"' in seite and "verlaufAusKopf(r);" in seite
+           and 'if (e.target.closest && e.target.closest("input, textarea, select, [contenteditable]")) return;' in seite
+           and 'if (offenerDialog() || (ansicht() === "lernen" && LS)) return;' in seite
+           and seite.count('"X-GL-Gruppe"') == 1 and 'S.vlGruppe = "alle-" + Date.now();' in seite, "")
+    pruefe("Jede Schritt-Art hat einen Text in de/en/es; Wege mit eigenen Daten sind Schritte (Karten, Entwürfe, Ideen, Import, Wortliste)",
+           not fehlt and seite.count("vl_art_aenderung:") == 3 and {"/api/karten", "/api/karte-speichern", "/api/entwurf",
+                                                                   "/api/entwurf-uebernehmen", "/api/idee", "/api/idee-weg",
+                                                                   "/api/import-uebernehmen", "/api/wortliste-uebernehmen",
+                                                                   "/api/gans-bild", "/api/bild-weg"} <= set(wege)
+           and "/api/lernen-bewerten" not in wege and "/api/einstellungen" not in wege, fehlt)
+    baum = ast.parse((HIER / "verlauf.py").read_text(encoding="utf-8"))
+    importe = {(n.names[0].name if isinstance(n, ast.Import) else n.module).split(".")[0] for n in ast.walk(baum)
+               if isinstance(n, (ast.Import, ast.ImportFrom))}
+    pruefe("verlauf.py nur Standardbibliothek (läuft auch in der Web-App)", importe <= {"__future__", "contextlib", "hashlib", "os",
+                                                                                     "secrets", "shutil", "threading", "time", "pathlib"}, importe)
+    ideen, daten = tmp / "ideen-e47", tmp / "daten-e47"
+    ideen.mkdir()
+    daten.mkdir()
+    env = dict(os.environ, PYTHONIOENCODING="utf-8", MGD_DATEN=str(daten), MGD_START_ID="test")
+    env.pop("MGD_IM_PROZESS", None)
+    r = subprocess.run([sys.executable, "-c", E47_PROZESS, str(p), str(ideen)], cwd=p, env=env,
+                       capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=300)
+    m = re.search(r"^#e47 (.*)$", r.stdout, re.M)
+    if not m:
+        print((r.stdout + r.stderr)[-3000:])
+        pruefe("E47-Prozess lief durch", False, (r.stdout + r.stderr)[-600:])
+        return
+    for name, gut, detail in json.loads(m.group(1)):
+        pruefe(name, gut, detail)
+
+
+E48_PROZESS = r'''
+import hashlib, http.server, io, json, os, shutil, stat, sys, threading, time, zipfile
+from pathlib import Path
+sys.path.insert(0, sys.argv[1])
+os.environ.pop("MGD_IM_PROZESS", None)
+p, tmp = Path(sys.argv[1]), Path(sys.argv[2])
+import aktualisieren as ak
+E = []
+def ok(name, gut, detail=""):
+    E.append([name, bool(gut), str(detail)[:700]])
+W = "Me-Goos-ta-Deutsch/"
+def release(version, extra=None, weg=(), roh=None):
+    dateien = {"Programm/starter.py": b"# starter\n", "Programm/gans_ui.py": b"# ui neu\n", "Programm/neu.py": b"x = 1\n",
+               "Programm/gans_lernkarten.py": f'VERSION = "{version} (01.01.2030)"\n'.encode(),
+               "Me Goos-ta Deutsch - Windows.cmd": b"@echo off\r\n", "Me Goos-ta Deutsch - Mac.command": b"#!/bin/bash\n",
+               "Me Goos-ta Deutsch - Linux.sh": b"#!/bin/sh\n", "README.md": b"# neu\n"}
+    dateien.update(extra or {})
+    b = io.BytesIO()
+    with zipfile.ZipFile(b, "w") as z:
+        for n, d in dateien.items():
+            if n in weg:
+                continue
+            i = zipfile.ZipInfo((roh or W) + n)
+            i.external_attr = (0o100755 if n.endswith((".sh", ".command")) else 0o100644) << 16
+            z.writestr(i, d)
+    return b.getvalue()
+# --- Server wie GitHub-Releases (…/download/v<V>/…), auch mit Weiterleitung ---
+DATEIEN = {}
+class H(http.server.BaseHTTPRequestHandler):
+    def log_message(self, *a): pass
+    def do_GET(self):
+        if self.path.startswith("/weiter/"):
+            self.send_response(302); self.send_header("Location", "http://boese.example/x.zip"); self.end_headers(); return
+        d = DATEIEN.get(self.path)
+        if d is None:
+            self.send_response(404); self.end_headers(); return
+        self.send_response(200); self.send_header("Content-Length", str(len(d))); self.end_headers(); self.wfile.write(d)
+srv = http.server.ThreadingHTTPServer(("127.0.0.1", 0), H)
+threading.Thread(target=srv.serve_forever, daemon=True).start()
+quelle = f"http://127.0.0.1:{srv.server_address[1]}/dl"
+def anbieten(version, z, summe=None):
+    DATEIEN[f"/dl/v{version}/Me-Goos-ta-Deutsch-{version}.zip"] = z
+    s = summe or hashlib.sha256(z).hexdigest()
+    DATEIEN[f"/dl/v{version}/SHA256SUMS.txt"] = f"{s}  Me-Goos-ta-Deutsch-{version}.zip\n".encode()
+daten = tmp / "daten"
+anbieten("9.9", release("9.9"))
+meldungen = []
+neu = ak.laden("9.9", quelle, daten, melde=meldungen.append)
+b = ak.bereit(daten)
+ok("Laden: SHA256SUMS + ZIP, Prüfsumme, entpackt nach update/neu, bereit.json mit Version", neu.is_dir() and (neu / "Programm" / "neu.py").is_file()
+   and bool(b) and b["version"] == "9.9" and not list((daten / "update").glob("*.part")), (neu, b, meldungen[-2:]))
+def fehler(fn):
+    try:
+        fn()
+        return ""
+    except ak.UpdateFehler as e:
+        return str(e) or "?"
+anbieten("9.8", release("9.8"), summe="0" * 64)
+f_summe = fehler(lambda: ak.laden("9.8", quelle, daten, melde=lambda t: None))
+f_404 = fehler(lambda: ak.laden("9.7", quelle, daten, melde=lambda t: None))
+f_host = fehler(lambda: ak.laden("9.9", "https://boese.example/dl", daten))
+f_weiter = fehler(lambda: ak._oeffne(f"http://127.0.0.1:{srv.server_address[1]}/weiter/x", ("127.0.0.1",)))
+ok("Falsche Prüfsumme, fehlendes Release, fremder Host, Weiterleitung zu fremdem Host → abgelehnt; die schon geladene Version bleibt bereit",
+   f_summe and f_404 and f_host and "boese.example" in f_weiter and (ak.bereit(daten) or {}).get("version") == "9.9", (f_summe, f_404, f_host, f_weiter))
+def zip_pruefen(z, v="9.9"):
+    pfad = tmp / "probe.zip"
+    pfad.write_bytes(z)
+    return fehler(lambda: ak.pruefe_zip(pfad, v))
+proben = {"Ausbruch": release("9.9", {"../boese.py": b"x"}), "fremde Wurzel": release("9.9", roh="Anders/"),
+          "Nutzerdaten": release("9.9", {"Programm/karten.csv": b"bild;de"}), "Bilder": release("9.9", {"Programm/bilder/a.jpg": b"j"}),
+          "falsche Version": release("9.9"), "Pflicht fehlt": release("9.9", weg=("Programm/starter.py",))}
+erg = {k: zip_pruefen(z, "9.6" if k == "falsche Version" else "9.9") for k, z in proben.items()}
+b2 = io.BytesIO()
+with zipfile.ZipFile(b2, "w") as z:
+    i = zipfile.ZipInfo(W + "Programm/link"); i.external_attr = 0o120777 << 16; z.writestr(i, "/etc/passwd")
+erg["Link"] = zip_pruefen(b2.getvalue())
+ok("ZIP-Prüfung: Ausbruch, fremde Wurzel, Nutzerdaten, Bilder, falsche Version, fehlende Pflichtdatei, symbolischer Link → abgelehnt",
+   all(erg.values()) and zip_pruefen(release("9.9")) == "", erg)
+# --- Anwenden: ersetzt Programmdateien, eigene Daten bleiben ---
+ziel = tmp / "installiert" / "Me-Goos-ta-Deutsch"
+alt = {"Programm/starter.py": b"# starter alt\n", "Programm/gans_ui.py": b"# ui alt\n", "Programm/gans_lernkarten.py": b'VERSION = "2.4 (x)"\n',
+       "Programm/alt_nur.py": b"y = 2\n", "README.md": b"# alt\n"}
+nutzer = {"Programm/karten.csv": b"bild;de;es;notiz\na.jpg;Gans a;b;\n", "Programm/bilder/a.jpg": b"bild", "Programm/ideen.json": b"{}",
+          "Programm/ui_einstellungen.json": b'{"sprache": "de"}', "Programm/lernstand.json": b"{}", "Programm/ausgabe/x.pdf": b"%PDF",
+          "Programm/assets/gans_hintergrund.jpg": b"gans"}
+for n, d in {**alt, **nutzer}.items():
+    (ziel / n).parent.mkdir(parents=True, exist_ok=True)
+    (ziel / n).write_bytes(d)
+n_geaendert = ak.anwenden(neu, ziel, daten / "update" / "alt")
+ok("Anwenden: Programmdateien ersetzt, neue dazu, alte Zusatzdatei bleibt, eigene Daten Byte für Byte unverändert",
+   (ziel / "Programm" / "gans_ui.py").read_bytes() == b"# ui neu\n" and (ziel / "Programm" / "neu.py").is_file()
+   and (ziel / "Programm" / "alt_nur.py").read_bytes() == b"y = 2\n" and (ziel / "Me Goos-ta Deutsch - Linux.sh").is_file()
+   and all((ziel / n).read_bytes() == d for n, d in nutzer.items()) and n_geaendert == 8, n_geaendert)
+if os.name != "nt":
+    ok("Startdateien danach ausführbar (0755)", all(os.stat(ziel / n).st_mode & 0o111 for n in ("Me Goos-ta Deutsch - Linux.sh", "Me Goos-ta Deutsch - Mac.command")))
+# --- Fehler mitten drin → alles zurück ---
+ziel2 = tmp / "installiert2" / "Me-Goos-ta-Deutsch"
+for n, d in {**alt, **nutzer}.items():
+    (ziel2 / n).parent.mkdir(parents=True, exist_ok=True)
+    (ziel2 / n).write_bytes(d)
+vorher = {str(q.relative_to(ziel2)): q.read_bytes() for q in ziel2.rglob("*") if q.is_file()}
+echt, zahl = shutil.copyfile, [0]
+def kaputt(a, b, *x, **y):
+    zahl[0] += 1
+    if zahl[0] == 4:
+        raise OSError("Platte voll (Test)")
+    return echt(a, b, *x, **y)
+ak.shutil.copyfile = kaputt
+try:
+    f_halb = ""
+    ak.anwenden(neu, ziel2, tmp / "sich2")
+except OSError as e:
+    f_halb = str(e)
+finally:
+    ak.shutil.copyfile = echt
+nachher = {str(q.relative_to(ziel2)): q.read_bytes() for q in ziel2.rglob("*") if q.is_file() and not q.name.endswith(".tmp")}
+ok("Fehler mitten im Ersetzen → alles wie vorher (neue Dateien wieder weg)", f_halb and nachher == vorher, (f_halb, sorted(set(nachher) ^ set(vorher))))
+# --- Nie den Entwicklungsordner oder ein Git-Verzeichnis ---
+dev = tmp / "arbeit" / "Me-Goos-ta-Deutsch"
+(dev / "Programm").mkdir(parents=True)
+for n in ("starter.py", "gans_ui.py"):
+    (dev / "Programm" / n).write_text("#", encoding="utf-8")
+ok_dev1 = ak.programm_ordner_ok(dev)
+(dev.parent / "bau_release.py").write_text("#", encoding="utf-8")
+ok_dev2 = ak.programm_ordner_ok(dev)
+(dev.parent / "bau_release.py").unlink()
+(dev / ".git").mkdir()
+ok_dev3 = ak.programm_ordner_ok(dev)
+f_dev = fehler(lambda: ak.anwenden(neu, dev, tmp / "sich3"))
+ok("Programmordner-Schutz: Entwicklungsordner (bau_release.py daneben) und Git-Verzeichnis werden nie ersetzt",
+   ok_dev1 and not ok_dev2 and not ok_dev3 and f_dev == "ziel", (ok_dev1, ok_dev2, ok_dev3, f_dev))
+# --- Ablauf nach „Jetzt neu starten“ (ohne echten Start) ---
+ziel3 = tmp / "installiert3" / "Me-Goos-ta-Deutsch"
+for n, d in {**alt, **nutzer}.items():
+    (ziel3 / n).parent.mkdir(parents=True, exist_ok=True)
+    (ziel3 / n).write_bytes(d)
+e1 = ak.anwenden_und_starten(daten, ziel3, 0, starten=False)
+gespeichert = json.loads((daten / "update" / "ergebnis.json").read_text(encoding="utf-8"))
+e2 = ak.anwenden_und_starten(daten, ziel3, 0, starten=False)
+ok("Ablauf: ersetzt, ergebnis.json (ok, Version), räumt neu/alt/bereit auf; ohne bereite Version → Fehler im Ergebnis",
+   e1["ok"] and e1["version"] == "9.9" and gespeichert["ok"] and not (daten / "update" / "neu").exists()
+   and not (daten / "update" / "bereit.json").exists() and not e2["ok"] and e2["fehler"]
+   and (ziel3 / "Programm" / "gans_lernkarten.py").read_bytes().startswith(b'VERSION = "9.9'), (e1, e2))
+ok("Startdatei je System; Warten auf eine beendete Prozess-ID kehrt sofort zurück",
+   ak.startdatei(ziel3).name.startswith("Me Goos-ta Deutsch - ") and ak.warte_auf_ende(0) and ak.warte_auf_ende(999999, 2), ak.startdatei(ziel3).name)
+if os.name != "nt":
+    import subprocess as sp
+    zombie = sp.Popen(["true"])
+    time.sleep(0.5)
+    ok("Beendeter, nicht abgeholter Prozess (Zombie, z. B. Container ohne Init) zählt als beendet; der eigene lebt",
+       not ak._lebt(zombie.pid) and ak._lebt(os.getpid()), zombie.pid)
+    zombie.wait()
+srv.shutdown()
+# --- Oberfläche: /api/update ---
+import gans_ui as ui, gans_lernkarten as gl
+gl.setze_sprache("de")
+def direkt(daten_, am_handy=False):
+    s, k, i = ui.verarbeite("POST", "/api/update", "", json.dumps(daten_).encode(), {"X-GL-Sprache": "de", "Content-Type": "application/json"}, am_handy=am_handy)
+    return s, json.loads(i)
+info = ui.status_info()["update"]
+h = direkt({"aktion": "laden", "version": "9.9"}, am_handy=True)
+k = direkt({"aktion": "laden", "version": "1.0"})
+x = direkt({"aktion": "laden", "version": "9.9; rm"})
+a = direkt({"aktion": "anwenden"})
+(ui.uebersetzer.daten_ordner() / "update").mkdir(parents=True, exist_ok=True)
+(ui.uebersetzer.daten_ordner() / "update" / "ergebnis.json").write_text(json.dumps({"ok": True, "version": "9.9"}), encoding="utf-8")
+mit = ui.status_info()["update"]["ergebnis"]
+g = direkt({"aktion": "gesehen"})
+ui.im_browser = lambda: True
+app = ui.update_info()
+ok("/api/update: Handy-Zugang 403, nicht neuer → 409, ungültige Version → 400, anwenden ohne Download → 409; Status meldet Ergebnis einmal; Web-App: nicht möglich",
+   info["moeglich"] is True and info["bereit"] == "" and h[0] == 403 and k[0] == 409 and x[0] == 400 and a[0] == 409
+   and mit and mit["ok"] and mit["version"] == "9.9" and g[0] == 200 and g[1]["ergebnis"] is None and app["moeglich"] is False,
+   (info, h[0], k, x[0], a, mit, g[1], app))
+print("#e48 " + json.dumps(E, ensure_ascii=False))
+'''
+
+
+def test_update(p, tmp):
+    """E48 (2.4): neue Version direkt im Programm – laden (nur GitHub bzw. Test-Server, Prüfsumme, ZIP-Prüfung), anwenden
+    (ersetzt Programmdateien im selben Ordner, eigene Daten bleiben, Fehler → alles zurück, nie Entwicklungsordner),
+    /api/update nur am Rechner; Knöpfe in Werkzeuge, Über und Fußzeile."""
+    print("\n[E48] Update direkt im Programm")
+    seite = (HIER / "ui" / "index.html").read_text(encoding="utf-8")
+    import ast
+    baum = ast.parse((HIER / "aktualisieren.py").read_text(encoding="utf-8"))
+    oben = {(n.names[0].name if isinstance(n, ast.Import) else n.module).split(".")[0] for n in baum.body
+            if isinstance(n, (ast.Import, ast.ImportFrom))}
+    bau = HIER.parent.parent / "bau_webapp.py"                      # nur im Arbeitsordner: die App braucht das Modul nicht
+    pruefe("aktualisieren.py: oben nur Standardbibliothek (anwenden läuft ohne Pakete), kein api.github.com; nicht in der Web-App",
+           oben <= {"__future__", "argparse", "hashlib", "json", "os", "re", "shutil", "subprocess", "sys", "time", "urllib", "zipfile", "pathlib"}
+           and "api.github.com" not in (HIER / "aktualisieren.py").read_text(encoding="utf-8")
+           and (not bau.is_file() or '"aktualisieren.py"}' in bau.read_text(encoding="utf-8")), oben)
+    pruefe("Oberfläche: „Nach neuer Version suchen“ in Werkzeuge, Über und Fußzeile (nur am Rechner); „Jetzt aktualisieren“ nur, wenn möglich",
+           seite.count("data-nv-knopf") >= 3 and 'id="update-bereich"' in seite and "data-nv-fuss" in seite
+           and "${!AM_HANDY && !AM_APP ? `<br><button type=\"button\"" in seite and "u.moeglich ? `<p class=\"knopfzeile\"><button class=\"knopf haupt\"" in seite
+           and 'L.art === "update"' in seite and 'id="update-fenster"' in seite, "")
+    daten = tmp / "daten-e48"
+    daten.mkdir()
+    arbeit = tmp / "e48"
+    arbeit.mkdir()
+    env = dict(os.environ, PYTHONIOENCODING="utf-8", MGD_DATEN=str(daten), MGD_START_ID="test")
+    env.pop("MGD_IM_PROZESS", None)
+    r = subprocess.run([sys.executable, "-c", E48_PROZESS, str(p), str(arbeit)], cwd=p, env=env,
+                       capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=300)
+    m = re.search(r"^#e48 (.*)$", r.stdout, re.M)
+    if not m:
+        print((r.stdout + r.stderr)[-3000:])
+        pruefe("E48-Prozess lief durch", False, (r.stdout + r.stderr)[-600:])
+        return
+    for name, gut, detail in json.loads(m.group(1)):
+        pruefe(name, gut, detail)
+
+
+def test_oberflaeche_24():
+    """E49 (2.4): Vorher/Nachher-Vergleich legt beim Klicken mit leichtem Ziehen kein Bild mehr an (Fund 2.3) – Bilder dort
+    nicht ziehbar, alles aus der Seite selbst Gezogene ist nie eine neue Datei; neue Texte in de/en/es."""
+    print("\n[E49] Oberfläche 2.4: Vergleich ohne Bild-Anlegen, Texte")
+    seite = (HIER / "ui" / "index.html").read_text(encoding="utf-8")
+    i = seite.index("function zeigeVergleich(k) {")
+    vergleich = seite[i:seite.index("\n}\n", i)]
+    j = seite.index("let innenZieh = false;")
+    schutz = seite[j:seite.index("let ziehZaehler = 0;", j)]
+    pruefe("Vergleich: Bilder draggable=false + ohne Zeiger-Ereignisse, dragstart verhindert, Regler mit pointercancel",
+           vergleich.count('draggable="false"') == 3 and '$("#vergleich-inhalt").addEventListener("dragstart", e => e.preventDefault());' in seite
+           and "pointer-events: none; }" in seite[seite.index(".vergleich-bild img {"):][:200] and 'box.addEventListener("pointercancel", auf);' in seite, "")
+    pruefe("Ziehen aus der Seite selbst ist nie eine neue Datei: Schutz vor Ablage und Zieh-Zielen (erste Zuhörer, stoppt sofort)",
+           'document.addEventListener("dragstart", e => { innenZieh = !e.defaultPrevented; });' in schutz
+           and "e.stopImmediatePropagation();" in schutz and 'if (typ === "dragover" || typ === "drop") { e.preventDefault();' in schutz
+           and j < seite.index("const ZIEH_ZIELE = {};") and j < seite.index('window.addEventListener("drop", e => {'), "")
+    txt = {"de": [], "en": [], "es": []}
+    a = seite.index("const TXT = {")
+    for m in re.finditer(r"\n(de|en|es)\s*:\s*\{", seite[a:seite.index("\n};", a)]):
+        txt[m.group(1)] += js_schluessel(seite, a + m.end() - 1)
+    for m in re.finditer(r"Object\.assign\(TXT\.(de|en|es),\s*\{", seite):
+        txt[m.group(1)] += js_schluessel(seite, m.end() - 1)
+    noetig = ["nv_fuss", "h_nv_fuss", "up_titel", "up_unter", "up_jetzt", "up_erklaerung", "up_laedt", "up_geladen", "up_bereit_text",
+              "up_neustart", "up_neustart_kurz", "up_zieht_um_titel", "up_zieht_um", "up_ok", "up_fehler", "up_nicht_moeglich",
+              "vl_gruppe", "vl_zurueck_kurz", "vl_vor_kurz", "h_vl_zurueck", "h_vl_vor", "h_vl_zurueck_was", "h_vl_vor_was",
+              "vl_zurueck", "vl_vor", "vl_zurueck_ok", "vl_vor_ok", "gans_ergaenzen_knopf", "h_gans_ergaenzen"]
+    fehlt = [f"{s}.{k}" for s in txt for k in noetig if k not in txt[s]]
+    pruefe("Neue Texte (Update, Rückgängig, Gans ergänzen) in de/en/es", not fehlt, fehlt[:8])
+
+
 def main():
     global ECHTES_KI_BILD, ECHT_DA
     t0 = time.time()
@@ -5226,6 +5788,8 @@ def main():
         shutil.copy2(HIER / "sprachen.py", p / "sprachen.py")
         shutil.copy2(HIER / "lernkarten_digital.py", p / "lernkarten_digital.py")
         shutil.copy2(HIER / "lernen.py", p / "lernen.py")
+        shutil.copy2(HIER / "verlauf.py", p / "verlauf.py")
+        shutil.copy2(HIER / "aktualisieren.py", p / "aktualisieren.py")
         shutil.copy2(HIER.parent / "Me Goos-ta Deutsch - Linux.sh", p.parent / "Me Goos-ta Deutsch - Linux.sh")
         daten = Path(tmp) / "daten"
         daten.mkdir()
@@ -5267,6 +5831,10 @@ def main():
         test_wortliste_oberflaeche(p, Path(tmp))
         test_fix_download_release(Path(tmp))
         test_bild_ki_ideen(p, Path(tmp))
+        test_gans_pruefung(p, Path(tmp))
+        test_rueckgaengig(p, Path(tmp))
+        test_update(p, Path(tmp))
+        test_oberflaeche_24()
     ok =sum(1 for e in tg.ergebnisse if e[1])
     print(f"\n{ok} von {len(tg.ergebnisse)} Prüfungen bestanden ({time.time() - t0:.0f} s).")
     if ok == len(tg.ergebnisse):

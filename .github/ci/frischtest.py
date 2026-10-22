@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Frischtest von Me Goos-ta Deutsch auf einem echten Rechner (seit 2.2) – wie ein Nutzer: Startdatei, Oberfläche per
-API, beide Testreihen, zweiter Start, Update in einen neuen Ordner, Deinstallation. Nur Standardbibliothek; läuft mit dem
+API, beide Testreihen, zweiter Start, Update in einen neuen Ordner, Update direkt im Programm (seit 2.4: Version 9.9 von
+einem Release-Server auf 127.0.0.1, Neustart über die Startdatei – nur auf GitHub-Rechnern), Deinstallation. Nur Standardbibliothek; läuft mit dem
 Python des Runners als „Dirigent“ (das Programm richtet wie beim Nutzer sein eigenes Python ein).
 
 GitHub Actions (Branch ci; Wegwerf-Rechner → echte Startdatei, echte Symbole, echter Datenordner):
@@ -188,6 +189,8 @@ class Frischtest:
             self.symbole = None
         if ART == "linux":
             self.env["MGD_KEIN_TERMINAL"] = "1"                 # ohne Terminalfenster (wie „sh …Linux.sh“ im Terminal)
+        self.env["MGD_KEIN_BROWSER"] = "1"                      # Neustart nach dem Update im Programm: kein Browser
+        self.update_server = None
         self.daten = self._daten_ordner()
         self.env_tests = None
         self.ui = None
@@ -519,6 +522,8 @@ class Frischtest:
     # ---------- h) Update in einen neuen Ordner ----------
     def h_update(self):
         t0 = time.time()
+        if not self.lokal:
+            self.k_vorbereiten()                                # die Oberfläche von o2 kennt dann den Release-Server
         self.kopieren(self.o2)
         code, text, s = self.starte(self.o2, "--kein-browser")
         prog = self.o2 / "Programm"
@@ -538,6 +543,92 @@ class Frischtest:
                f"neu {bool(self.ui)} · alt noch da {bool(alt)}")
         if not self.ui:
             raise Stopp("keine Oberfläche nach dem Update")
+
+    # ---------- k) Update direkt im Programm (seit 2.4) ----------
+    def k_vorbereiten(self):
+        """Wie ein GitHub-Release v9.9 (ZIP + SHA256SUMS.txt) auf 127.0.0.1: Inhalt = dieses Release, nur VERSION 9.9 und
+        eine Merkdatei. Die Oberfläche lädt dort statt bei GitHub (MGD_UPDATE_QUELLE, nur 127.0.0.1)."""
+        import functools
+        import hashlib
+        import http.server
+        import threading
+        ziel = Path.home() / "mgd-update"
+        shutil.rmtree(ziel, ignore_errors=True)
+        (ziel / "v9.9").mkdir(parents=True)
+        zip_pfad = ziel / "v9.9" / f"{NAME}-9.9.zip"
+        with zipfile.ZipFile(zip_pfad, "w", zipfile.ZIP_DEFLATED) as z:
+            for p in sorted(self.quelle.rglob("*")):
+                rel = p.relative_to(self.quelle).as_posix()
+                if (not p.is_file() or rel.split("/")[0] in (".git", ".github", ".gitattributes", "web-app")
+                        or rel.startswith("ergebnis") or "__pycache__" in rel):
+                    continue
+                daten = p.read_bytes()
+                if rel == "Programm/gans_lernkarten.py":
+                    daten = re.sub(rb'^VERSION = "[^"]+"', b'VERSION = "9.9 (01.01.2030)"', daten, count=1, flags=re.M)
+                info = zipfile.ZipInfo(f"{NAME}/{rel}", (2026, 1, 1, 0, 0, 0))
+                info.create_system, info.compress_type = 3, zipfile.ZIP_DEFLATED
+                info.external_attr = (0o100755 if p.suffix in (".sh", ".command") else 0o100644) << 16
+                z.writestr(info, daten)
+            z.writestr(f"{NAME}/Programm/update_probe.txt", "9.9\n")
+        sha = hashlib.sha256(zip_pfad.read_bytes()).hexdigest()
+        (ziel / "v9.9" / "SHA256SUMS.txt").write_text(f"{sha}  {NAME}-9.9.zip\n", encoding="utf-8")
+
+        class Leise(http.server.SimpleHTTPRequestHandler):
+            def log_message(self, *a):
+                pass
+        self.update_server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), functools.partial(Leise, directory=str(ziel)))
+        threading.Thread(target=self.update_server.serve_forever, daemon=True).start()
+        self.env["MGD_UPDATE_QUELLE"] = f"http://127.0.0.1:{self.update_server.server_address[1]}"
+        log(f"· Release-Server für das Update im Programm: {self.env['MGD_UPDATE_QUELLE']} (ZIP {zip_pfad.stat().st_size // 1024} KB)")
+
+    def k_update_im_programm(self):
+        if self.lokal or not self.update_server:
+            log("· Lokal: Update im Programm entfällt (der Neustart über die Startdatei legt echte Symbole an) – E48 prüft die Teile")
+            return
+        t0 = time.time()
+        prog = self.o2 / "Programm"
+        s, st = self.ui.get("/api/status")
+        moeglich = (st.get("update") or {}).get("moeglich")
+        s1, l = self.ui.post("/api/update", {"aktion": "laden", "version": "9.9"})
+        fertig = self.ui.warte_lauf(l.get("id"), 600) if s1 == 200 and l.get("id") else None
+        s, st = self.ui.get("/api/status")
+        bereit = (st.get("update") or {}).get("bereit")
+        ok = pruefe("Update im Programm: „Jetzt aktualisieren“ lädt 9.9 (Prüfsumme, ZIP geprüft) → bereit, im selben Ordner möglich",
+                    s1 == 200 and moeglich is True and fertig and fertig.get("code") == 0 and bereit == "9.9",
+                    f"{s1} {str(l)[:120]} · möglich {moeglich} · Code {fertig and fertig.get('code')} · bereit {bereit}", t0=t0,
+                    protokoll="\n".join((fertig or {}).get("zeilen", [])))
+        if not ok:
+            return
+        vorher = {n: (prog / n).read_bytes() for n in ("karten.csv", "lernstand.json", "ui_einstellungen.json") if (prog / n).is_file()}
+        bilder = sorted(p.name for p in (prog / "bilder").glob("*"))
+        alt, _ = self.instanz(self.o2, zeit=5)
+        t1 = time.time()
+        s2, r = self.ui.post("/api/update", {"aktion": "anwenden"})
+        neu, ui = None, None
+        frist = time.time() + 15 * 60
+        while time.time() < frist:
+            d, o = self.instanz(self.o2, zeit=5)
+            if d and (not alt or d.get("pid") != alt.get("pid")):
+                neu, ui = d, o
+                break
+            time.sleep(3)
+        if ui:
+            self.ui = ui
+        s, st = self.ui.get("/api/status") if ui else (0, {})
+        erg = (st.get("update") or {}).get("ergebnis") or {}
+        ordner = sorted(p.name for p in self.o2.parent.iterdir() if p.is_dir())
+        pruefe("… „Jetzt neu starten“: alte Oberfläche endet, Programmdateien im selben Ordner ersetzt, Neustart über die "
+               "Startdatei → Version 9.9, Ergebnis „ok“ gemeldet",
+               s2 == 200 and ui is not None and st.get("version", "").split()[0] == "9.9" and erg.get("ok") is True
+               and (prog / "update_probe.txt").is_file() and ordner == [NAME],
+               f"{s2} {str(r)[:120]} · neu {bool(ui)} · Version {st.get('version')} · Ergebnis {erg} · Ordner {ordner}", t0=t1)
+        pruefe("… eigene Daten unverändert (Kartenliste, Lernstand, Einstellungen, Bilder), Zwischenstand aufgeräumt",
+               all((prog / n).read_bytes() == b for n, b in vorher.items()) and sorted(p.name for p in (prog / "bilder").glob("*")) == bilder
+               and not (self.daten / "update" / "neu").exists() and not (self.daten / "update" / "bereit.json").exists(),
+               f"gleich {[n for n, b in vorher.items() if (prog / n).is_file() and (prog / n).read_bytes() == b]} · "
+               f"Bilder {len(bilder)} · neu/ {(self.daten / 'update' / 'neu').exists()}")
+        if ui:
+            self.ui.post("/api/update", {"aktion": "gesehen"})
 
     # ---------- j) Plattform: Symbole, App, Menüeintrag ----------
     def j_plattform(self):
@@ -613,7 +704,7 @@ class Frischtest:
     def lauf(self):
         stufen = [("a", self.a_kopieren), ("b", self.b_erster_start), ("c", self.c_api), ("d", self.d_erzeugen),
                   ("e", self.e_lernen), ("g", self.g_zweiter_start), ("h", self.h_update), ("j", self.j_plattform),
-                  ("f", lambda: self.f_tests(self.o2)), ("i", self.i_deinstallieren)]
+                  ("f", lambda: self.f_tests(self.o2)), ("k", self.k_update_im_programm), ("i", self.i_deinstallieren)]
         for kurz, fn in stufen:
             if self.zeit_um():
                 pruefe(f"Stufe {kurz}", False, "Zeitlimit des Frischtests erreicht – übersprungen")

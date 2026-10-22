@@ -105,6 +105,12 @@ a { color: var(--nacht-2); }
 .navi .fuss { margin-top: auto; padding: 12px; font-size: 12px; color: var(--nacht-3); line-height: 1.6; }
 .navi .fuss .ok::before { content: "●"; color: var(--gut); margin-right: 6px; }
 .navi .fuss .nein::before { content: "●"; color: var(--schnabel-dunkel); margin-right: 6px; }
+.navi .fuss .nv-fuss { border: 0; background: none; padding: 0; font: inherit; color: inherit; text-decoration: underline;
+  cursor: pointer; }
+.navi .fuss .nv-fuss:hover { color: var(--nacht); }
+.verlauf-knoepfe { display: flex; gap: 2px; }
+.verlauf-knoepfe .knopf { min-width: 36px; padding-left: 8px; padding-right: 8px; font-size: 17px; line-height: 1; }
+.verlauf-knoepfe .knopf:disabled { opacity: .35; }
 
 main { padding: 32px 40px 80px; min-width: 0; }
 .ansicht { max-width: 1120px; }
@@ -488,7 +494,8 @@ table.vergleich { width: 100%; border-collapse: collapse; font-size: 14px; }
 .fenster-kopf h2 { margin: 0; flex: 1; }
 .vergleich-bild { position: relative; width: 100%; aspect-ratio: 88 / 63; border-radius: 10px; overflow: hidden; background: var(--himmel);
   user-select: none; touch-action: none; cursor: ew-resize; }
-.vergleich-bild img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.vergleich-bild img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; -webkit-user-drag: none;
+  user-select: none; pointer-events: none; }
 .vergleich-bild .nachher { clip-path: inset(0 0 0 50%); }
 .vergleich-bild .linie { position: absolute; top: 0; bottom: 0; left: 50%; width: 3px; margin-left: -1px; background: var(--weiss);
   box-shadow: 0 0 0 1px rgba(var(--schatten), .35); pointer-events: none; }
@@ -818,6 +825,7 @@ table.kompakt { width: 100%; border-collapse: collapse; table-layout: fixed; fon
   .sprachwahl button { min-height: 44px; min-width: 44px; }
   .zeichen button { min-width: 44px; height: 44px; }
   .marke { min-width: 44px; min-height: 44px; }
+  .navi .fuss .nv-fuss { min-height: 44px; }
   input:not([type="checkbox"]):not([type="radio"]):not([type="color"]):not([type="file"]), select, .f select, .eingabe { min-height: 44px; }
   .geprueft { min-height: 44px; }
   .verb-karte .wahl { width: 44px; height: 44px; }
@@ -1032,6 +1040,10 @@ label.knopf input[type="file"] { display: none; }
     <b>Me Goos-ta Deutsch</b>
   </a>
   <div class="rechts">
+    <div class="verlauf-knoepfe" role="group" data-t-attr="aria-label:vl_gruppe">
+      <button type="button" class="knopf klein leise" id="vl-zurueck" disabled data-t-attr="aria-label:vl_zurueck_kurz"><span aria-hidden="true">↶</span></button>
+      <button type="button" class="knopf klein leise" id="vl-vor" disabled data-t-attr="aria-label:vl_vor_kurz"><span aria-hidden="true">↷</span></button>
+    </div>
     <div class="sprachwahl" role="group" data-t-attr="aria-label:sprache">
       <button type="button" data-sprache="de" lang="de" title="Deutsch">DE</button>
       <button type="button" data-sprache="en" lang="en" title="English">EN</button>
@@ -1237,6 +1249,7 @@ label.knopf input[type="file"] { display: none; }
       <div class="titelzeile"><div class="text"><h1 data-t="werkzeuge_titel"></h1><p class="unter" data-t="werkzeuge_unter"></p></div></div>
       <div class="erzeugen-raster">
         <div>
+          <section class="flaeche" id="update-bereich" hidden></section>
           <section class="flaeche" id="tools-bereich" hidden></section>
           <section class="flaeche"><div class="liste-zeilen" id="werkzeug-liste"></div></section>
           <section class="flaeche" id="ue-einstellungen"></section>
@@ -1278,6 +1291,12 @@ label.knopf input[type="file"] { display: none; }
   <div class="fenster" role="dialog" aria-modal="true" aria-labelledby="vergleich-titel">
     <div class="fenster-kopf"><h2 id="vergleich-titel"></h2><button class="knopf klein leise" data-schliessen data-t="schliessen"></button></div>
     <div id="vergleich-inhalt"></div>
+  </div>
+</div>
+<div class="overlay" id="update-fenster" hidden>
+  <div class="fenster schmal" role="dialog" aria-modal="true" aria-labelledby="update-titel">
+    <div class="fenster-kopf"><h2 id="update-titel" data-t="up_zieht_um_titel"></h2></div>
+    <p id="update-text" aria-live="polite"></p>
   </div>
 </div>
 <div class="overlay" id="zustimmung" hidden>
@@ -1472,6 +1491,28 @@ de: {
   nv_voraus: (v, e) => `Du bist voraus: Version ${e} ist neuer als das neueste Release ${v} – ganz schön flott, Gans!`,
   nv_zur_seite: "Zur Download-Seite", nv_leitfaden: "Wie das Update geht, steht im Leitfaden unter „Neue Version installieren“.",
   nv_hinweis: "Nur auf Klick: eine Anfrage an api.github.com, ohne Daten über dich oder deine Karten.",
+  nv_fuss: "🔎 Nach Updates suchen", h_nv_fuss: "Zu Werkzeuge → „Programm aktuell halten“ und gleich bei GitHub nach einer neueren Version fragen",
+  up_titel: "Programm aktuell halten", up_unter: v => `Installiert ist Version ${v}. Nur auf Klick fragt die Gans bei GitHub nach – eine neue Version übernimmt sie gleich hier, im selben Ordner.`,
+  up_jetzt: v => `⬆️ Jetzt auf ${v} aktualisieren`,
+  up_erklaerung: "Lädt das Release von GitHub, prüft die Prüfsumme und ersetzt nur die Programmdateien – im selben Ordner, kein zweiter Ordner. Karten, Bilder, Ideen, Lernstand und Einstellungen bleiben, wie sie sind.",
+  up_laedt: v => `Die Gans holt Version ${v} – den Fortschritt zeigt der Auftrag.`,
+  up_geladen: v => `Version ${v} ist geladen und geprüft – bereit zum Übernehmen.`,
+  up_bereit_text: "Zum Übernehmen beendet sich das Programm kurz und startet von selbst neu (die Startdatei richtet dabei bei Bedarf Python und Pakete ein).",
+  up_neustart: v => `🔄 Jetzt neu starten und ${v} übernehmen`, up_neustart_kurz: "Neu starten",
+  up_zieht_um_titel: "Die Gans zieht um …", up_zieht_um: v => `Version ${v} wird übernommen. Gleich öffnet sich das Programm neu – dieses Fenster kannst du dann schließen.`,
+  up_ok: v => `Update geklappt – willkommen in Version ${v}! Alles Gans beim Alten: Deine Karten sind da.`,
+  up_fehler: f => `Das Update hat nicht geklappt (${f}) – die bisherige Version läuft weiter, nichts ist verloren.`,
+  up_nicht_moeglich: "Hier geht ein Update nur über die Download-Seite (Programmordner schreibgeschützt oder Entwicklungsordner).",
+  vl_gruppe: "Rückgängig und Wiederholen", vl_zurueck_kurz: "Rückgängig", vl_vor_kurz: "Wiederholen",
+  h_vl_zurueck: "Rückgängig (Strg+Z) – noch nichts zum Zurücknehmen", h_vl_vor: "Wiederholen (Strg+Y) – nichts zurückgenommen",
+  h_vl_zurueck_was: (a, n) => `Rückgängig: ${a} (Strg+Z) – bis zu ${n} Schritt(e) zurück`, h_vl_vor_was: (a, n) => `Wiederholen: ${a} (Strg+Y) – ${n} Schritt(e)`,
+  vl_zurueck: "↶ Rückgängig", vl_vor: "↷ Wiederholen", vl_zurueck_ok: a => `Rückgängig gemacht: ${a}`, vl_vor_ok: a => `Wiederholt: ${a}`,
+  vl_art_karten: "Kartenliste geändert", vl_art_karte: "Karte gespeichert", vl_art_status: "Übersetzung abgehakt", vl_art_bild: "Bild zurückgeholt",
+  vl_art_bild_weg: "Bild entfernt", vl_art_entwurf_neu: "Bild hinzugefügt", vl_art_entwurf: "Neues Bild bearbeitet", vl_art_neue_karte: "Karte angelegt",
+  vl_art_entwurf_weg: "Neues Bild verworfen", vl_art_gans_bild: "Gänse-Bild geändert", vl_art_ki_bild: "KI-Bild übernommen", vl_art_gans: "Gans ergänzt",
+  vl_art_werkzeug: "Werkzeug", vl_art_idee: "Idee geändert", vl_art_idee_weg: "Idee entfernt", vl_art_idee_karte: "Idee als Karte aufgenommen",
+  vl_art_wortliste: "Wortliste", vl_art_import: "Import", vl_art_aenderung: "Änderung",
+  gans_ergaenzen_knopf: "Gans ergänzen", h_gans_ergaenzen: "Setzt „Gans“ an den Anfang jeder Karte, deren deutscher Text noch keine Gans hat – lässt sich rückgängig machen",
   u_letzter: "Letzter Lauf", u_keiner: "noch keiner", u_erweitern: "Neue Funktionen ergänzen",
   u_erweitern_text: "Neue Schalter werden in gans_lernkarten.py in baue_parser() eingetragen und erscheinen in Schritt 3 automatisch. Eine neue Auswahl bei --nur wird automatisch zu einem Startknopf, neue Werkzeuge entstehen in gans_ui.py mit @werkzeug(…).",
   fuss_version: v => `Version ${v}`, fuss_ki: m => `KI: ${m}`, fuss_vorschau_ok: "Vorschau bereit", fuss_vorschau_nein: "Vorschau eingeschränkt",
@@ -1636,6 +1677,28 @@ en: {
   nv_voraus: (v, e) => `You’re ahead: version ${e} is newer than the latest release ${v} – one speedy goose!`,
   nv_zur_seite: "Go to the download page", nv_leitfaden: "How to update is explained in the guide under “Installing a new version”.",
   nv_hinweis: "Only when you click: one request to api.github.com, with no data about you or your cards.",
+  nv_fuss: "🔎 Check for updates", h_nv_fuss: "Go to Tools → “Keep the program up to date” and ask GitHub right away for a newer version",
+  up_titel: "Keep the program up to date", up_unter: v => `Version ${v} is installed. Only when you click does the goose ask GitHub – and a new version is installed right here, in the same folder.`,
+  up_jetzt: v => `⬆️ Update to ${v} now`,
+  up_erklaerung: "Downloads the release from GitHub, checks its checksum and replaces only the program files – in the same folder, no second folder. Cards, images, ideas, learning progress and settings stay as they are.",
+  up_laedt: v => `The goose is fetching version ${v} – the task shows the progress.`,
+  up_geladen: v => `Version ${v} is downloaded and checked – ready to install.`,
+  up_bereit_text: "To install it, the program closes briefly and starts again by itself (the start file sets up Python and packages if needed).",
+  up_neustart: v => `🔄 Restart now and install ${v}`, up_neustart_kurz: "Restart",
+  up_zieht_um_titel: "The goose is moving in …", up_zieht_um: v => `Installing version ${v}. The program opens again in a moment – you can close this window then.`,
+  up_ok: v => `Update done – welcome to version ${v}! Same old goose: your cards are all there.`,
+  up_fehler: f => `The update didn’t work (${f}) – the previous version keeps running, nothing is lost.`,
+  up_nicht_moeglich: "Here an update only works via the download page (program folder is read-only or a development folder).",
+  vl_gruppe: "Undo and redo", vl_zurueck_kurz: "Undo", vl_vor_kurz: "Redo",
+  h_vl_zurueck: "Undo (Ctrl+Z) – nothing to take back yet", h_vl_vor: "Redo (Ctrl+Y) – nothing undone",
+  h_vl_zurueck_was: (a, n) => `Undo: ${a} (Ctrl+Z) – up to ${n} step(s) back`, h_vl_vor_was: (a, n) => `Redo: ${a} (Ctrl+Y) – ${n} step(s)`,
+  vl_zurueck: "↶ Undo", vl_vor: "↷ Redo", vl_zurueck_ok: a => `Undone: ${a}`, vl_vor_ok: a => `Redone: ${a}`,
+  vl_art_karten: "Card list changed", vl_art_karte: "Card saved", vl_art_status: "Translation checked", vl_art_bild: "Image restored",
+  vl_art_bild_weg: "Image removed", vl_art_entwurf_neu: "Image added", vl_art_entwurf: "New image edited", vl_art_neue_karte: "Card created",
+  vl_art_entwurf_weg: "New image discarded", vl_art_gans_bild: "Goose image changed", vl_art_ki_bild: "AI image taken over", vl_art_gans: "Goose added",
+  vl_art_werkzeug: "Tool", vl_art_idee: "Idea changed", vl_art_idee_weg: "Idea removed", vl_art_idee_karte: "Idea turned into a card",
+  vl_art_wortliste: "Word list", vl_art_import: "Import", vl_art_aenderung: "Change",
+  gans_ergaenzen_knopf: "Add the goose", h_gans_ergaenzen: "Puts “Gans” at the start of every card whose German text has no goose yet – can be undone",
   u_letzter: "Last run", u_keiner: "none yet", u_erweitern: "Adding new features",
   u_erweitern_text: "New switches are added in gans_lernkarten.py in baue_parser() and appear in step 3 automatically. A new choice for --nur automatically becomes a start button; new tools are created in gans_ui.py with @werkzeug(…).",
   fuss_version: v => `Version ${v}`, fuss_ki: m => `AI: ${m}`, fuss_vorschau_ok: "Preview ready", fuss_vorschau_nein: "Preview limited",
@@ -1800,6 +1863,28 @@ es: {
   nv_voraus: (v, e) => `Vas adelante: la versión ${e} es más nueva que la última publicada (${v}). ¡Qué ganso tan veloz!`,
   nv_zur_seite: "Ir a la página de descarga", nv_leitfaden: "Cómo actualizar se explica en la guía, en «Instalar una versión nueva».",
   nv_hinweis: "Solo al hacer clic: una consulta a api.github.com, sin datos sobre ti ni tus cartas.",
+  nv_fuss: "🔎 Buscar actualizaciones", h_nv_fuss: "Ir a Herramientas → «Mantener el programa al día» y preguntar enseguida a GitHub por una versión más nueva",
+  up_titel: "Mantener el programa al día", up_unter: v => `Está instalada la versión ${v}. Solo al hacer clic el ganso pregunta a GitHub, y una versión nueva se instala aquí mismo, en la misma carpeta.`,
+  up_jetzt: v => `⬆️ Actualizar ahora a ${v}`,
+  up_erklaerung: "Descarga la versión de GitHub, revisa su suma de verificación y reemplaza solo los archivos del programa: en la misma carpeta, sin una segunda carpeta. Cartas, imágenes, ideas, progreso y ajustes se quedan como están.",
+  up_laedt: v => `El ganso trae la versión ${v}; la tarea muestra el progreso.`,
+  up_geladen: v => `La versión ${v} está descargada y revisada; lista para instalar.`,
+  up_bereit_text: "Para instalarla, el programa se cierra un momento y vuelve a abrirse solo (el archivo de inicio prepara Python y paquetes si hace falta).",
+  up_neustart: v => `🔄 Reiniciar ahora e instalar ${v}`, up_neustart_kurz: "Reiniciar",
+  up_zieht_um_titel: "El ganso se muda …", up_zieht_um: v => `Instalando la versión ${v}. El programa se abre de nuevo en un momento; luego puedes cerrar esta ventana.`,
+  up_ok: v => `¡Actualización lista: bienvenido a la versión ${v}! El mismo ganso de siempre: tus cartas están ahí.`,
+  up_fehler: f => `La actualización no funcionó (${f}); la versión anterior sigue funcionando, no se perdió nada.`,
+  up_nicht_moeglich: "Aquí solo se puede actualizar desde la página de descarga (carpeta del programa protegida o de desarrollo).",
+  vl_gruppe: "Deshacer y rehacer", vl_zurueck_kurz: "Deshacer", vl_vor_kurz: "Rehacer",
+  h_vl_zurueck: "Deshacer (Ctrl+Z): todavía no hay nada que deshacer", h_vl_vor: "Rehacer (Ctrl+Y): nada deshecho",
+  h_vl_zurueck_was: (a, n) => `Deshacer: ${a} (Ctrl+Z); hasta ${n} paso(s) atrás`, h_vl_vor_was: (a, n) => `Rehacer: ${a} (Ctrl+Y); ${n} paso(s)`,
+  vl_zurueck: "↶ Deshacer", vl_vor: "↷ Rehacer", vl_zurueck_ok: a => `Deshecho: ${a}`, vl_vor_ok: a => `Rehecho: ${a}`,
+  vl_art_karten: "Lista de cartas cambiada", vl_art_karte: "Carta guardada", vl_art_status: "Traducción revisada", vl_art_bild: "Imagen recuperada",
+  vl_art_bild_weg: "Imagen quitada", vl_art_entwurf_neu: "Imagen añadida", vl_art_entwurf: "Imagen nueva editada", vl_art_neue_karte: "Carta creada",
+  vl_art_entwurf_weg: "Imagen nueva descartada", vl_art_gans_bild: "Imagen del ganso cambiada", vl_art_ki_bild: "Imagen de IA adoptada", vl_art_gans: "Ganso añadido",
+  vl_art_werkzeug: "Herramienta", vl_art_idee: "Idea cambiada", vl_art_idee_weg: "Idea quitada", vl_art_idee_karte: "Idea convertida en carta",
+  vl_art_wortliste: "Lista de palabras", vl_art_import: "Importación", vl_art_aenderung: "Cambio",
+  gans_ergaenzen_knopf: "Añadir el ganso", h_gans_ergaenzen: "Pone «Gans» al principio de cada carta cuyo texto alemán aún no tiene ganso; se puede deshacer",
   u_letzter: "Última ejecución", u_keiner: "ninguna", u_erweitern: "Agregar funciones",
   u_erweitern_text: "Los interruptores nuevos se agregan en gans_lernkarten.py en baue_parser() y aparecen solos en el paso 3. Una opción nueva en --nur se convierte en un botón; las herramientas nuevas se crean en gans_ui.py con @werkzeug(…).",
   fuss_version: v => `Versión ${v}`, fuss_ki: m => `IA: ${m}`, fuss_vorschau_ok: "Vista previa lista", fuss_vorschau_nein: "Vista previa limitada",
@@ -3489,8 +3574,9 @@ function enteGlobal(plus) {                        // erscheint erst nach 400 ms
   if (!enteOffen) { clearTimeout(enteUhr); enteUhr = null; el.hidden = true; }
 }
 
-async function api(pfad, { methode = "GET", daten, roh, timeout, signal } = {}) {
+async function api(pfad, { methode = "GET", daten, roh, timeout, signal, gruppe } = {}) {
   const opt = { method: methode, headers: { "X-GL-Token": TOKEN, "X-GL-Sprache": S.sprache }, credentials: "same-origin" };
+  if (gruppe || S.vlGruppe) opt.headers["X-GL-Gruppe"] = gruppe || S.vlGruppe;     // ein Schritt für Rückgängig
   if (daten !== undefined) { opt.body = JSON.stringify(daten); opt.headers["Content-Type"] = "application/json"; }
   if (roh) { opt.body = roh; opt.headers["Content-Type"] = "application/octet-stream"; }
   // optional: Zeitlimit (ms) und/oder Abbruch von außen (AbortSignal); ohne beides wie bisher
@@ -3511,9 +3597,11 @@ async function api(pfad, { methode = "GET", daten, roh, timeout, signal } = {}) 
   clearTimeout(uhr);
   enteGlobal(-1);
   $("#verbindung").hidden = true;
+  verlaufAusKopf(r);
   let j = null; try { j = await r.json(); } catch (e) { j = null; }
   if (!r.ok) { const e = new Error((j && j.fehler) || t("fehler_status", r.status)); e.status = r.status; e.daten = j; throw e; }
   if (j && j.lernstand_meldung) { toast(j.lernstand_meldung); lernSpaeter(); }    // Karte geändert → Lernstand zurückgesetzt
+  if (j && j.gans_hinweis) toast(j.gans_hinweis);                                 // jede Karte braucht ihre Gans
   return j;
 }
 function url(pfad, q) { return `${pfad}?${new URLSearchParams(q || {})}`; }
@@ -3524,6 +3612,45 @@ function toast(text, { fehler = false, aktion = null } = {}) {
   $("#toasts").append(el); setTimeout(() => el.remove(), aktion ? 9000 : fehler ? 7000 : 3500);
 }
 const fehlerToast = e => toast(e.message, { fehler: true });
+
+/* ===================== Rückgängig / Wiederholen (Server: verlauf.py; Stand kommt mit jeder Antwort) =====================
+   Kopfzeile ↶ ↷ und Strg+Z / Strg+Y bzw. Strg+Umschalt+Z – nicht in Textfeldern (dort gilt das Rückgängig des Browsers),
+   nicht bei offenem Fenster und nicht in der Lernsitzung (dort nimmt Strg+Z die letzte Bewertung zurück). */
+S.verlauf = { z: 0, w: 0, za: "", wa: "" };
+function vlArt(a) { const k = "vl_art_" + (a || "aenderung"); return TXT[S.sprache] && k in TXT[S.sprache] ? t(k) : t("vl_art_aenderung"); }
+function zeichneVerlauf() {
+  const v = S.verlauf || { z: 0, w: 0 }, z = $("#vl-zurueck"), w = $("#vl-vor"); if (!z || !w) return;
+  z.disabled = !v.z; w.disabled = !v.w;
+  z.title = v.z ? t("h_vl_zurueck_was", vlArt(v.za), v.z) : t("h_vl_zurueck");
+  w.title = v.w ? t("h_vl_vor_was", vlArt(v.wa), v.w) : t("h_vl_vor");
+}
+function verlaufAusKopf(r) {
+  const k = r.headers.get("X-MGD-Verlauf"); if (!k) return;
+  try { S.verlauf = JSON.parse(k); zeichneVerlauf(); } catch (e) { /* egal */ }
+}
+let vlArbeitet = false;
+async function verlaufSchritt(zurueck) {
+  if (vlArbeitet || !(zurueck ? S.verlauf.z : S.verlauf.w)) return;
+  vlArbeitet = true;
+  try {
+    const r = await api(zurueck ? "/api/rueckgaengig" : "/api/wiederholen", { methode: "POST", daten: {} });
+    uebernehmeKarten(r.karten);
+    await Promise.all([ladeEntwuerfe(), ladeGans(), IDEEN ? ladeIdeen(false) : null]).catch(() => {});
+    zeige();
+    toast(t(zurueck ? "vl_zurueck_ok" : "vl_vor_ok", vlArt(r.art)),
+      { aktion: { label: t(zurueck ? "vl_vor" : "vl_zurueck"), fn: () => verlaufSchritt(!zurueck) } });
+  } catch (e) { fehlerToast(e); }
+  finally { vlArbeitet = false; }
+}
+$("#vl-zurueck").addEventListener("click", () => verlaufSchritt(true));
+$("#vl-vor").addEventListener("click", () => verlaufSchritt(false));
+document.addEventListener("keydown", e => {
+  if (!(e.ctrlKey || e.metaKey) || e.altKey || e.defaultPrevented) return;
+  const k = e.key.toLowerCase(); if (k !== "z" && k !== "y") return;
+  if (e.target.closest && e.target.closest("input, textarea, select, [contenteditable]")) return;
+  if (offenerDialog() || (ansicht() === "lernen" && LS)) return;
+  e.preventDefault(); verlaufSchritt(k === "z" && !e.shiftKey);
+});
 function pruefliste(meldungen) {
   return `<ul class="pruefliste">${(meldungen || []).map(m => `<li class="${esc(m.stufe)}">${esc(m.text)}</li>`).join("")}</ul>`;
 }
@@ -3533,6 +3660,7 @@ function uebersetze() {
   document.documentElement.lang = S.sprache;
   $$("[data-t]").forEach(el => { el.textContent = t(el.dataset.t); });
   $$("[data-t-attr]").forEach(el => el.dataset.tAttr.split(";").forEach(p => { const [a, k] = p.split(":"); el.setAttribute(a, t(k)); }));
+  zeichneVerlauf();
   $$(".sprachwahl button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.sprache === S.sprache)));
 }
 $(".sprachwahl").addEventListener("click", async e => {
@@ -3584,6 +3712,12 @@ function zaehler() {
 /* ===================== Kartenliste (Übersicht) ===================== */
 function uebernehmeKarten(d) { S.karten = d.karten.map(k => ({ ...k })); S.ohne = d.ohne_karte; S.meldungen = d.meldungen; zaehler(); }
 async function ladeKarten() { uebernehmeKarten(await api("/api/karten")); }
+$("#karten-hinweise").addEventListener("click", async e => {        // seit 2.4: jede Karte braucht ihre Gans
+  const b = e.target.closest("[data-gans-ergaenzen]"); if (!b) return;
+  b.disabled = true;
+  try { const r = await api("/api/gans-ergaenzen", { methode: "POST", daten: {} }); uebernehmeKarten(r.karten); zeichneKarten(); toast(r.meldung); }
+  catch (err) { b.disabled = false; fehlerToast(err); }
+});
 /* ----- Sprach-Chips (Code groß, Hover = Name; keine Flaggen) und Auswahl der Rückseiten-Sprache ----- */
 function rsText(k, code) { code = code || ZS.code; return code === ZS.code ? String(k.es || "") : String((k.rueckseiten || {})[code] || ""); }
 function sprachChip(code, { aktuell = code === ZS.code, wort = null, knopf = false, gedrueckt = false } = {}) {
@@ -3683,7 +3817,8 @@ function zeichneKarten() {
     <a class="knopf haupt" href="#beschriften">${esc(t("banner_offen_knopf"))}</a></div>` : "";
   const ms = S.meldungen.filter(m => m.code !== "es_leer");
   $("#karten-hinweise").innerHTML = ms.length ? `<div class="hinweise"><b>${esc(t("hinweise_liste"))}</b><ul>${ms.map(m =>
-    `<li class="${m.stufe === "fehler" ? "fehler" : ""}">${esc(m.text)}</li>`).join("")}</ul></div>` : "";
+    `<li class="${m.stufe === "fehler" ? "fehler" : ""}">${esc(m.text)}${m.code === "k_ohne_gans" ? ` <button class="knopf klein" type="button"
+      data-gans-ergaenzen title="${esc(t("h_gans_ergaenzen"))}">${esc(t("gans_ergaenzen_knopf"))}</button>` : ""}</li>`).join("")}</ul></div>` : "";
   $("#karten-lernleiste").innerHTML = lernLeisteHTML();
   const liste = S.karten.map((k, i) => lernPasst(k) ? zeileHTML(k, i) : "").join("");
   zeichneAuswahlLeiste();
@@ -3832,7 +3967,8 @@ function aktualisiereEntwurf(d, bilderNeu) {
   zeichneStapel(); zaehler();
 }
 async function pruefeEntwurf(id, aenderung, bilderNeu = false) {
-  try { aktualisiereEntwurf(await api("/api/entwurf-pruefen", { methode: "POST", daten: { id, ...aenderung } }), bilderNeu); }
+  const gruppe = "es" in aenderung || "de" in aenderung && !("drehung" in aenderung || "fit" in aenderung || "ersetzen" in aenderung) ? `entwurf-${id}` : "";
+  try { aktualisiereEntwurf(await api("/api/entwurf-pruefen", { methode: "POST", daten: { id, ...aenderung }, gruppe }), bilderNeu); }
   catch (e) { fehlerToast(e); if (e.status === 400) await ladeEntwuerfe().then(zeichneEntwuerfe).catch(() => {}); }
 }
 const entwurfUhren = {};
@@ -3978,6 +4114,17 @@ $("#entwuerfe-uebersetzen").addEventListener("click", async () => {
   await alleUebersetzen($("#entwuerfe-uebersetzen"), offen.map(d => ({ de: d.de, fuellen: v => fuelleEntwurf(d.id, v) })));
   zeichneStapel();
 });
+// Was aus der Seite selbst gezogen wird (Bilder im Vergleich, Vorschauen, Links), ist nie eine neue Datei: nur Dateien von
+// außen landen in „Bilder vorbereiten“ bzw. an einem Ablage-Ziel (Fund 2.3: Klick + leichtes Ziehen im Vergleich legte ein Bild an)
+let innenZieh = false;
+document.addEventListener("dragstart", e => { innenZieh = !e.defaultPrevented; });
+document.addEventListener("dragend", () => { innenZieh = false; });
+["dragenter", "dragover", "dragleave", "drop"].forEach(typ => window.addEventListener(typ, e => {
+  if (!innenZieh) return;
+  e.stopImmediatePropagation();
+  if (typ === "dragover" || typ === "drop") { e.preventDefault(); if (e.dataTransfer) e.dataTransfer.dropEffect = "none"; }
+  if (typ === "drop") innenZieh = false;
+}, true));
 let ziehZaehler = 0;
 const ABLAGE_ZIELE = "[data-gansbild], .editor:not([data-neu]) .bilder";      // Gänse-Bild bzw. neues Bild einer Karte
 function gansZiel(e) { return e.target && e.target.closest ? e.target.closest(ABLAGE_ZIELE) : null; }
@@ -4611,6 +4758,12 @@ async function laufAbgeschlossen(L) {                     // einmal je Auftrag: 
     kiLaufFertig(L);
   } else if (L.art === "test") {
     L.code === 0 ? toast(t("test_ok")) : toast(t("test_fehler"), { fehler: true });
+  } else if (L.art === "update") {                         // neue Version geladen → „Jetzt neu starten“ anbieten
+    try { await ladeStatus(); } catch (e) { /* nächste Runde */ }
+    zeichneUpdateBereich();
+    const v = updateStand().bereit;
+    if (L.code === 0 && v) toast(t("up_geladen", v), { aktion: { label: t("up_neustart_kurz"), fn: updateAnwenden } });
+    else toast(t("lauf_fehler", L.titel), { fehler: true });
   } else if (L.tool) {
     await toolFertig(L);
   } else {
@@ -4798,6 +4951,7 @@ document.addEventListener("click", e => {
 let WERKZEUGE = [];
 async function ladeWerkzeuge() { WERKZEUGE = await api("/api/werkzeuge"); }
 function zeichneWerkzeuge() {
+  zeichneUpdateBereich();
   zeichneTools();
   const imToolBereich = x => x.tool && TOOLS && TOOLS.tools.some(z => z.id === x.tool);     // dort statt doppelt
   $("#werkzeug-liste").innerHTML = WERKZEUGE.filter(x => !(AM_HANDY && x.nur_rechner) && !imToolBereich(x)).map(x => `<div class="werkzeug"><div><h3 style="margin:0">${esc(x.titel)}</h3>
@@ -5080,8 +5234,8 @@ async function ladeHilfe() {
       ${s.tools && Object.keys(s.tools).length ? `<dt>${esc(t("u_tools"))}</dt><dd>${Object.entries(s.tools).map(([id, da]) =>
         esc(`${(toolInfo(id) || {}).titel || id}: ${t(da ? "tool_installiert" : "tool_nicht")}`)).join("<br>")}</dd>` : ""}
       ${downloadAdresse() ? `<dt>${esc(t("u_download"))}</dt><dd><a href="${esc(downloadAdresse())}" target="_blank" rel="noopener">${esc(t("u_download_text"))}</a></dd>` : ""}
-      ${!AM_HANDY && !AM_APP ? `<dt>${esc(t("u_neue_version"))}</dt><dd><button class="knopf klein" type="button" id="nv-knopf" title="${esc(t("h_nv_knopf"))}">${esc(t("nv_knopf"))}</button>
-        <p class="klein nv-hinweis">${esc(t("nv_hinweis"))}</p><div id="nv-ergebnis" class="nv-ergebnis" aria-live="polite"></div></dd>` : ""}
+      ${!AM_HANDY && !AM_APP ? `<dt>${esc(t("u_neue_version"))}</dt><dd data-nv-bereich><button class="knopf klein" type="button" id="nv-knopf" data-nv-knopf title="${esc(t("h_nv_knopf"))}">${esc(t("nv_knopf"))}</button>
+        <p class="klein nv-hinweis">${esc(t("nv_hinweis"))}</p><div id="nv-ergebnis" class="nv-ergebnis" data-nv-ergebnis aria-live="polite"></div></dd>` : ""}
       <dt>${esc(t("u_letzter"))}</dt><dd>${esc(s.letzter_lauf ? datum(s.letzter_lauf) : t("u_keiner"))}</dd></dl>
       <h3 style="margin-top:24px">${esc(t("u_erweitern"))}</h3><p>${esc(t("u_erweitern_text"))}</p>`;
     return;
@@ -5100,22 +5254,72 @@ async function ladeHilfe() {
   } finally { if (hilfeAnfrage === ctrl) hilfeAnfrage = null; }
 }
 $(".reiter").addEventListener("click", e => { const b = e.target.closest("[data-doc]"); if (b) { S.doc = b.dataset.doc; ladeHilfe(); } });
-// Nach neuer Version suchen: die einzige Stelle, die den Server danach fragen lässt – nur auf Klick, nie beim Start/im Hintergrund
-$("#doku").addEventListener("click", async e => {
-  if (e.target.closest("[data-nv-leitfaden]")) { S.doc = "leitfaden"; ladeHilfe(); return; }
-  const b = e.target.closest("#nv-knopf"); if (!b || b.disabled || AM_HANDY || AM_APP) return;
-  const aus = $("#nv-ergebnis"); b.disabled = true; aus.innerHTML = enteHTML(t("nv_sucht"), true);
+/* ===================== Nach neuer Version suchen + Update direkt im Programm (nur am Rechner) =====================
+   Knöpfe in Werkzeuge („Programm aktuell halten“), Hilfe → Über und in der Fußzeile der Navigation. sucheNeueVersion() ist
+   die einzige Stelle, die den Server danach fragen lässt – nur auf Klick, nie beim Start/im Hintergrund. „Jetzt
+   aktualisieren“ lädt als Auftrag (aktualisieren.py) und übernimmt nach einem Klick auf „Jetzt neu starten“. */
+async function sucheNeueVersion(b) {
+  const bereich = b && b.closest("[data-nv-bereich]"), aus = bereich && $("[data-nv-ergebnis]", bereich);
+  if (!aus || b.disabled || AM_HANDY || AM_APP) return;
+  const werkzeuge = !!b.closest("#update-bereich");             // Werkzeuge zeichnen sich evtl. neu → Ergebnis merken
+  b.disabled = true; aus.innerHTML = enteHTML(t("nv_sucht"), true);
+  let html;
   try {
     const r = await api("/api/neue-version", { methode: "POST", daten: {}, timeout: 30000 });
-    if (!aus.isConnected) return;
-    if (r.ergebnis === "neuer") {
-      const d = r.datum ? new Date(r.datum + "T12:00:00").toLocaleDateString(t("datum"), { dateStyle: "long" }) : "";
-      const seite = downloadAdresse();                      // Link immer aus web_adresse.txt, nie aus der Antwort
-      aus.innerHTML = `<p><b>${esc(t("nv_neuer", r.version, d))}</b></p>${seite ? `<p><a class="knopf klein haupt" href="${esc(seite)}" target="_blank" rel="noopener">${esc(t("nv_zur_seite"))} →</a></p>` : ""}
-        <p class="klein">${esc(t("nv_leitfaden"))} <button class="knopf klein leise" type="button" data-nv-leitfaden>${esc(t("tab_leitfaden"))}</button></p>`;
-    } else aus.innerHTML = `<p>${esc(r.ergebnis === "aktuell" ? t("nv_aktuell", r.version) : r.ergebnis === "voraus" ? t("nv_voraus", r.version, r.eigene) : r.meldung || t("nv_aktuell", r.version))}</p>`;
-  } catch (err) { if (aus.isConnected) aus.innerHTML = `<p>${esc(err.message)}</p>`; }
+    html = nvErgebnisHTML(r);
+    if (werkzeuge) S.nvLetzt = r;
+  } catch (err) { html = `<p>${esc(err.message)}</p>`; }
   finally { b.disabled = false; }
+  const ziel = aus.isConnected ? aus : werkzeuge ? $("#update-bereich [data-nv-ergebnis]") : null;
+  if (ziel) ziel.innerHTML = html;
+}
+function updateStand() { return (S.status && S.status.update) || {}; }
+function nvErgebnisHTML(r) {
+  if (r.ergebnis !== "neuer") return `<p>${esc(r.ergebnis === "aktuell" ? t("nv_aktuell", r.version) : r.ergebnis === "voraus" ? t("nv_voraus", r.version, r.eigene) : r.meldung || t("nv_aktuell", r.version))}</p>`;
+  const d = r.datum ? new Date(r.datum + "T12:00:00").toLocaleDateString(t("datum"), { dateStyle: "long" }) : "";
+  const seite = downloadAdresse(), u = updateStand();          // Link immer aus web_adresse.txt, nie aus der Antwort
+  return `<p><b>${esc(t("nv_neuer", r.version, d))}</b></p>${u.moeglich ? `<p class="knopfzeile"><button class="knopf haupt" type="button"
+      data-update-laden="${esc(r.version)}">${esc(t("up_jetzt", r.version))}</button></p><p class="klein">${esc(t("up_erklaerung"))}</p>` : ""}
+    ${seite ? `<p><a class="knopf klein${u.moeglich ? "" : " haupt"}" href="${esc(seite)}" target="_blank" rel="noopener">${esc(t("nv_zur_seite"))} →</a></p>` : ""}
+    <p class="klein">${esc(t("nv_leitfaden"))} <button class="knopf klein leise" type="button" data-nv-leitfaden>${esc(t("tab_leitfaden"))}</button></p>`;
+}
+function updateBereitHTML(v) {
+  return `<p><b>${esc(t("up_geladen", v))}</b></p><p class="klein">${esc(t("up_bereit_text"))}</p>
+    <p class="knopfzeile"><button class="knopf haupt" type="button" data-update-anwenden>${esc(t("up_neustart", v))}</button></p>`;
+}
+function zeichneUpdateBereich() {
+  const el = $("#update-bereich"); if (!el) return;
+  el.hidden = AM_HANDY || AM_APP || !S.status; if (el.hidden) return;
+  const u = updateStand();
+  el.innerHTML = `<h2 style="margin-top:0">${esc(t("up_titel"))}</h2><p class="klein">${esc(t("up_unter", S.status.version))}</p>
+    <div data-nv-bereich><div class="knopfzeile"><button class="knopf" type="button" data-nv-knopf title="${esc(t("h_nv_knopf"))}">${esc(t("nv_knopf"))}</button></div>
+      <p class="klein nv-hinweis">${esc(t("nv_hinweis"))}</p>
+      <div class="nv-ergebnis" data-nv-ergebnis aria-live="polite">${u.bereit ? updateBereitHTML(u.bereit) : S.nvLetzt ? nvErgebnisHTML(S.nvLetzt) : ""}</div></div>
+    ${u.moeglich ? "" : `<p class="klein">${esc(t("up_nicht_moeglich"))}</p>`}`;
+  if (S.nvSofort) { S.nvSofort = false; el.scrollIntoView({ block: "start" }); sucheNeueVersion($("[data-nv-knopf]", el)); }
+}
+async function updateLaden(v, b) {
+  if (AM_HANDY || AM_APP) return;
+  if (b) b.disabled = true;
+  try {
+    starteBeobachtung(await api("/api/update", { methode: "POST", daten: { aktion: "laden", version: v } }));
+    const aus = b && b.closest("[data-nv-ergebnis]"); if (aus) aus.innerHTML = `<p>${esc(t("up_laedt", v))}</p>`;
+  } catch (e) { if (b) b.disabled = false; fehlerToast(e); }
+}
+async function updateAnwenden() {
+  if (AM_HANDY || AM_APP) return;
+  try {
+    const r = await api("/api/update", { methode: "POST", daten: { aktion: "anwenden" } });
+    $("#update-text").textContent = t("up_zieht_um", r.version);
+    $("#update-fenster").hidden = false;
+  } catch (e) { fehlerToast(e); }
+}
+document.addEventListener("click", e => {
+  const nv = e.target.closest("[data-nv-knopf]"); if (nv) { sucheNeueVersion(nv); return; }
+  if (e.target.closest("[data-nv-fuss]")) { S.nvSofort = true; if (ansicht() === "werkzeuge") zeichneUpdateBereich(); else location.hash = "werkzeuge"; return; }
+  if (e.target.closest("[data-nv-leitfaden]")) { S.doc = "leitfaden"; if (ansicht() === "hilfe") ladeHilfe(); else location.hash = "hilfe"; return; }
+  const l = e.target.closest("[data-update-laden]"); if (l) { updateLaden(l.dataset.updateLaden, l); return; }
+  if (e.target.closest("[data-update-anwenden]")) updateAnwenden();
 });
 
 /* ===================== Automatische Übersetzung (nur Vorschläge, nur nach Zustimmung) ===================== */
@@ -5172,7 +5376,7 @@ function vorschlagHTML(v) {
 function vorschlagFehlerHTML(e) { return `<div class="vorschlag fehler">${esc(e.message)}</div>`; }
 async function alleUebersetzen(knopf, auftraege) {
   if (!auftraege.length) return;
-  const alt = knopf.textContent; S.beschaeftigt = true; knopf.disabled = true;
+  const alt = knopf.textContent; S.beschaeftigt = true; knopf.disabled = true; S.vlGruppe = "alle-" + Date.now();
   let n = 0, gefuellt = 0;
   try {
     for (const a of auftraege) {
@@ -5183,7 +5387,7 @@ async function alleUebersetzen(knopf, auftraege) {
     }
     toast(t("uebersetzt_n", gefuellt, auftraege.length));
   } catch (e) { toast(`${e.message} ${t("uebersetzt_n", gefuellt, auftraege.length)}`, { fehler: true }); }   // z. B. Tageskontingent: sauber aufhören
-  finally { S.beschaeftigt = false; knopf.disabled = false; knopf.textContent = alt; }
+  finally { S.beschaeftigt = false; S.vlGruppe = ""; knopf.disabled = false; knopf.textContent = alt; }
 }
 const ueSchlange = []; let ueArbeitet = false, ueFehlerGezeigt = false;
 function automatischUebersetzen(schluessel, de, fuellen) {
@@ -5507,13 +5711,13 @@ function zeigeVergleich(k) {
   $("#vergleich-titel").textContent = t("vergleich_titel", k.de || k.bild);
   const name = (k.info && (k.info.ki === "keine" ? t("verb_ohne_vergr") : KI_KURZ[k.info.ki])) || VERB.methode_name;
   $("#vergleich-inhalt").innerHTML = k.status === "verbessert" ? `<div class="vergleich-bild" data-vergleich>
-      <img alt="${esc(t("vorher"))}" src="${vorher}"><img class="nachher" alt="${esc(t("nachher"))}" src="${nachher}">
+      <img alt="${esc(t("vorher"))}" src="${vorher}" draggable="false"><img class="nachher" alt="${esc(t("nachher"))}" src="${nachher}" draggable="false">
       <span class="linie"></span><span class="etikett links">${esc(t("vorher"))}</span><span class="etikett rechts">${esc(t("nachher_mit", name))}</span></div>
     <input type="range" class="regler" min="0" max="100" value="50" aria-label="${esc(t("vergleich_regler"))}">
     <p class="klein">${esc(t("vergleich_hilfe"))} ${esc(verbInfo(k))}</p>
     <div class="knopfzeile"><a class="knopf klein" href="${nachher}" target="_blank" rel="noopener">${esc(t("in_originalgroesse"))}</a>
       <a class="knopf klein leise" href="${vorher}" target="_blank" rel="noopener">${esc(t("vorher_originalgroesse"))}</a></div>`
-    : `<div class="vergleich-bild"><img alt="${esc(t("vorher"))}" src="${vorher}"><span class="etikett links">${esc(t("vorher"))}</span></div>
+    : `<div class="vergleich-bild"><img alt="${esc(t("vorher"))}" src="${vorher}" draggable="false"><span class="etikett links">${esc(t("vorher"))}</span></div>
     <p>${esc(k.status === "anders" ? t("vergleich_anders", verbInfo(k)) : t("vergleich_fehlt"))}</p>
     <div class="knopfzeile"><button class="knopf haupt" data-verb-eins="${esc(k.bild)}">${esc(t("jetzt_verbessern"))}</button></div>`;
   $("#vergleich-fenster").hidden = false; $("#vergleich-fenster [data-schliessen]").focus();
@@ -5527,10 +5731,11 @@ $("#vergleich-inhalt").addEventListener("input", e => { if (e.target.matches(".r
 $("#vergleich-inhalt").addEventListener("pointerdown", e => {
   const box = e.target.closest("[data-vergleich]"); if (!box) return;
   const bewege = ev => { const r = box.getBoundingClientRect(); setzeVergleich((ev.clientX - r.left) / r.width * 100); };
-  bewege(e); box.setPointerCapture(e.pointerId);
-  const auf = () => { box.removeEventListener("pointermove", bewege); box.removeEventListener("pointerup", auf); };
-  box.addEventListener("pointermove", bewege); box.addEventListener("pointerup", auf);
+  e.preventDefault(); bewege(e); box.setPointerCapture(e.pointerId);
+  const auf = () => { box.removeEventListener("pointermove", bewege); box.removeEventListener("pointerup", auf); box.removeEventListener("pointercancel", auf); };
+  box.addEventListener("pointermove", bewege); box.addEventListener("pointerup", auf); box.addEventListener("pointercancel", auf);
 });
+$("#vergleich-inhalt").addEventListener("dragstart", e => e.preventDefault());   // Klick + leichtes Ziehen bleibt beim Regler
 $("#vergleich-inhalt").addEventListener("click", e => {
   const b = e.target.closest("[data-verb-eins]"); if (!b) return;
   $("#vergleich-fenster").hidden = true; S.verbWahl.add(b.dataset.verbEins); zeichneVerbAuswahl(); starteVerbessern([b.dataset.verbEins]);
@@ -6824,9 +7029,16 @@ async function ladeStatus() {
     const s = S.status;
     if (uebernehmeZs(s.zielsprache) && S.gestartet) zeige();
     $$("[data-ki-knopf]").forEach(el => { el.hidden = !s.ki_bild && !s.web_app; });   // App: Knopf bleibt, Hinweis „nur am Rechner“
-    $("#statusfuss").innerHTML = `${esc(t("fuss_version", s.version))}<br>
+    $("#statusfuss").innerHTML = `${esc(t("fuss_version", s.version))}${!AM_HANDY && !AM_APP ? `<br><button type="button"
+      class="nv-fuss" data-nv-fuss title="${esc(t("h_nv_fuss"))}">${esc(t("nv_fuss"))}</button>` : ""}<br>
       <span class="${(s.ki_methode || "").startsWith("realesrgan") ? "ok" : "nein"}">${esc(t("fuss_ki", s.ki_name))}</span><br>
       <span class="${s.vorschau ? "ok" : "nein"}">${esc(s.vorschau ? t("fuss_vorschau_ok") : t("fuss_vorschau_nein"))}</span>`;
+    const ue = s.update && s.update.ergebnis;                   // Update ist gelaufen → einmal melden
+    if (ue && !S.upGemeldet) {
+      S.upGemeldet = true;
+      toast(ue.ok ? t("up_ok", ue.version) : t("up_fehler", ue.fehler || "?"), { fehler: !ue.ok });
+      api("/api/update", { methode: "POST", daten: { aktion: "gesehen" } }).catch(() => {});
+    }
   } catch (e) { /* Verbindungshinweis erscheint */ }
 }
 /* ===================== Karten lernen (Tool „lernen“; Server: lernen.py, /api/lernen*) =====================

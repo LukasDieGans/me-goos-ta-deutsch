@@ -24,6 +24,21 @@ Print them at home, order them from a print shop, or study digitally with Anki, 
 one click away. Everything before and during the setup starts in English; afterwards the language you pick in the
 program counts.
 
+**Already have it?** From version 2.4 on, **Tools → “Keep the program up to date”** finds a new version and installs it
+in the same folder – no second folder, your cards stay.
+
+## New in 2.4
+
+**Update right inside the program** – “🔎 Check for updates” now also sits below the version number in the menu and
+under Tools; if a newer goose is out, “⬆️ Update now” downloads the release (checksum and contents checked) and
+“🔄 Restart now” replaces the program files in the same folder and starts again – no second folder, no doubled disk
+space, cards, images, ideas, learning progress and settings stay · **Undo and redo everywhere** – ↶ ↷ in the header
+or Ctrl+Z / Ctrl+Y, up to 30 steps for cards, images, “Prepare images”, ideas, imports, word lists and the goose image ·
+**every card needs its goose** – if “Gans” is missing from the German text, saving puts it at the start with a short
+note (it may also stand in the middle, like “Die Gans ist alt”); “Add the goose” fixes older cards in one go ·
+**fixed:** clicking with a tiny drag in the before/after comparison no longer creates a new image in “Prepare images”.
+Updating keeps your cards, ideas, settings and learning progress.
+
 ## New in 2.3
 
 **Ideas get their image more easily** – one “🖼️ Choose image …” button (or a click on the empty image area, or
@@ -93,8 +108,10 @@ error messages. Updating keeps your cards, settings and learning progress.
 Everything stays on your computer. Internet is only used for the one-time setup (python.org, pypi.org, github.com –
 every download is checked by checksum), for tools you install yourself (models and fonts from github.com or
 huggingface.co, checked by checksum) and, only if you switch it on, for translation suggestions (only the single word
-is sent). Checking for a new version happens only when you click “Check for a new version” (Help → About this
-program): one request to api.github.com, with no data about you or your cards – the program never checks on its own.
+is sent). Checking for a new version happens only when you click “Check for a new version” (Tools, Help → About this
+program, or below the version number in the menu): one request to api.github.com, with no data about you or your cards –
+the program never checks on its own. “Update now” downloads only the release of this project from github.com, checked
+against its published checksum.
 Read aloud (🔊) only uses offline voices of your system. The interface is reachable only from your own computer unless
 you deliberately enable phone access.
 

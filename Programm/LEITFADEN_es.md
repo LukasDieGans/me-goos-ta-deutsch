@@ -1,6 +1,6 @@
 # Me Goos-ta Deutsch – Guía
 
-Actualizada: 22/10/2026 · programa e interfaz versión 2.3 · Alemán: `LEITFADEN.md` · Inglés: `LEITFADEN_en.md`
+Actualizada: 22/10/2026 · programa e interfaz versión 2.4 · Alemán: `LEITFADEN.md` · Inglés: `LEITFADEN_en.md`
 
 ¡Qué bueno que estás aquí! Esta guía te acompaña desde el primer doble clic hasta la carta terminada, paso a paso y sin tecnicismos. No tienes que leerla de principio a fin: salta a la parte que necesites. Y tranquilo: aquí nadie te apura; cada paso va a tu ritmo, como un ganso que pasea a gusto.
 
@@ -64,11 +64,19 @@ La interfaz sigue funcionando en segundo plano aunque cierres la pestaña del na
 
 Tu trabajo está en la carpeta `Programm`: la lista de cartas `karten.csv`, las imágenes en `bilder/`, tus ideas en `ideen/`, archivos de impresión e imágenes mejoradas en `ausgabe/`, los ajustes en `ui_einstellungen.json` y tu imagen de ganso en `assets/`. La descarga de una versión nueva no trae nada de eso: sus cartas de ejemplo vienen como `beispiel-karten.csv` y `beispiel-bilder/` y solo se usan en una carpeta totalmente nueva. Así no se pierde nada al actualizar.
 
-**La versión nueva** siempre está en la página de descarga; en el programa, en **Ayuda → «Acerca del programa»**, enlace «Versión más reciente para Windows, macOS y Linux». Si hay una versión nueva te lo dice ahí el botón **«🔎 Buscar una versión nueva»**: solo tu clic pregunta una vez a GitHub (api.github.com) por la versión más reciente; nunca por sí solo, nunca en segundo plano, sin datos sobre ti ni tus cartas, y no se guarda nada. Si hay un ganso más nuevo, un enlace te lleva a la página de descarga; «¡Ganso al día!» significa que ya tienes el más reciente. El botón solo existe en la computadora (no en la app del celular ni con el acceso desde el celular).
+**Lo más fácil: dentro del programa (desde 2.4).** En **Herramientas → «Mantener el programa al día»** (también abajo en el menú, bajo el número de versión: «🔎 Buscar actualizaciones», y en **Ayuda → «Acerca del programa»**) el botón **«🔎 Buscar una versión nueva»** pregunta una vez a GitHub (api.github.com) por la versión más reciente: solo con tu clic, nunca por sí solo, nunca en segundo plano, sin datos sobre ti ni tus cartas, y no se guarda nada. «¡Ganso al día!» significa que ya tienes el más reciente. Si hay un ganso más nuevo:
+
+1. **«⬆️ Actualizar ahora a …»** descarga la versión de GitHub, compara su suma de verificación con el `SHA256SUMS.txt` publicado y revisa el contenido; la tarea muestra el progreso. Todavía no se cambia nada.
+2. **«🔄 Reiniciar ahora e instalar …»:** el programa se cierra un momento, reemplaza solo los archivos del programa **en la misma carpeta** y vuelve a abrirse solo con el archivo de inicio (que prepara Python y paquetes si hace falta, como en el primer inicio). Sin segunda carpeta, sin espacio doble, el icono del escritorio se queda igual.
+3. Un aviso dice «Actualización lista». Si algo falla al reemplazar, el programa deja todo como estaba y la versión anterior sigue funcionando.
+
+Cartas, imágenes, ideas, progreso, ajustes, archivos de impresión y tu imagen de ganso no se tocan: nunca vienen en la descarga. La actualización dentro del programa solo existe en la computadora (la app del celular se actualiza sola; con el acceso desde el celular está bloqueada) y solo si la carpeta del programa se puede escribir; si no, un enlace lleva a la página de descarga.
+
+**A mano**, la versión nueva siempre está en la página de descarga (Ayuda → «Acerca del programa», enlace «Versión más reciente para Windows, macOS y Linux»). Hay dos caminos.
 
 **Lo más seguro:** antes descarga una copia completa en **Importar / exportar**. La puedes importar en cualquier lugar.
 
-**Recomendado: descomprimir en una carpeta nueva**
+**Descomprimir en una carpeta nueva**
 
 1. Cierra la interfaz abierta (⏻ arriba a la derecha).
 2. Desbloquea el ZIP nuevo (Windows: Propiedades → «Desbloquear») y descomprímelo con «Extraer todo …»; Windows propone solo una carpeta nueva.
@@ -106,11 +114,21 @@ Bibliotecas como Pillow y NumPy contienen partes de programa (DLL) que Microsoft
 | Ideas | Juntar ideas, completarlas y convertirlas en cartas; seguir con cartas sin terminar |
 | 3 Generar | Elegir objetivo, ajustar, ¡vamos!; a la derecha, el registro te cuenta lo que pasa |
 | 4 Revisar e imprimir | Hoja de control y lista de revisión, imprimir en casa o en imprenta, estudiar en digital |
-| Herramientas | Herramientas opcionales (mejora de imagen, traducción, imágenes IA), importar / exportar, imagen GANS, inicio del programa, abrir en el celular, ajustes de la traducción, autoprueba, ZIP del proyecto, carpetas |
+| Herramientas | Mantener el programa al día (actualización en la misma carpeta), herramientas opcionales (mejora de imagen, traducción, imágenes IA), importar / exportar, imagen GANS, inicio del programa, abrir en el celular, ajustes de la traducción, autoprueba, ZIP del proyecto, carpetas |
 | Ayuda | Esta guía en el idioma elegido, la especificación, estado del programa; si la carga tarda demasiado, usa «Cancelar» o «Intentar de nuevo» |
 | Desinstalar | Respaldar y quitar limpiamente |
 
 Los números del menú muestran lo pendiente: en el paso 1 las imágenes que aún no se agregaron, en el paso 2 las cartas sin palabra, en «Ideas» tus ideas, en «Tabla» las palabras traducidas automáticamente que esperan tu revisión.
+
+## Deshacer y rehacer
+
+Casi cualquier cambio se puede deshacer: **↶** en la barra superior (o **Ctrl+Z**, en Mac **⌘+Z**) deshace el último paso, **↷** (o **Ctrl+Y** o **Ctrl+Mayús+Z**) lo rehace. Funciona en todo lugar donde cambias tus propios datos: guardar cartas, editar en la tabla, pausar, reordenar o quitar cartas de la lista, preparar imágenes (agregar, rotular, girar, agregar como carta, descartar), cambiar una imagen, ideas (crear, editar, imagen, quitar, convertir en carta), listas de palabras, importación, «Añadir el ganso» y la imagen del ganso del reverso. El texto al pasar el mouse sobre los botones dice qué se desharía; después de cada deshacer, un aviso ofrece volver a avanzar.
+
+- Se pueden deshacer hasta **30 pasos**; escribir en la misma imagen nueva y «🌐 Traducir todas» cuentan como un paso.
+- Un cambio nuevo después de «Deshacer» reemplaza el camino hacia adelante, como en cualquier editor de texto.
+- En los campos de texto, Ctrl+Z actúa sobre el texto como siempre; en una sesión de aprendizaje, Ctrl+Z deshace la última calificación.
+- El historial vale para la sesión en curso y empieza de nuevo al cerrar. Si un archivo cambió de otra forma mientras tanto (p. ej. `karten.csv` en Excel), deshacer no cambia nada por seguridad y el historial empieza de nuevo.
+- Los ajustes (idioma, colores, opciones de impresión) y el progreso de aprendizaje no forman parte. Si deshacer revierte un cambio de texto, el progreso de esa carta empieza de nuevo, como con cualquier cambio.
 
 ## Paso 1: Preparar imágenes
 
@@ -185,6 +203,8 @@ Aquí aparecen todas las cartas a las que todavía les falta la palabra en {{esp
 | Texto de la imagen (alemán) | Para revisar en la hoja de control; no se imprime |
 | Nota | Solo para ti, p. ej. el tipo de palabra; no se imprime |
 
+**Cada carta necesita su ganso:** el texto de la imagen debe contener «Gans», también en medio del texto («Die Gans ist alt») o como «Gäns…» («Gänsehaut»). Si falta, la revisión dice «Aquí falta el ganso» y al guardar el programa pone «Gans» al principio; un aviso te lo cuenta. Vale también para imágenes nuevas del paso 1, ideas que se vuelven cartas, cambios en la tabla y cartas importadas. Las cartas anteriores sin ganso aparecen en «Mis cartas»: **«Añadir el ganso»** lo pone delante en todas a la vez (se puede deshacer).
+
 Los botones á é í ó ú ñ ü ¿ ¡ insertan caracteres especiales, útiles con cualquier teclado. El reverso se actualiza mientras escribes. «Guardar carta» (o Intro) guarda la carta en `karten.csv`; «Después» la deja esperando con paciencia. Con varias cartas, **«🌐 Traducir todas»** sugiere una palabra para todos los campos vacíos y **«Guardar todas (n)»** guarda todas las listas de una vez.
 
 **Cambiar imagen:** debajo de las vistas previas, **«Cambiar imagen …»** trae una imagen nueva para la carta, o simplemente arrástrala sobre la vista previa. Se revisa como en el paso 1, con giro y recorte; la palabra, el texto y la nota se quedan. «Usar la imagen nueva» guarda la anterior en `bilder/_entfernt/` y «Deshacer» la recupera. **«🪄 Con IA …»** pinta en su lugar una imagen nueva de ganso para esa carta (ver «Crear ganso con IA»).
@@ -199,6 +219,7 @@ Los botones á é í ó ú ñ ü ¿ ¡ insertan caracteres especiales, útiles c
 | En español las preguntas empiezan con «¿» | p. ej. `¿cómo estás?` |
 | el carácter no se puede imprimir | quita emojis y caracteres raros |
 | El texto no puede empezar con = + - @ | protección contra fórmulas de Excel (también en la nota): quita el carácter del inicio |
+| Aquí falta el ganso | escribe «Gans» en cualquier parte del texto de la imagen; si no, al guardar va al principio |
 | todavía es igual al texto alemán | ¡hora de traducir! |
 | ya está en la carta … | solo un aviso: se permiten palabras repetidas |
 

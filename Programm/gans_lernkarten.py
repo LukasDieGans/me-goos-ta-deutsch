@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-ME GOOS-TA DEUTSCH – Kartengenerator                                Version 2.3 (22.10.2026)
+ME GOOS-TA DEUTSCH – Kartengenerator                                Version 2.4 (22.10.2026)
 =============================================================================================
 Erzeugt aus Bildern (Vorderseite) und karten.csv (Rückseite: Spanisch) druckfertige Lernkarten.
 
@@ -58,7 +58,7 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas as rl_canvas
 
-VERSION = "2.3 (22.10.2026)"
+VERSION = "2.4 (22.10.2026)"
 BILD_VERSION = "2.0"                 # ändert sich nur, wenn die Bildaufbereitung anders rechnet (Cache-Schlüssel)
 PRODUKT = "Me Goos-ta Deutsch"
 DATEI_PRAEFIX = "Me-Goos-ta-Deutsch"
@@ -1007,6 +1007,19 @@ def dateiname_aus_text(text, endung=".jpg"):
     return (t or "bild") + endung.lower()
 
 
+def hat_gans(text):
+    """Steckt die Gans im deutschen Text? „Gans“ bzw. „Gäns…“ irgendwo, groß oder klein („Die Gans ist alt“,
+    „Gänsehaut“) – sie muss nicht vorn stehen (seit 2.4)."""
+    t = str(text or "").casefold()
+    return "gans" in t or "gäns" in t
+
+
+def mit_gans(text):
+    """Jede Karte braucht ihre Gans: fehlt sie im deutschen Text, kommt „Gans“ an den Anfang. Leerer Text bleibt leer."""
+    text = " ".join(str(text or "").split())
+    return text if not text or hat_gans(text) else f"Gans {text}"
+
+
 MELDUNGEN = {
     "csv_fehlt": L("Die Kartenliste '{pfad}' ist nicht da – stimmt der Pfad?",
                    "The card list '{pfad}' isn’t there – is the path right?",
@@ -1343,9 +1356,12 @@ PRUEF_MELDUNGEN = {
     "n_entwurf_doppelt": L("Ein anderes neues Bild bekommt schon den Namen „{name}“.",
                            "Another new image already gets the name “{name}”.",
                            "Otra imagen nueva ya recibe el nombre «{name}»."),
-    "n_ohne_gans": L("Tipp: Die Wortwitze beginnen mit „Gans …“, z. B. „Gans alt“.",
-                     "Tip: the puns start with “Gans …”, e.g. “Gans alt”.",
-                     "Consejo: los juegos de palabras empiezan con «Gans …», p. ej. «Gans alt»."),
+    "n_ohne_gans": L("Hier fehlt noch die Gans: Beim Speichern kommt „Gans“ an den Anfang. Sie darf auch mitten im Text "
+                     "stehen, z. B. „Die Gans ist alt“.",
+                     "The goose is still missing: saving puts “Gans” at the start. It may also stand anywhere in the "
+                     "text, e.g. “Die Gans ist alt”.",
+                     "Aquí falta el ganso: al guardar, «Gans» va al principio. También puede ir en medio del texto, "
+                     "p. ej. «Die Gans ist alt»."),
     "n_lang": L("Sehr langer Text ({n} Zeichen) – stimmt er mit dem Bild überein?",
                 "Very long text ({n} characters) – does it match the image?",
                 "Texto muy largo ({n} caracteres): ¿coincide con la imagen?"),
@@ -1509,7 +1525,7 @@ def pruefe_name(text, endung, belegt, andere_entwuerfe=(), ersetzen=False, vorha
     elif name in belegt:
         alt = vorhanden or name
         m.append(pm("n_ersetzen", "warnung", name=alt) if ersetzen else pm("n_kollision", "fehler", name=alt))
-    if not text.lower().startswith("gans"):
+    if not hat_gans(text):
         m.append(pm("n_ohne_gans", "info"))
     if len(text) > 40:
         m.append(pm("n_lang", "warnung", n=len(text)))
@@ -1562,7 +1578,7 @@ def pruefe_karte(de, es, cfg, bild=None, bilder_dir=None, andere=(), notiz="", z
                 break
     if not de:
         m.append(pm("k_de_leer", "warnung"))
-    elif not de.lower().startswith("gans"):
+    elif not hat_gans(de):
         m.append(pm("n_ohne_gans", "info"))
     return dict(de=de, es=es, meldungen=m, ok=not any(x["stufe"] == "fehler" for x in m))
 

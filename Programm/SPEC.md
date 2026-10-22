@@ -1,12 +1,13 @@
 # Me Goos-ta Deutsch – Spezifikation
 
-**Version 2.3 · Stand 22.10.2026** · (früher „GANS LERNKARTEN“)
+**Version 2.4 · Stand 22.10.2026** · (früher „GANS LERNKARTEN“)
 
 Diese Datei beschreibt verbindlich, **wie die Lernkarten „Me Goos-ta Deutsch“ gebaut sind**. Zusammen mit
 `gans_lernkarten.py` (Generator), `ki_modelle.py` (KI-Bildverbesserung), `ki_bild.py` (KI-Bilder), `uebersetzer.py` (Übersetzungsvorschläge), `sprachen.py`
 (Sprachen der Rückseite) und `karten.csv` (Kartenliste) ist sie die Rezeptur: Bild + eine CSV-Zeile → druckfertige PDFs. Den Arbeitsablauf beschreibt `LEITFADEN.md`
 (Englisch: `LEITFADEN_en.md`, Spanisch: `LEITFADEN_es.md`). Diese Spezifikation gibt es nur auf Deutsch.
 
+Neu in 2.4 (veröffentlicht am 22.10.2026): **Update direkt im Programm** – „🔎 Nach neuer Version suchen“ jetzt auch unter Werkzeuge → „Programm aktuell halten“ und unten im Menü unter der Versionsnummer; ist eine neuere Version da, lädt „⬆️ Jetzt aktualisieren“ das Release (Prüfsumme, ZIP-Prüfung), „🔄 Jetzt neu starten“ ersetzt die Programmdateien im selben Ordner und startet über die Startdatei neu – kein zweiter Ordner, eigene Daten bleiben (Abschnitt 9); **Rückgängig und Wiederholen überall** – ↶ ↷ in der Kopfzeile, Strg+Z/Strg+Y, bis zu 30 Schritte für Karten, Bilder, „Bilder vorbereiten“, Ideen, Import, Wortliste und Gänse-Bild (Abschnitt 9); **jede Karte braucht ihre Gans** – fehlt „Gans“ im deutschen Text, setzt das Speichern sie mit Hinweis an den Anfang (sie darf auch mitten im Text stehen), „Gans ergänzen“ für ältere Karten; **Fehler behoben:** Klicken mit leichtem Ziehen im Vorher/Nachher-Vergleich legte ein neues Bild in „Bilder vorbereiten“ an.
 Neu in 2.3 (veröffentlicht am 22.10.2026): **Ideen bekommen ihr Bild leichter** – ein einziger Weg für Fotos und fertige Bilder („🖼️ Bild wählen …“, Klick auf die leere Bildfläche oder Hineinziehen → „GANS-Bild gestalten“ mit Vorschau: „Für diese Idee übernehmen“ mit „GANS + Wort“ oder „Bild unverändert übernehmen“; der doppelte Knopf „GANS-Bild gestalten …“ entfällt), **„🪄 Mit KI erzeugen …“** direkt an der Idee (Tool „KI-Bilder“; Wort + Bildidee vorbelegt, Ergebnis „Ohne Wort für die Idee übernehmen“ bzw. „✍️ Wort aufs Bild setzen …“) und das neue Feld **„Bildidee“** – Merkzettel, wie ein passendes Bild aussehen könnte, zugleich die Beschreibung für die KI (Abschnitt 9.2/9.3).
 Neu in 2.2 (veröffentlicht am 21.10.2026): **🔊 Deutsch beim Lernen** – nach dem Aufdecken liest eine lokale Stimme (de-DE → de-AT → de-CH) auch den deutschen Text vor, ebenso auf der Lernseite; **„🔎 Nach neuer Version suchen“** (Hilfe → Über, nur per Klick, nur am Rechner, eine Anfrage an api.github.com, Abschnitt 9); **Wortliste in Ideen** – Datei oder eingefügter Text → Vorschau → bis zu 500 Ideen auf einmal, nie still gekürzt, Rückgängig je Liste (Abschnitt 9.2), dazu „🌐 Alle übersetzen“ für Ideen ohne Wort; **automatische Tests auf allen Systemen** (nur Entwickler) – jede Version läuft vor der Veröffentlichung auf GitHub-Rechnern (Windows x64/ARM, macOS Apple Silicon/Intel, Linux x64/ARM, Debian) und in WebKit, Firefox und Chromium; ein Release gibt es nur für genau den grün geprüften Inhalt, der veröffentlichte Stand wird nach jedem Push auf `main` erneut geprüft (Fix vom 21.10.2026, vorher wöchentlich; derselbe Fix holt eine Handy-App von vor 2.1, die auf der Download-Seite nur ihren Startbildschirm zeigte, von selbst auf die neue Version).
 Neu in 2.1 (veröffentlicht am 20.10.2026): **Download für alle Systeme** – ein ZIP für Windows, macOS und Linux als GitHub-Release (mit `SHA256SUMS.txt`), dazu die Download-Seite `…/me-goos-ta-deutsch/download/` (EN · DE · ES, System erkannt, drei Schritte mit Skizzen, Hilfe zu SmartScreen/Gatekeeper); **Englisch vor der Installation** – LIES MICH, Startdateien, Starter-Fenster und erster Start der Handy-App starten Englisch, danach gilt die im Programm gewählte Sprache (nie die System-/Gerätesprache); **neue Gans auf der Rückseite** – Fläche hinter dem Wort einfarbig, die Gans des Programmsymbols schwimmt klein unten rechts im Teich und weicht dem Text aus; Tools-Knopf „Faster ×2“ sauber zweizeilig.
@@ -315,7 +316,7 @@ Fehler verhindern das Übernehmen):
 | `n_text_leer` | Fehler | kein Text → kein Dateiname |
 | `n_kollision` · `n_ersetzen` | Fehler · Warnung | Name vergeben (auch gleicher Name mit anderer Endung); mit „ersetzen“: alte Datei → `bilder/_entfernt/`, Kartenzeile wird umbenannt |
 | `n_entwurf_doppelt` | Fehler | zwei neue Bilder bekämen denselben Namen |
-| `n_ohne_gans` · `n_lang` | Hinweis · Warnung | Text beginnt nicht mit „Gans“ · über 40 Zeichen |
+| `n_ohne_gans` · `n_lang` | Hinweis · Warnung | kein „Gans“/„Gäns…“ im Text (beim Übernehmen kommt „Gans“ an den Anfang, seit 2.4) · über 40 Zeichen |
 
 **Prüfungen in Schritt 2** (`gans_lernkarten.pruefe_karte`):
 
@@ -330,7 +331,7 @@ Fehler verhindern das Übernehmen):
 | `k_alternativen` | Warnung | mehr als 2 Alternativen |
 | `k_gleich` | Warnung | Spanisch = Deutsch |
 | `k_de_leer` | Warnung | Text auf dem Bild fehlt |
-| `k_frage` · `k_doppelt` · `n_ohne_gans` | Hinweis | „¿/¡“ fehlt · Wort schon auf anderer Karte · kein „Gans …“ |
+| `k_frage` · `k_doppelt` · `n_ohne_gans` | Hinweis | „¿/¡“ fehlt · Wort schon auf anderer Karte · kein „Gans“ im Text (Speichern setzt es davor) |
 | `k_passt` | OK | Zeilenzahl und Schriftgröße |
 
 Alle Meldungen gibt es in drei Sprachen (`PRUEF_MELDUNGEN` in `gans_lernkarten.py`); die Oberfläche schickt ihre Sprache
@@ -448,7 +449,9 @@ charset-normalizer aus der `pyodide-lock.json`, ReportLab 5.0.1 von PyPI – all
   (Arbeitsordner; `--probe` = Plan ohne Netz, `--ersetzen` für ein vorhandenes Release): prüft Ordner = ZIP und keine
   Nutzerdaten, pusht `main`, setzt Standard-Branch/Homepage, legt das Release als Entwurf an, lädt die Assets hoch,
   veröffentlicht es als „Latest“ und vergleicht das heruntergeladene Asset per SHA-256.
-- **Nach neuer Version suchen (seit 2.2):** Knopf „🔎 Nach neuer Version suchen“ unter Hilfe → „Über dieses Programm“, nur
+- **Nach neuer Version suchen (seit 2.2):** Knopf „🔎 Nach neuer Version suchen“ unter Hilfe → „Über dieses Programm“, seit
+  2.4 auch unter Werkzeuge → „Programm aktuell halten“ (`#update-bereich`) und in der Fußzeile des Menüs („🔎 Nach Updates
+  suchen“ → Werkzeuge, sucht sofort); alle über `sucheNeueVersion()` (die einzige Stelle mit `/api/neue-version`), nur
   am Rechner (in App und Handy-Zugang ausgeblendet; `POST /api/neue-version` in `NUR_RECHNER_WEGE`/`LAN_GESPERRT` → 403).
   **Nur ein Klick fragt** – nie beim Start, im Hintergrund, per Zeitgeber oder im Starter; nichts wird gespeichert.
   `gans_ui.neue_version()`: Konto/Repository nur aus `web_adresse.txt` (`https://<konto>.github.io/<repo>/`, sonst 409
@@ -459,6 +462,60 @@ charset-normalizer aus der `pyodide-lock.json`, ReportLab 5.0.1 von PyPI – all
   neuer|aktuell|voraus, version, datum, eigene}`, Fehler → `{ergebnis: fehler, code, meldung}` (`nv_netz`, `nv_zeit`,
   `nv_grenze` bei 403/429, `nv_noch_keins` bei 404, `nv_format`). Der Link „Zur Download-Seite“ kommt aus
   `downloadAdresse()`, nie aus der Antwort; dazu der Hinweis auf den Leitfaden-Abschnitt „Neue Version installieren“.
+- **Update direkt im Programm (seit 2.4, `aktualisieren.py`, nur Standardbibliothek):** bis 2.3 hieß ein Update „ZIP in
+  einen neuen Ordner entpacken + Karten übernehmen“ – danach lagen zwei Ordner da (bzw. derselbe Name). Jetzt, nur auf
+  Klick und nur am Rechner (`/api/update` in `NUR_RECHNER_WEGE`/`LAN_GESPERRT`, Lauf-Art `update` in `NUR_RECHNER_LAEUFE`):
+  ① „⬆️ Jetzt auf <V> aktualisieren“ (erscheint, wenn die Suche „neuer“ meldet und `update.moeglich`) → `POST /api/update
+  {aktion: laden, version}` (Version `\d+.\d+[.\d+]`, muss neuer sein, sonst 409 `update_kein_neuer`) → Auftrag
+  `aktualisieren.py --laden <V> --quelle https://github.com/<konto>/<repo>/releases/download --daten <Datenordner>`
+  (Konto/Repo aus `web_adresse.txt`, nie aus einer Antwort; Weiterleitungen nur zu github.com,
+  objects/release-assets.githubusercontent.com): `SHA256SUMS.txt` (≤ 64 KB) → `v<V>/Me-Goos-ta-Deutsch-<V>.zip`
+  (≤ 200 MB) → SHA-256 vergleichen → ZIP prüfen (jeder Eintrag unter `Me-Goos-ta-Deutsch/`, keine `..`/`\`/`:`/Links,
+  ≤ 5000 Dateien / 500 MB, Pflichtdateien Startdateien + starter/gans_ui/gans_lernkarten, `VERSION` = <V>, keine
+  Nutzerdaten) → nach `<Datenordner>/update/neu` entpacken → `bereit.json`. Ein gescheiterter Versuch lässt eine schon
+  geladene Version stehen. ② „🔄 Jetzt neu starten und <V> übernehmen“ → `POST /api/update {aktion: anwenden}` (nur mit
+  `bereit`, nur ohne laufenden/wartenden Auftrag, sonst 409) → eigener Prozess `aktualisieren.py --anwenden --daten …
+  --wurzel <Programmordner> --pid <Oberfläche>` (gelöst wie beim Deinstallieren), dann beendet sich die Oberfläche. Der
+  Prozess wartet auf ihr Ende (≤ 60 s; Windows über `WaitForSingleObject`), ersetzt jede Datei des Releases (alte Fassung
+  vorher nach `update/alt`, jede Datei über `.tmp` + `os.replace`, Startdateien 0755; Fehler → alles zurück, neue
+  Dateien wieder weg), schreibt `update/ergebnis.json` und startet die **Startdatei** (Windows eigenes Konsolenfenster,
+  macOS/Linux ohne Terminal) – sie richtet bei Bedarf Python/Pakete ein wie beim ersten Start. Nie angefasst:
+  `karten.csv`, `karten.bak.csv`, `ui_einstellungen.json`, `ideen.json`, `lernstand*.json`, `bilder/`, `ideen/`,
+  `ausgabe/`, `_beispiele/`, eigenes Gänse-Bild, `modelle/realesrgan*.npz`. Nur in einem Programmordner
+  (`programm_ordner_ok`: Startprogramm + Oberfläche, kein `.git`, kein `bau_release.py` daneben = Arbeitsordner) und nur
+  beschreibbar, sonst `update.moeglich = false` und nur der Link zur Download-Seite. `/api/status.update` = `{moeglich,
+  bereit, ergebnis}`; das Ergebnis meldet die Seite einmal („Update geklappt – willkommen in Version …“ bzw. Fehler +
+  „die bisherige Version läuft weiter“) und quittiert mit `{aktion: gesehen}`. Der Web-App fehlt das Modul (sie
+  aktualisiert sich über ihren Service Worker). Tests: `MGD_UPDATE_QUELLE` (nur `http://127.0.0.1:<port>`),
+  `MGD_KEIN_BROWSER=1` (Neustart mit `--kein-browser`).
+- **Rückgängig und Wiederholen (seit 2.4, `verlauf.py`, nur Standardbibliothek):** Jede Anfrage aus `VERLAUF_WEGE`
+  (Kartenliste, Karte speichern/abhaken, Bild ändern/weg/zurück, Entwurf hinzufügen/prüfen/übernehmen/verwerfen,
+  Gänse-Bild, KI-Bild übernehmen, Gans ergänzen, Werkzeuge, Ideen samt Bild/Wort/Aufnehmen, Wortliste, Import) läuft in
+  `verarbeite()` als Schritt: vorher `.csv`/`.json` der eigenen Daten als Bytes, sonst Größe + Zeit; Dateien, die die
+  Anfrage löschen, verschieben oder überschreiben will, sichert der Code vorher mit `_sichere(pfad)` (in `_aufheben`,
+  `_gans_beiseite`, `_atomar`, `_beiseite`, beim Übernehmen/Verwerfen von Entwürfen …). Danach bekommt jede geänderte
+  Datei Inhalt vorher/nachher (SHA-256, Kopie in `ausgabe/.verlauf/blobs`). Bereich: `karten.csv`, `bilder/` (mit
+  `_entfernt`), `ausgabe/.entwuerfe`, `ideen.json` + `ideen/`, `assets/gans_hintergrund.*` + `assets/_alt`. `POST
+  /api/rueckgaengig` bzw. `/api/wiederholen` → `{art, verlauf, karten}`; nur wenn jede betroffene Datei noch genau
+  den erwarteten Inhalt hat, sonst 409 `vl_konflikt` und der Verlauf beginnt neu (nichts überschrieben); halb
+  geschafft → alles zurück. Fehlt für eine geänderte Datei die Sicherung, wird der Verlauf geleert (nie halb zurück).
+  Höchstens 30 Schritte bzw. 400 MB Kopien; die Kopfzeile `X-MGD-Verlauf` jeder `/api/`-Antwort trägt `{z, w, za,
+  wa}`; `GET /api/verlauf` dasselbe. Gruppen (`X-GL-Gruppe`, ≤ 10 min, nur ohne Wiederholen-Schritte) fassen Tippen im
+  selben Entwurf und „🌐 Alle übersetzen“ zu einem Schritt zusammen. Nicht dabei: Einstellungen, Sprache, Farben,
+  Lernstand (eigene Rückgängig-Taste der Sitzung), Läufe; die App-Sicherung leert den Verlauf. Verlauf je Sitzung
+  (beim Start und Beenden leer). Seite: ↶ ↷ in der Kopfzeile (Hover = was zurückgenommen würde), Strg/⌘+Z,
+  Strg+Y/Strg+Umschalt+Z – nicht in Textfeldern, Fenstern oder der Lernsitzung; danach Karten, Entwürfe, Gänse-Bild und
+  Ideen neu laden, Toast mit dem Gegenweg.
+- **Jede Karte braucht ihre Gans (seit 2.4):** `gl.hat_gans()` = „gans“ oder „gäns“ irgendwo (casefold), `gl.mit_gans()`
+  setzt sonst „Gans “ davor (leer bleibt leer). Angewandt beim Übernehmen eines Entwurfs (vor dem Dateinamen →
+  `gans-…`), Speichern im Editor, Speichern der Kartenliste (nur geänderte Texte), Idee → Karte und Import; die
+  Antwort trägt dann `gans_hinweis` (Toast). `karten_daten().meldungen` meldet ältere Karten ohne Gans (`k_ohne_gans`,
+  `anzahl`) mit Knopf „Gans ergänzen“ → `POST /api/gans-ergaenzen` (ein Schritt, rückgängig machbar). Wortliste:
+  „Die Gans ist alt“ bleibt, sonst wie bisher „Gans“ davor.
+- **Vorher/Nachher-Vergleich (Fix 2.4):** Klicken mit leichtem Ziehen auf das Bild legte über das native Ziehen eines
+  `<img>` ein neues Bild in „Bilder vorbereiten“ an. Jetzt: Bilder dort `draggable="false"` ohne Zeiger-Ereignisse,
+  `dragstart` verhindert, Regler mit `pointercancel`; allgemein ist alles, was aus der Seite selbst gezogen wird
+  (`innenZieh`), nie eine neue Datei – nur Dateien von außen landen in Schritt 1 bzw. an einem Ablage-Ziel.
 - **App-Sicherung:** `GET /api/app-sicherung` (nur in der App) → ZIP mit Marke `me-goos-ta-deutsch-app-sicherung.json`,
   `projekt/` (karten.csv, bilder/, ideen/, ideen.json, lernstand*.json, ui_einstellungen.json, entwuerfe/) und `daten/`
   (Datenordner ohne Modelle und Pakete); `POST /api/app-sicherung` (rohe Bytes, ≤ 600 MB) prüft alles vorab (Marke,
@@ -523,7 +580,7 @@ Ansicht, ein Reiter „Ideen“ unter „Neue Karte“ und vier Zeilen unter „
 | Handy-Zugang | Werkzeuge → „Am Handy öffnen (WLAN)“: Schalter, QR-Code, Adresse, 6-stellige PIN, Restzeit | zweiter Server auf der privaten WLAN-Adresse, Port gemerkt in `handy-port.txt` (Datenordner; belegt → anderer freier Port); `GET/POST /api/lan`, `POST /lan-pin` | standardmäßig aus; nur Host `<ip>:<port>`; ohne Cookie PIN-Seite; aus nach 120 min, 5 falschen PINs oder beim Beenden; über das Handy gesperrt: beenden, deinstallieren, öffnen, Start- und Handy-Schalter sowie Werkzeuge mit `nur_rechner` (Ordner öffnen, CSV extern, Programmstart) – die Seite (`AM_HANDY`, Klasse `am-handy`) blendet sie aus; Touch-Regeln (Tippflächen ≥ 44 px, Eingaben 16 px, `…_touch`-Texte); Datei-Felder mit konkreten Bildtypen (iPhone wandelt HEIC dann in der Regel in JPG); Kopieren ohne Zwischenablage-Schnittstelle; die Lauf-Anzeige übersteht ~30 s Verbindungsaussetzer und holt nach Display-Sperre auf |
 | Warteschlange | Höchstens **ein** Hintergrundprozess (Erzeugen, Bildverbesserung, Selbsttest, Tool laden, KI-Bild); weitere Aufträge warten und starten automatisch nacheinander (nur im Arbeitsspeicher). Kopfzeile „⏳ n“ → Fenster: laufender Auftrag (Fortschritt, Dauer, Abbrechen), wartende mit Platz, ▲ ▼ „Als Nächstes“ ✕, „Alle wartenden entfernen“ (Rückfrage), „Zuletzt erledigt“ (10, ✓/✕, Ergebnis/Protokoll). Startknöpfe bleiben frei → Toast „In der Warteschlange – Platz n“; KI-Fenster zeigt „wartet (Platz n)“. Gleicher Auftrag (Art + Befehl) wird nicht doppelt eingereiht; scheitert der Start (z. B. KI-Modell fehlt), landet er als ✕ unter „Zuletzt erledigt“. Beenden fragt nach, Beenden/Deinstallieren verwerfen wartende und stoppen den laufenden | `gans_ui.Warteschlange` (Start des nächsten per Rückruf am Ende von `Lauf._lies`); `POST /api/lauf` → bei leerer Schlange wie bisher `laeuft: true`, sonst `{wartet, position, id, titel, art}`; `GET /api/lauf[?id=]` (laufender bzw. letzter Auftrag + `warteschlange`, `aktiv`); `GET /api/warteschlange` → `{aktiv, wartend, fertig}`; `POST /api/warteschlange {aktion: hoch\|runter\|als-naechstes\|entfernen\|leeren, id}`; `POST /api/lauf-stopp` bricht den laufenden ab; `/api/status` → `warteschlange` |
 
-Selbsttest der Erweiterungen: `python3 test_erweiterungen.py` (468 Prüfungen in den Abschnitten E1–E45, in einer Kopie,
+Selbsttest der Erweiterungen: `python3 test_erweiterungen.py` (511 Prüfungen in den Abschnitten E1–E49, in einer Kopie,
 ohne Internet, ohne echten Browserstart, ohne echtes Deinstallieren; mit Mac-, Linux- und Handy-Prüfungen, der
 KI-Faltung und den KI-Bildern: Rechenkern gegen eine Lehrbuch-Fassung, Prompt, Server-Lauf, Oberfläche, Plattformen;
 der Hilfe: Markdown-Umwandler mit Sonderfällen, jede mitgelieferte `.md` in < 2 s, Spezifikation über den Server;
@@ -971,6 +1028,14 @@ neuer Ordner, pip aus dem Rad, beschädigtes NumPy mit automatischer Reparatur, 
 - Sprachpakete: Schriften kommen mit fester Revision und SHA-256, uharfbuzz (nur Hindi/Arabisch) per pip in fester
   Fassung von PyPI – pip prüft wie bei den übrigen Paketen die Prüfsumme aus dem Index, eine eigene feste Prüfsumme
   hat das Programm dafür nicht.
+- Update im Programm (seit 2.4): die Prüfsumme stammt vom selben GitHub-Release wie das ZIP – sie schützt vor kaputten
+  oder unterwegs veränderten Downloads, ersetzt aber keine Signatur (wie beim Download über die Seite). Dateien, die ein
+  neues Release nicht mehr enthält, bleiben im Ordner liegen (nie wird geraten, was eigene Daten sein könnten). Der
+  echte Neustart über die Startdatei läuft in den automatischen Tests auf allen GitHub-Rechnern (Stufe k des
+  Frischtests mit einem Release-Server auf 127.0.0.1), lokal unter Windows nur in Teilen (sonst entstünden echte Symbole).
+- Rückgängig (seit 2.4) gilt nur für die laufende Sitzung und nur für die eigenen Daten des Programms; was außerhalb
+  geändert wird (z. B. `karten.csv` in Excel), bricht den Verlauf zur Sicherheit ab. Der Lernstand einer Karte, deren Text
+  zurückgenommen wird, beginnt wie bei jeder Änderung von vorn.
 
 ## 15. Ordner und Dateien
 
@@ -991,6 +1056,8 @@ Me-Goos-ta-Deutsch/
    ├─ tools.py                  Tools: Katalog, Zustand, installieren (Auftrag für die Warteschlange), deinstallieren (9.4)
    ├─ sprachen.py               Sprachen der Rückseite: Katalog (15), Sprachpakete laden/prüfen/entfernen (9.4)
    ├─ lernen.py                 Karten lernen: FSRS-6, Lernstand, Sitzung, Stapel, Statistik (9.4)
+   ├─ verlauf.py                Rückgängig/Wiederholen der eigenen Daten (Schritte, Kopien in ausgabe/.verlauf) (9)
+   ├─ aktualisieren.py          Update im Programm: Release laden/prüfen, im selben Ordner ersetzen, neu starten (9)
    ├─ DRITTLIZENZEN.md          Lizenzen der Bestandteile von anderen (inkl. KI-Modelle)
    ├─ uebersetzer.py            Übersetzungsvorschläge (Wiktionary, MyMemory, DeepL) mit Schutzmaßnahmen
    ├─ gans_ui.py                Oberfläche: Logik aller Adressen (verarbeite) + lokaler Server als Hülle

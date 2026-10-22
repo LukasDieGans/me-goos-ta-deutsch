@@ -101,7 +101,7 @@ jobs:
     needs: release
     name: ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 30
+    timeout-minutes: 45                                     # 22.10.2026: apt über den Azure-Spiegel brauchte > 30 min
     strategy:
       fail-fast: false
       matrix:
@@ -117,6 +117,7 @@ jobs:
           python-version: "3.13"
       - name: Playwright (Browser-Download bis zu dreimal – der Spiegel von Microsoft ist manchmal kurz weg)
         run: |
+          if [ -f /etc/apt/apt-mirrors.txt ] && grep -qv 'azure\.archive\.ubuntu\.com' /etc/apt/apt-mirrors.txt; then sudo sed -i '/azure\.archive\.ubuntu\.com/d' /etc/apt/apt-mirrors.txt || true; fi
           python -m pip install -q playwright==1.63.0
           for i in 1 2 3; do python -m playwright install --with-deps $(echo "${{ matrix.engines }}" | tr ',' ' ') && break; [ "$i" = 3 ] && exit 1; sleep 20; done
       - name: Browser-Test gegen die Live-Adressen (Download-Seite, Web-App)

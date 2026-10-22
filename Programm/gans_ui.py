@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-ME GOOS-TA DEUTSCH – Oberfläche                                     Version 2.3 (22.10.2026)
+ME GOOS-TA DEUTSCH – Oberfläche                                     Version 2.4 (22.10.2026)
 =============================================================================================
 Startet eine lokale Oberfläche im Browser, von der aus alles bedient wird: Meine Karten, Tabelle (Vorder- und
 Rückseite nebeneinander), Bildverbesserung, Schritt 1 „Bilder vorbereiten“ (auch viele auf einmal), Schritt 2
@@ -65,7 +65,7 @@ except ImportError:                                      # Datei fehlt (Testkopi
     sprachen = None
 
 L, T = gl.L, gl.T
-UI_VERSION = "2.3 (22.10.2026)"
+UI_VERSION = "2.4 (22.10.2026)"
 EINSTELLUNGEN = HIER / "ui_einstellungen.json"
 UI_DATEI = HIER / "ui" / "index.html"
 MAX_BILD = gl.MAX_DATEI_MB * 1024 * 1024
@@ -303,6 +303,48 @@ TEXTE = {
     "nv_format": L("Die Antwort von GitHub sah unerwartet aus – bitte später nochmal versuchen.",
                    "GitHub’s answer looked unexpected – please try again later.",
                    "La respuesta de GitHub se veía extraña; inténtalo más tarde."),
+    # seit 2.4: jede Karte braucht ihre Gans, Rückgängig/Wiederholen, Update direkt im Programm
+    "gans_davor": L("Jede Karte braucht ihre Gans: „{de}“ – „Gans“ steht jetzt vorn. Du darfst sie auch woanders in den "
+                    "Text setzen.",
+                    "Every card needs its goose: “{de}” – “Gans” now stands at the start. You may also move it "
+                    "elsewhere in the text.",
+                    "Cada carta necesita su ganso: «{de}»; «Gans» ahora va al principio. También puedes ponerlo en "
+                    "otro lugar del texto."),
+    "gans_davor_n": L("Bei {n} Karte(n) steht jetzt „Gans“ vorn – jede Karte braucht ihre Gans.",
+                      "“Gans” now stands at the start of {n} card(s) – every card needs its goose.",
+                      "«Gans» ahora va al principio en {n} carta(s): cada carta necesita su ganso."),
+    "gans_fehlt": L("Karten ohne „Gans“ im deutschen Text: {n} – „Gans ergänzen“ setzt sie an den Anfang.",
+                    "Cards without “Gans” in their German text: {n} – “Add the goose” puts it at the start.",
+                    "Cartas sin «Gans» en su texto alemán: {n}; «Añadir el ganso» lo pone al principio."),
+    "gans_ergaenzt": L("Gans ergänzt bei {n} Karte(n) – ganz schön gänsig!", "Goose added to {n} card(s) – all goosed up!",
+                       "Ganso añadido en {n} carta(s). ¡Qué ganso!"),
+    "vl_leer": L("Hier ist der Verlauf zu Ende – nichts mehr da.", "That’s the end of the history – nothing left.",
+                 "Aquí termina el historial; no queda nada."),
+    "vl_konflikt": L("Das hat sich inzwischen anders geändert – zur Sicherheit ist nichts passiert. Der Verlauf beginnt neu.",
+                     "That has changed in the meantime – to be safe, nothing happened. The history starts fresh.",
+                     "Eso cambió mientras tanto; por seguridad no pasó nada. El historial empieza de nuevo."),
+    "vl_fehler": L("Das Zurückholen hat nicht geklappt ({fehler}) – alles ist wie vorher.",
+                   "Restoring didn’t work ({fehler}) – everything is as before.",
+                   "No se pudo restaurar ({fehler}); todo está como antes."),
+    "update_laden": L("Neue Version {v} laden", "Download new version {v}", "Descargar la versión nueva {v}"),
+    "update_nicht_moeglich": L("Hier geht das Update nicht direkt im Programm (Ordner schreibgeschützt oder "
+                               "Entwicklungsordner) – bitte über die Download-Seite.",
+                               "The update can’t run inside the program here (folder is read-only or a development "
+                               "folder) – please use the download page.",
+                               "Aquí la actualización no puede hacerse dentro del programa (carpeta protegida o de "
+                               "desarrollo); usa la página de descarga."),
+    "update_kein_neuer": L("Version {v} ist nicht neuer als deine – nichts zu tun, Gans!",
+                           "Version {v} isn’t newer than yours – nothing to do, goose!",
+                           "La versión {v} no es más nueva que la tuya; ¡nada que hacer, ganso!"),
+    "update_warten": L("Erst noch den laufenden Auftrag fertig werden lassen – dann klappt das Update.",
+                       "Let the running task finish first – then the update works.",
+                       "Primero deja que termine la tarea en curso; luego funciona la actualización."),
+    "update_nicht_bereit": L("Es liegt noch keine geladene Version bereit – bitte erst „Jetzt aktualisieren“.",
+                             "No downloaded version is waiting yet – please use “Update now” first.",
+                             "Todavía no hay ninguna versión descargada; usa primero «Actualizar ahora»."),
+    "update_neustart": L("Die Gans zieht um: Das Programm beendet sich, übernimmt Version {v} und startet gleich neu.",
+                         "The goose is moving in: the program closes, installs version {v} and starts again shortly.",
+                         "El ganso se muda: el programa se cierra, instala la versión {v} y vuelve a abrirse enseguida."),
 }
 
 
@@ -860,8 +902,12 @@ def karten_daten():
     if lern is not None:                                     # Tool „lernen“: Stand je Karte (sonst kein Feld)
         for k in liste:
             k["lernen"] = lern.get(k["bild"])
+    meldungen = [m for m in meldungen if m["code"] != "ohne_karte"]
+    ohne_gans = sum(1 for k in liste if k["de"].strip() and not gl.hat_gans(k["de"]))
+    if ohne_gans:                                            # seit 2.4: jede Karte braucht ihre Gans
+        meldungen.append(dict(code="k_ohne_gans", stufe="info", text=tx("gans_fehlt", n=ohne_gans), anzahl=ohne_gans))
     return dict(spalten=spalten, karten=liste, ohne_karte=ohne, zielsprache=zs,
-                meldungen=[m for m in meldungen if m["code"] != "ohne_karte"],
+                meldungen=meldungen,
                 csv=str(csv_pfad), bilder=str(bilder))
 
 
@@ -920,10 +966,18 @@ def speichere_karten(daten):
         alt = {k["bild"]: k for k in karten_daten()["karten"]}     # fehlende Rückseiten (ältere Seite) behalten
         karten = [dict(k, **{f: alt[k["bild"]][f] for f in ("rueckseiten", "uebersetzungen")
                              if f not in k and k.get("bild") in alt}) for k in daten.get("karten", [])]
+        gans = 0
+        for k in karten:                                     # geänderter Text ohne Gans → „Gans“ davor (seit 2.4)
+            de = " ".join(str(k.get("de") or "").split())
+            if de and not gl.hat_gans(de) and (k.get("bild") not in alt or alt[k["bild"]]["de"] != k.get("de")):
+                k["de"], gans = gl.mit_gans(de), gans + 1
         zeilen = [_zeile_aus(k) for k in karten if str(k.get("bild", "")).strip()]
         gl.schreibe_csv(csv_pfad, zeilen, spalten)
     _vorschau_cache.clear()
-    return karten_daten()
+    erg = karten_daten()
+    if gans:
+        erg["gans_hinweis"] = tx("gans_davor_n", n=gans)
+    return erg
 
 
 def setze_karte(bild, werte, anlegen=True):
@@ -1185,6 +1239,11 @@ def entwurf_pruefen(eid, aenderung):
 
 
 def entwurf_uebernehmen(eid, aenderung):
+    de = aenderung["de"] if "de" in aenderung else _entwurf_meta(eid).get("de", "")
+    gans = ""
+    if not _entwurf_meta(eid).get("karte") and str(de or "").strip() and not gl.hat_gans(de):
+        aenderung = dict(aenderung, de=gl.mit_gans(de))           # jede Karte braucht ihre Gans (seit 2.4)
+        gans = tx("gans_davor", de=aenderung["de"])
     erg = entwurf_pruefen(eid, aenderung)
     if not erg["ok"]:
         raise Meldung("bitte_pruefen")
@@ -1209,6 +1268,7 @@ def entwurf_uebernehmen(eid, aenderung):
         roh = puffer.getvalue()
     if erg.get("karte"):
         fertig = _karte_bild_ersetzen(erg["karte"], ziel, roh, erg["fit"])
+        _sichere(bild)
         bild.unlink(missing_ok=True)
         meta_pfad.unlink(missing_ok=True)
         return fertig
@@ -1218,6 +1278,7 @@ def entwurf_uebernehmen(eid, aenderung):
         _bericht_vergessen(ausgabe, alt)
     tmp = ziel.with_name(ziel.name + ".tmp")
     tmp.write_bytes(roh)
+    _sichere(ziel)
     os.replace(tmp, ziel)
     werte = dict(de=erg["de"], fit=erg["fit"])
     if erg.get("es"):                                           # schon beschriftet → Karte ist sofort fertig
@@ -1232,9 +1293,13 @@ def entwurf_uebernehmen(eid, aenderung):
         setze_karte(ziel.name, werte)
     else:
         setze_karte(ziel.name, dict(leer, **werte))
+    _sichere(bild)
     bild.unlink(missing_ok=True)
     meta_pfad.unlink(missing_ok=True)
-    return dict(name=ziel.name, karten=karten_daten())
+    fertig = dict(name=ziel.name, karten=karten_daten())
+    if gans:
+        fertig["gans_hinweis"] = gans
+    return fertig
 
 
 def _karte_bild_ersetzen(karte, ziel, roh, fit):
@@ -1248,6 +1313,7 @@ def _karte_bild_ersetzen(karte, ziel, roh, fit):
     sicherung = _aufheben(alt).name if alt.is_file() else None
     tmp = ziel.with_name(ziel.name + ".tmp")
     tmp.write_bytes(roh)
+    _sichere(ziel)
     os.replace(tmp, ziel)
     setze_karte(karte, dict(bild=ziel.name, fit=fit), anlegen=False)
     _bericht_vergessen(ausgabe, karte)
@@ -1271,6 +1337,7 @@ def karte_bild_zurueck(daten):
     if jetzt.is_file():
         _aufheben(jetzt)
     if quelle is not None:
+        _sichere(quelle)
         shutil.move(str(quelle), str(frueher))
     fit = daten.get("fit") if daten.get("fit") in ("contain", "cover") else "contain"
     setze_karte(bild, dict(bild=name, fit=fit), anlegen=False)
@@ -1280,6 +1347,7 @@ def karte_bild_zurueck(daten):
 
 def entwurf_weg(eid):
     bild, meta = _entwurf_pfade(eid)
+    _sichere(bild)
     bild.unlink(missing_ok=True)
     meta.unlink(missing_ok=True)
     return {"ok": True}
@@ -1331,13 +1399,17 @@ def karte_speichern(daten):
     erg = karte_pruefen(daten)
     if not erg["ok"]:
         raise Meldung("bitte_pruefen")
-    werte = dict(de=erg["de"], es=erg["es"], notiz=" ".join(str(daten.get("notiz") or "").split()))
+    de = gl.mit_gans(erg["de"])                                   # jede Karte braucht ihre Gans (seit 2.4)
+    werte = dict(de=de, es=erg["es"], notiz=" ".join(str(daten.get("notiz") or "").split()))
     if daten.get("fit") in ("contain", "cover"):
         werte["fit"] = daten["fit"]
-    werte["uebersetzung"] = _neuer_status(bild, erg["de"], erg["es"], daten.get("es_auto"))
+    werte["uebersetzung"] = _neuer_status(bild, de, erg["es"], daten.get("es_auto"))
     werte.update(_weitere_rueckseiten(bild, daten))
     setze_karte(bild, werte)
-    return dict(pruefung=erg, karten=karten_daten())
+    aus = dict(pruefung=erg, karten=karten_daten())
+    if de != erg["de"]:
+        aus["gans_hinweis"] = tx("gans_davor", de=de)
+    return aus
 
 
 def _weitere_rueckseiten(bild, daten):
@@ -1436,6 +1508,7 @@ def _gans_beiseite(pfad):
     while neu.exists():
         neu = ziel / f"{pfad.stem}-{stempel}-{i}{pfad.suffix}"
         i += 1
+    _sichere(pfad)
     shutil.move(str(pfad), str(neu))
     return neu
 
@@ -1539,6 +1612,7 @@ def gans_bild_laden(daten):
         ziel = GANS_ORDNER / name
         tmp = ziel.with_name(ziel.name + ".tmp")
         tmp.write_bytes(puffer.getvalue())
+        _sichere(ziel)
         os.replace(tmp, ziel)
         _einstellung_gans_leeren()
     _vorschau_cache.clear()
@@ -1566,6 +1640,7 @@ def gans_bild_zurueck():
         letzte = alte[-1]
         for jetzt in _gans_dateien():
             _gans_beiseite(jetzt)
+        _sichere(letzte)
         shutil.move(str(letzte), str(GANS_ORDNER / f"gans_hintergrund{letzte.suffix.lower()}"))
         _einstellung_gans_leeren()
     _vorschau_cache.clear()
@@ -1993,7 +2068,7 @@ def _lauf_tool(art):
 
 
 NUR_RECHNER_TOOLS = {"ki-bild"}                      # Web-App: zu groß (3,5 GB Modell, ~3 GB Arbeitsspeicher)
-NUR_RECHNER_LAEUFE = {"ki-bild", "ki-bild-laden", "test"}
+NUR_RECHNER_LAEUFE = {"ki-bild", "ki-bild-laden", "test", "update"}
 
 
 def tool_da(tid):
@@ -2246,6 +2321,7 @@ def _aufheben(quelle):
     while ziel.exists():
         ziel = ziel_ordner / f"{quelle.stem}-{time.strftime('%Y%m%d-%H%M%S')}{f'-{n}' if n > 1 else ''}{quelle.suffix}"
         n += 1
+    _sichere(quelle)
     shutil.move(str(quelle), str(ziel))
     _vorschau_cache.clear()
     return ziel
@@ -2607,7 +2683,7 @@ OEFFENTLICH = {"/symbol.svg", "/favicon.ico", "/apple-touch-icon.png", "/apple-t
 # Was Handy-Zugang und Web-App nicht dürfen (POST): Beenden, Deinstallieren, am Rechner öffnen, Start-/Handy-Einstellungen,
 # Versionsprüfung (betrifft nur das Programm am Rechner)
 NUR_RECHNER_WEGE = {"/api/deinstallieren", "/api/beenden", "/api/oeffnen", "/api/lan", "/api/start-einstellung",
-                    "/api/neue-version"}
+                    "/api/neue-version", "/api/update"}
 
 
 def oeffentlich(weg):
@@ -2669,6 +2745,9 @@ def verarbeite(methode, weg, abfrage="", koerper=b"", kopf=None, am_handy=False)
     try:
         if post and a.am_handy and weg in NUR_RECHNER_WEGE:
             a._fehler(403, _nur_rechner_text())
+        elif post and weg in VERLAUF_WEGE and _verlauf():      # ändert eigene Daten → ein Schritt für Rückgängig
+            with _verlauf().schritt(VERLAUF_WEGE[weg], a.headers.get("X-GL-Gruppe") or ""):
+                a._post(weg, q)
         elif post:
             a._post(weg, q)
         elif methode in ("GET", "HEAD"):
@@ -2679,6 +2758,9 @@ def verarbeite(methode, weg, abfrage="", koerper=b"", kopf=None, am_handy=False)
         _fehler_antwort(a, e, post)
     if a.antwort is None:
         a._fehler(404, tx("unbekannt"))
+    v = _verlauf() if weg.startswith("/api/") else None
+    if v is not None:                                          # Stand für ↶ ↷ in der Kopfzeile
+        a.antwort[1]["X-MGD-Verlauf"] = json.dumps(v.info())
     return a.antwort
 
 
@@ -2836,6 +2918,8 @@ class Anfrage:
             return self._bild_senden(vergleich_bild(eins("bild"), "vorher" if art == "vorher" else "nachher"))
         if weg == "/api/tabelle":
             return self._senden(200, tabelle())
+        if weg == "/api/verlauf":
+            return self._senden(200, _verlauf().info() if _verlauf() else dict(z=0, w=0, za="", wa=""))
         if weg == "/api/uebersetzung":
             return self._senden(200, uebersetzung_info())
         if weg == "/api/zielsprache":
@@ -2967,6 +3051,12 @@ class Anfrage:
             return self._senden(200, uebersetzen(daten))
         if weg == "/api/neue-version":                         # nur auf Klick „Nach neuer Version suchen“
             return self._senden(200, neue_version())
+        if weg in ("/api/rueckgaengig", "/api/wiederholen"):
+            return self._senden(200, verlauf_schritt(weg == "/api/rueckgaengig"))
+        if weg == "/api/gans-ergaenzen":
+            return self._senden(200, gans_ergaenzen())
+        if weg == "/api/update":                               # nur nach Klick „Jetzt aktualisieren“ (seit 2.4)
+            return self._senden(200, update_aktion(daten))
         if weg == "/api/ki-bild-prompt" and ki_bild:
             return self._senden(200, ki_bild_prompt_setzen(daten))
         if weg == "/api/ki-bild-text" and ki_bild:
@@ -3145,7 +3235,7 @@ def status_info():
                 plattform=sys.platform, sprache=lade_sprache(), lauf=bool(warteschlange.aktiv),
                 warteschlange=warteschlange.anzahl + bool(warteschlange.aktiv),
                 ki_bild=bool(ki_bild) and not im_browser(), tools={tid: tools.installiert(tid) for tid in tools.TOOLS} if tools else {},
-                zielsprache=zielsprache_info(), web_adresse=web_adresse())
+                zielsprache=zielsprache_info(), web_adresse=web_adresse(), update=update_info())
 
 
 def web_adresse():
@@ -3195,7 +3285,7 @@ def neue_version(abruf=None):
         return dict(ergebnis="fehler", code="nv_format", meldung=tx("nv_format"))
     datum = str(d.get("published_at") or "")[:10]
     datum = datum if re.fullmatch(r"\d{4}-\d{2}-\d{2}", datum) else ""
-    eigene = str(gl.VERSION).split()[0]                         # „2.3 (22.10.2026)“ → „2.2“
+    eigene = str(gl.VERSION).split()[0]                         # „2.4 (22.10.2026)“ → „2.4“
     hier = version_tupel(eigene) or (0, 0, 0)
     version = ".".join(map(str, neu if neu[2] else neu[:2]))
     ergebnis = "neuer" if neu > hier else "aktuell" if neu == hier else "voraus"
@@ -3309,6 +3399,8 @@ def app_sicherung_einspielen(roh):
     for ziel, daten in inhalt:
         ziel.parent.mkdir(parents=True, exist_ok=True)
         ziel.write_bytes(daten)
+    if _VERLAUF is not None:                                  # ganzer Stand ersetzt → kein Weg zurück
+        _VERLAUF.leeren()
     _vorschau_cache.clear()
     karten = len(karten_daten()["karten"])
     return dict(ok=True, karten=karten, dateien=len(inhalt), meldung=tx("sicherung_ok", karten=karten, dateien=len(inhalt)))
@@ -3350,6 +3442,8 @@ def beenden():
     time.sleep(0.3)
     BEENDET.set()
     warteschlange.alles_stoppen()
+    if _VERLAUF is not None:                                  # Verlauf gilt nur für die laufende Sitzung
+        _VERLAUF.leeren()
     if _server:
         _server.shutdown()
 
@@ -3455,6 +3549,180 @@ try:
     import lernen  # noqa: E402
 except ImportError:                                      # Datei fehlt (z. B. in einer Testkopie) → ohne Lernen
     lernen = None
+
+try:
+    import verlauf  # noqa: E402
+except ImportError:                                      # Datei fehlt (z. B. in einer Testkopie) → ohne Rückgängig
+    verlauf = None
+
+try:
+    import aktualisieren  # noqa: E402
+except ImportError:                                      # Datei fehlt (z. B. in einer Testkopie) → nur Download-Seite
+    aktualisieren = None
+
+
+# =============================================================================================
+# Rückgängig / Wiederholen (seit 2.4, verlauf.py): jede Anfrage aus VERLAUF_WEGE ist ein Schritt
+# =============================================================================================
+VERLAUF_WEGE = {"/api/karten": "karten", "/api/karte-speichern": "karte", "/api/karte-status": "status",
+                "/api/karte-bild-zurueck": "bild", "/api/bild-weg": "bild_weg", "/api/entwurf": "entwurf_neu",
+                "/api/entwurf-pruefen": "entwurf", "/api/entwurf-uebernehmen": "neue_karte",
+                "/api/entwurf-weg": "entwurf_weg", "/api/gans-bild": "gans_bild", "/api/gans-bild-weg": "gans_bild",
+                "/api/gans-bild-zurueck": "gans_bild", "/api/ki-bild-uebernehmen": "ki_bild",
+                "/api/gans-ergaenzen": "gans", "/api/werkzeug": "werkzeug", "/api/idee": "idee", "/api/idee-wort": "idee",
+                "/api/idee-bild": "idee", "/api/idee-weg": "idee_weg", "/api/idee-zurueck": "idee",
+                "/api/idee-aufnehmen": "idee_karte", "/api/wortliste-uebernehmen": "wortliste",
+                "/api/wortliste-rueckgaengig": "wortliste", "/api/import-uebernehmen": "import"}
+_VERLAUF = None
+_verlauf_lock = threading.Lock()
+
+
+def _verlauf_bereich():
+    """Die eigenen Daten, die Rückgängig zurückholen kann: Kartenliste, Bilder (auch _entfernt), Entwürfe von
+    „Bilder vorbereiten“, Ideen samt Bildern, Gänse-Bild der Rückseite."""
+    csv_pfad, bilder, ausgabe, _ = pfade()
+    dateien = [csv_pfad] + [GANS_ORDNER / n for n in GANS_NAMEN]
+    ordner = [bilder, ausgabe / ".entwuerfe", GANS_ORDNER / "_alt"]
+    if erweiterungen:
+        dateien.append(erweiterungen.IDEEN_DATEI)
+        ordner.append(erweiterungen.IDEEN_ORDNER)
+    return dateien, ordner
+
+
+def _verlauf():
+    """Der Verlauf dieser Sitzung (Kopien in ausgabe/.verlauf, beim ersten Gebrauch leer) – ohne verlauf.py None."""
+    global _VERLAUF
+    if verlauf is None:
+        return None
+    with _verlauf_lock:
+        if _VERLAUF is None:
+            try:
+                _VERLAUF = verlauf.Verlauf(pfade()[2] / ".verlauf", _verlauf_bereich)
+            except (OSError, ValueError):
+                return None
+    return _VERLAUF
+
+
+def _sichere(pfad):
+    """Vor dem Löschen, Verschieben oder Überschreiben einer eigenen Datei: für „Rückgängig“ aufheben."""
+    if verlauf is not None:
+        verlauf.sichere(pfad)
+
+
+def verlauf_schritt(zurueck):
+    """POST /api/rueckgaengig bzw. /api/wiederholen → {art, verlauf, karten}."""
+    v = _verlauf()
+    if v is None:
+        raise Meldung("vl_leer", status=409)
+    try:
+        art = v.rueckgaengig() if zurueck else v.wiederholen()
+    except verlauf.Konflikt:
+        raise Meldung("vl_konflikt", status=409) from None
+    except OSError as e:
+        raise Meldung("vl_fehler", status=409, fehler=str(e)) from None
+    if art is None:
+        raise Meldung("vl_leer", status=409)
+    _vorschau_cache.clear()
+    return dict(art=art, verlauf=v.info(), karten=karten_daten())
+
+
+def gans_ergaenzen():
+    """„Gans ergänzen“ (Meine Karten): jede Karte, deren deutscher Text keine Gans hat, bekommt „Gans“ davor."""
+    csv_pfad = pfade()[0]
+    n = 0
+    with _csv_lock:
+        spalten, zeilen, _ = gl.lies_csv(csv_pfad)
+        for z in zeilen:
+            de = " ".join(str(z.get("de") or "").split())
+            if de and not gl.hat_gans(de):
+                z["de"], n = gl.mit_gans(de), n + 1
+        if n:
+            gl.schreibe_csv(csv_pfad, zeilen, spalten)
+    _vorschau_cache.clear()
+    return dict(meldung=tx("gans_ergaenzt", n=n), anzahl=n, karten=karten_daten())
+
+
+# =============================================================================================
+# Neue Version direkt im Programm übernehmen (seit 2.4, aktualisieren.py) – nur auf Klick, nur am Rechner
+# =============================================================================================
+def update_info():
+    """Für die Seite: geht das Update hier (Programmordner beschreibbar, kein Entwicklungsordner), liegt eine geladene
+    Version bereit, und wie lief das letzte Update (einmal melden)?"""
+    if aktualisieren is None or im_browser():
+        return dict(moeglich=False, bereit="", ergebnis=None)
+    daten = uebersetzer.daten_ordner()
+    wurzel = HIER.parent
+    moeglich = aktualisieren.programm_ordner_ok(wurzel) and os.access(wurzel, os.W_OK) and os.access(HIER, os.W_OK)
+    b = aktualisieren.bereit(daten)
+    try:
+        erg = json.loads((aktualisieren.ordner(daten) / "ergebnis.json").read_text(encoding="utf-8"))
+        erg = erg if isinstance(erg, dict) and not erg.get("gesehen") else None
+    except (OSError, ValueError):
+        erg = None
+    if erg:
+        erg = dict(ok=erg.get("ok") is True, version=str(erg.get("version") or "")[:20], fehler=str(erg.get("fehler") or "")[:300])
+    return dict(moeglich=bool(moeglich), bereit=b["version"] if b else "", ergebnis=erg)
+
+
+def _update_quelle():
+    """…/releases/download des eigenen Repositorys (aus web_adresse.txt) – für Tests MGD_UPDATE_QUELLE (nur 127.0.0.1)."""
+    test = os.environ.get("MGD_UPDATE_QUELLE", "")
+    if re.fullmatch(r"http://127\.0\.0\.1:\d{2,5}(/[A-Za-z0-9._/-]*)?", test):
+        return test
+    quelle = release_quelle()
+    if not quelle:
+        raise Meldung("nv_kein_release", 409, extra={"code": "kein_release"})
+    return f"https://github.com/{quelle[0]}/{quelle[1]}/releases/download"
+
+
+def update_aktion(daten):
+    """POST /api/update {aktion: laden|anwenden|gesehen, version}: laden = Auftrag in der Warteschlange; anwenden = eigener
+    Prozess übernimmt die geladene Version, sobald sich die Oberfläche beendet hat, und startet neu."""
+    aktion = str(daten.get("aktion") or "")
+    info = update_info()
+    d = uebersetzer.daten_ordner()
+    if aktion == "gesehen":
+        p = aktualisieren.ordner(d) / "ergebnis.json" if aktualisieren else None
+        try:
+            erg = json.loads(p.read_text(encoding="utf-8"))
+            p.write_text(json.dumps(dict(erg, gesehen=True), ensure_ascii=False), encoding="utf-8")
+        except (OSError, ValueError, AttributeError, TypeError):
+            pass
+        return update_info()
+    if not info["moeglich"]:
+        raise Meldung("update_nicht_moeglich", status=409)
+    if aktion == "laden":
+        v = str(daten.get("version") or "")
+        neu, hier = version_tupel(v), version_tupel(str(gl.VERSION).split()[0]) or (0, 0, 0)
+        if not neu or not aktualisieren.version_ok(v):
+            raise Meldung("ungueltig")
+        if neu <= hier:
+            raise Meldung("update_kein_neuer", status=409, v=v)
+        befehl = [sys.executable, "-u", str(HIER / "aktualisieren.py"), "--laden", v, "--quelle", _update_quelle(),
+                  "--daten", str(d)]
+        lauf = Lauf("update", tx("update_laden", v=v), befehl, f"python3 aktualisieren.py --laden {v}", sprache=gl.sprache())
+        lauf.schluessel = ("update", v)
+        return warteschlange.einreihen(lauf).status()
+    if aktion == "anwenden":
+        if not info["bereit"]:
+            raise Meldung("update_nicht_bereit", status=409)
+        if warteschlange.aktiv or warteschlange.anzahl:
+            raise Meldung("update_warten", status=409)
+        befehl = [sys.executable, str(HIER / "aktualisieren.py"), "--anwenden", "--daten", str(d),
+                  "--wurzel", str(HIER.parent), "--pid", str(os.getpid())]
+        kw = dict(stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, cwd=str(Path.home()),
+                  env=dict(os.environ, MGD_SPRACHE=gl.sprache()), close_fds=True)
+        if os.name == "nt":
+            flags = 0x00000200 | 0x08000000                    # CREATE_NEW_PROCESS_GROUP | CREATE_NO_WINDOW
+            try:
+                subprocess.Popen(befehl, creationflags=flags | 0x01000000, **kw)   # vom Job der Oberfläche lösen
+            except OSError:
+                subprocess.Popen(befehl, creationflags=flags, **kw)
+        else:
+            subprocess.Popen(befehl, start_new_session=True, **kw)
+        threading.Thread(target=beenden, daemon=True).start()
+        return dict(ok=True, version=info["bereit"], meldung=tx("update_neustart", v=info["bereit"]))
+    raise Meldung("ungueltig")
 
 
 # ---------- Karten lernen (Tool „lernen“, lernen.py): Lernstand im Projektordner neben karten.csv ----------

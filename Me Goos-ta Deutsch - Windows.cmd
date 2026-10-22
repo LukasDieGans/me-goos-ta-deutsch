@@ -1,6 +1,6 @@
 @echo off
 rem ===========================================================================
-rem  Me Goos-ta Deutsch - start for Windows                        Version 2.3
+rem  Me Goos-ta Deutsch - start for Windows                        Version 2.4
 rem
 rem  Just double-click. The first start sets everything up: a Python of its
 rem  own in your user folder (no administrator rights needed) and the packages

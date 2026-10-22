@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-ME GOOS-TA DEUTSCH – Erweiterungen der Oberfläche                   Version 2.3 (22.10.2026)
+ME GOOS-TA DEUTSCH – Erweiterungen der Oberfläche                   Version 2.4 (22.10.2026)
 =============================================================================================
 Zusätzliche Funktionen, die gans_ui.py einbindet (verbinde(gans_ui)). Fehlt diese Datei, läuft die Oberfläche
 genau wie bisher – nur ohne diese Funktionen.
@@ -219,7 +219,14 @@ def _atomar(pfad, daten: bytes):
     pfad.parent.mkdir(parents=True, exist_ok=True)
     tmp = pfad.with_name(f"{pfad.name}.{os.getpid()}.{secrets.token_hex(3)}.tmp")
     tmp.write_bytes(daten)
+    _sichere(pfad)
     os.replace(tmp, pfad)
+
+
+def _sichere(pfad):
+    """Vor dem Überschreiben/Verschieben/Löschen: für „Rückgängig“ aufheben (gans_ui → verlauf.py, seit 2.4)."""
+    if UI is not None and hasattr(UI, "_sichere"):
+        UI._sichere(pfad)
 
 
 def bild_pruefen(daten: bytes):
@@ -653,6 +660,9 @@ def import_uebernehmen(daten):
                         UI.bild_weg(e["bild"])                    # alte Fassung aufheben, nicht löschen
                     _atomar(ziel, z.read(erg["bilder"][e["bild"]][0]))
                 zahl["ersetzt" if e["status"] == "konflikt" else "neu"] += 1
+                if str(e.get("de") or "").strip() and not gl.hat_gans(e["de"]):      # jede Karte braucht ihre Gans
+                    e = dict(e, de=gl.mit_gans(e["de"]))
+                    zahl["gans"] = zahl.get("gans", 0) + 1
                 nehmen.append(e)
             for e in ideen:
                 if e["status"] == "fehler":
@@ -686,7 +696,10 @@ def import_uebernehmen(daten):
                 gl.schreibe_csv(csv_pfad, neu, spalten + extra_spalten)
         UI._vorschau_cache.clear()
     p.unlink(missing_ok=True)
-    return dict(zahlen=zahl, karten=UI.karten_daten(), **ideen_liste())
+    aus = dict(zahlen=zahl, karten=UI.karten_daten(), **ideen_liste())
+    if zahl.get("gans"):
+        aus["gans_hinweis"] = UI.tx("gans_davor_n", n=zahl["gans"])
+    return aus
 
 
 def _lernstand_aus(z):
@@ -866,6 +879,7 @@ def idee_bild_setzen(iid, daten: bytes, de=""):
 def _beiseite(p):
     ziel = IDEEN_ORDNER / "_entfernt"
     ziel.mkdir(parents=True, exist_ok=True)
+    _sichere(p)
     try:
         shutil.move(str(p), str(ziel / p.name))
     except OSError:
@@ -906,6 +920,7 @@ def idee_zurueck(daten):
             if i.get("id") == daten.get("id"):
                 d["entfernt"].remove(i)
                 if i.get("bild") and gl.sicherer_name(i["bild"]) and (IDEEN_ORDNER / "_entfernt" / i["bild"]).is_file():
+                    _sichere(IDEEN_ORDNER / "_entfernt" / i["bild"])
                     shutil.move(str(IDEEN_ORDNER / "_entfernt" / i["bild"]), str(IDEEN_ORDNER / i["bild"]))
                 d["ideen"].insert(0, i)
                 _ideen_schreiben(d)
@@ -924,8 +939,9 @@ def idee_aufnehmen(daten):
         raise ValueError(tx("idee_unvollstaendig"))
     erg = UI.entwurf_anlegen(p.read_bytes(), "idee" + p.suffix)
     eid = erg["id"]
+    de = gl.mit_gans(i["de"])                                  # jede Karte braucht ihre Gans (seit 2.4)
     try:
-        erg = UI.entwurf_pruefen(eid, dict(de=i["de"], es=i["es"], es_auto=i.get("es_auto", ""),
+        erg = UI.entwurf_pruefen(eid, dict(de=de, es=i["es"], es_auto=i.get("es_auto", ""),
                                            ersetzen=bool(daten.get("ersetzen"))))
         if not erg["ok"]:
             UI.entwurf_weg(eid)
@@ -944,8 +960,12 @@ def idee_aufnehmen(daten):
         d = _ideen_lesen()
         d["ideen"] = [x for x in d["ideen"] if x.get("id") != i["id"]]
         _ideen_schreiben(d)
+    _sichere(p)
     p.unlink(missing_ok=True)
-    return dict(ok=True, name=fertig["name"], karten=UI.karten_daten(), **ideen_liste())
+    aus = dict(ok=True, name=fertig["name"], karten=UI.karten_daten(), **ideen_liste())
+    if de != " ".join(str(i["de"]).split()):
+        aus["gans_hinweis"] = UI.tx("gans_davor", de=de)
+    return aus
 
 
 # =============================================================================================
@@ -1258,7 +1278,7 @@ def wortliste_lesen(roh: bytes, optionen=None):
             werte["de"], werte["wort"] = werte.get("wort", ""), werte.get("de", "")
         roh_de = werte.get("de", "")
         de = roh_de
-        if gans and de:
+        if gans and de and (_WL_GANS.match(de) or not gl.hat_gans(de)):     # „Die Gans ist alt“ bleibt so (seit 2.4)
             de = _WL_GANS.sub("", de)
             de = f"Gans {de}" if de else "Gans"
         z.update(de=de, wort=werte.get("wort", ""), notiz=werte.get("notiz", ""))
@@ -1537,7 +1557,7 @@ LAN_TEXTE = {
 }
 # Was das Handy nicht darf: Programm beenden/deinstallieren, Dinge am Rechner öffnen, Start- und Handy-Einstellungen.
 LAN_GESPERRT = {"/api/deinstallieren", "/api/beenden", "/api/oeffnen", "/api/lan", "/api/start-einstellung",
-                "/api/neue-version"}
+                "/api/neue-version", "/api/update"}
 
 
 def lan_gesperrt(h, weg):

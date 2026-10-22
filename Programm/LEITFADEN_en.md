@@ -1,6 +1,6 @@
 # Me Goos-ta Deutsch – Guide
 
-Updated: 22 Oct 2026 · program and interface version 2.3 · German: `LEITFADEN.md` · Spanish: `LEITFADEN_es.md`
+Updated: 22 Oct 2026 · program and interface version 2.4 · German: `LEITFADEN.md` · Spanish: `LEITFADEN_es.md`
 
 Great to have you here! This guide takes you from the first double-click to the finished card – step by step and without jargon. You don’t have to read it cover to cover: just jump to the part you need right now. And relax – no need to waddle along in single file; take every step at your own pace.
 
@@ -64,11 +64,19 @@ The interface keeps running in the background even when the browser tab is close
 
 Your work lives in the folder `Programm`: the card list `karten.csv`, the images in `bilder/`, your ideas in `ideen/`, print files and enhanced images in `ausgabe/`, the settings in `ui_einstellungen.json` and your own goose image in `assets/`. The download of a new version contains none of this – its example cards come as `beispiel-karten.csv` and `beispiel-bilder/` and are only used in a brand-new folder. So nothing gets lost during an update.
 
-**The new version** is always on the download page – in the program under **Help → “About this program”**, link “Latest version for Windows, macOS and Linux”. Whether there is a new version, the **“🔎 Check for a new version”** button there tells you: only your click asks GitHub (api.github.com) once for the latest release – never on its own, never in the background, with no data about you or your cards, and nothing is stored. If a newer goose is out, a link takes you to the download page; “Goose up to date!” means you already have the newest one. The button exists only on the computer (not in the phone app and not via phone access).
+**Easiest: right inside the program (since 2.4).** Under **Tools → “Keep the program up to date”** – also at the bottom of the menu below the version number (“🔎 Check for updates”) and under **Help → “About this program”** – the **“🔎 Check for a new version”** button asks GitHub (api.github.com) once for the latest release: only when you click, never on its own, never in the background, with no data about you or your cards, and nothing is stored. “Goose up to date!” means you already have the newest one. If a newer goose is out:
+
+1. **“⬆️ Update to … now”** downloads the release from GitHub, compares its checksum with the published `SHA256SUMS.txt` and checks the contents – the task shows the progress. Nothing is changed yet.
+2. **“🔄 Restart now and install …”:** the program closes briefly, replaces only the program files **in the same folder** and starts again by itself via the start file (which sets up Python and packages if needed, like on the first start). No second folder, no doubled disk space, the desktop icon stays as it is.
+3. A message reports “Update done”. If anything goes wrong while replacing, the program puts everything back and the previous version keeps running.
+
+Cards, images, ideas, learning progress, settings, print files and your own goose image stay untouched – they are never part of the download. The in-program update exists only on the computer (the phone app updates itself; via phone access it is blocked) and only if the program folder is writable – otherwise a link takes you to the download page.
+
+**By hand**, the new version is always on the download page (Help → “About this program”, link “Latest version for Windows, macOS and Linux”). There are two ways.
 
 **Safest of all:** download a full backup under **Import / export** first. You can read it back in anywhere.
 
-**Recommended: extract into a new folder**
+**Extract into a new folder**
 
 1. Stop the running interface (⏻ at the top right).
 2. Unblock the new ZIP (Windows: Properties → “Unblock”) and extract it with “Extract All …” – Windows suggests a new folder by itself.
@@ -106,11 +114,21 @@ Libraries such as Pillow and NumPy contain program parts (DLLs) that aren’t si
 | Ideas | Collect ideas, complete them and make them cards; continue unfinished cards |
 | 3 Generate | Choose a goal, fine-tune, go – on the right, the log tells you what’s happening |
 | 4 Check & print | Proof sheet and checklist, printing at home or at a print shop, studying digitally |
-| Tools | Optional tools (image enhancement, translation, AI images), import / export, GANS image, program start, open on your phone, translation settings, self-test, project ZIP, folders |
+| Tools | Keep the program up to date (update in the same folder), optional tools (image enhancement, translation, AI images), import / export, GANS image, program start, open on your phone, translation settings, self-test, project ZIP, folders |
 | Help | This guide in the selected language, the specification, program status; if loading ever takes too long, use “Cancel” or “Try again” |
 | Uninstall | Back up and remove cleanly |
 
 The numbers in the menu show what’s still open: for step 1 the images not added yet, for step 2 the cards without a word, for “Ideas” your ideas, for “Table” the automatically translated words still waiting for your look.
+
+## Undo and redo
+
+Almost every change can be taken back: **↶** in the header (or **Ctrl+Z**, on a Mac **⌘+Z**) undoes the last step, **↷** (or **Ctrl+Y** or **Ctrl+Shift+Z**) redoes it. This works wherever you change your own data: saving cards, editing in the table, pausing, reordering or taking cards off the list, preparing images (add, label, rotate, add as card, discard), changing an image, ideas (create, edit, image, remove, turn into a card), word lists, import, “Add the goose” and the goose image on the back. The hover text of the buttons tells you what would be undone; after each undo, a message offers the way forward again.
+
+- Up to **30 steps** can be undone; typing in the same new image and “🌐 Translate all” count as one step.
+- A new change after “Undo” replaces the way forward – just like in any text editor.
+- In text fields, Ctrl+Z works on the text itself as usual; in a learning session, Ctrl+Z takes back the last rating.
+- The history covers the running session and starts fresh after quitting. If a file has changed in another way meanwhile (e.g. `karten.csv` in Excel), undo changes nothing to be safe, and the history starts fresh.
+- Settings (language, colors, print options) and learning progress are not part of it. If undo takes back a text change, that card’s learning progress starts over – as with every change.
 
 ## Step 1: Prepare images
 
@@ -185,6 +203,8 @@ Here you find all cards still missing their {{Spanish}} word – and every card 
 | Text on the image (German) | For checking on the proof sheet, not printed |
 | Note | Just for you, e.g. the word type – not printed |
 
+**Every card needs its goose:** the text on the image must contain “Gans” – also in the middle of the text (“Die Gans ist alt”) or as “Gäns…” (“Gänsehaut”). If it’s missing, the check says “The goose is still missing”, and saving puts “Gans” at the start; a message lets you know. This also applies to new images from step 1, ideas that become cards, changes in the table and imported cards. Older cards without a goose are reported in “My cards” – **“Add the goose”** puts it in front of all of them at once (can be undone).
+
 The buttons á é í ó ú ñ ü ¿ ¡ insert Spanish special characters – handy with any keyboard. The back updates as you type. “Save card” (or Enter) writes the card into `karten.csv`; “Later” lets it wait patiently. With several cards, **“🌐 Translate all”** suggests a word for all empty fields, and **“Save all (n)”** saves all ready cards at once.
 
 **Change image:** below the previews, **“Change image …”** fetches a new image for the card – or simply drag it onto the preview. It is checked as in step 1, with rotation and crop; word, text and note stay. “Use new image” moves the previous image to `bilder/_entfernt/`, “Undo” brings it back. **“🪄 With AI …”** paints a new goose image for this card instead (see “Create a goose with AI”).
@@ -199,6 +219,7 @@ The buttons á é í ó ú ñ ü ¿ ¡ insert Spanish special characters – han
 | Spanish questions start with “¿” | e.g. `¿cómo estás?` |
 | character can’t be printed | remove emoji and rare characters |
 | Text must not start with = + - @ | protection against Excel formulas (also for the note) – remove the character at the start |
+| The goose is still missing | write “Gans” anywhere in the text on the image – otherwise saving puts it at the start |
 | still equals the German text | time to translate! |
 | is already on card … | just a note – duplicate words are allowed |
 

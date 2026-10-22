@@ -670,6 +670,47 @@ def b_wortliste(s, u, stufe):
            f"UTF-16 {a} · CSV {b} · xss {xss} · ohne Gans {ohne_gans!r} · danach {nachher} · Handy {handy}", t0=t0)
 
 
+def b1_rueckgaengig(s, u):
+    """2.4: Rückgängig/Wiederholen – echte Tasten Strg+Z/Strg+Y (nicht in Textfeldern) und ↶ in der Kopfzeile stellen eine
+    gespeicherte Karte her (ohne Gans → „Gans“ davor); Vorher/Nachher-Vergleich: Klicken mit leichtem Ziehen bewegt nur
+    den Regler und legt kein neues Bild an (Fund 2.3). Nachher-Bild nachgebildet (= Vorher), kein Netz."""
+    t0 = time.time()
+    _ansicht(s, "karten")
+    s.warte("() => !!S.karten && S.karten.length > 1")
+    wort = f"Ente {s.kurz}"
+    vorher = s.js("() => S.karten[0].de")
+    s.js("async w => { const k = S.karten[0]; await api('/api/karte-speichern', { methode: 'POST', daten: { bild: k.bild, de: w, "
+         "es: k.es, notiz: k.notiz } }); await ladeKarten(); zeige(); }", wort)
+    nach = s.js("() => S.karten[0].de")
+    s.js("() => { if (document.activeElement) document.activeElement.blur(); }")
+    s.page.keyboard.press("Control+z")
+    s.warte("w => S.karten[0].de === w", vorher)
+    s.page.keyboard.press("Control+y")
+    s.warte("w => S.karten[0].de === w", nach)
+    s.page.click("#vl-zurueck")
+    s.warte("w => S.karten[0].de === w", vorher)
+    vor_frei = s.js("() => !document.getElementById('vl-vor').disabled")
+    s.page.route("**/api/vergleich?*", lambda r: r.continue_(url=r.request.url.replace("art=nachher", "art=vorher")))
+    entwuerfe = s.js("async () => (await api('/api/entwuerfe')).length")
+    s.js("() => { const k = S.karten[1]; zeigeVergleich({ ...k, status: 'verbessert', info: { ki: 'keine' } }); }")
+    s.warte("() => [...document.querySelectorAll('#vergleich-inhalt img')].every(i => i.complete && i.naturalWidth > 0)")
+    box = s.page.locator("#vergleich-inhalt [data-vergleich]").bounding_box()
+    x, y = box["x"] + box["width"] * 0.3, box["y"] + box["height"] * 0.5
+    s.page.mouse.move(x, y)
+    s.page.mouse.down()
+    s.page.mouse.move(x + 8, y + 3, steps=3)
+    s.page.mouse.move(x + box["width"] * 0.1, y + 6, steps=4)
+    s.page.mouse.up()
+    time.sleep(1)
+    regler = s.js("() => +document.querySelector('#vergleich-inhalt .regler').value")
+    s.js("() => { document.getElementById('vergleich-fenster').hidden = true; }")
+    s.page.unroute("**/api/vergleich?*")
+    danach = s.js("async () => (await api('/api/entwuerfe')).length")
+    pruefe(f"[{s.kurz}] B1 Rückgängig: Strg+Z/Strg+Y + ↶ stellen die Karte her (Gans davor), Vergleich: Klicken + Ziehen legt kein Bild an",
+           nach == f"Gans {wort}" and vor_frei and entwuerfe == danach and 35 <= regler <= 45,
+           f"vorher {vorher!r} · nach {nach!r} · Wiederholen frei {vor_frei} · Entwürfe {entwuerfe} → {danach} · Regler {regler}", t0=t0)
+
+
 def b1_wortliste(s, u):
     b_wortliste(s, u, "B1")
 
@@ -868,6 +909,7 @@ ABLAEUFE = [
     ("B1", ALLE, ("rechner",), b1_aussprache),
     ("B1", ALLE, ("rechner",), b1_neue_version),
     ("B1", ALLE, ("rechner",), b1_wortliste),
+    ("B1", ALLE, ("rechner",), b1_rueckgaengig),
     ("B1", ALLE, ("rechner",), b1_konsole),
     ("B1", ("webkit", "chromium"), ("handy",), b1_willkommen),
     ("B1", ("webkit", "chromium"), ("handy",), b1_lernen),

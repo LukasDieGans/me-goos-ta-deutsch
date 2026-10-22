@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-ME GOOS-TA DEUTSCH – Lade-Ente für die Konsole                      Version 2.3 (22.10.2026)
+ME GOOS-TA DEUTSCH – Lade-Ente für die Konsole                      Version 2.4 (22.10.2026)
 =============================================================================================
 Eine Ente schwimmt hin und her, wippt im Wasser und dreht an den Enden um – das Ladesymbol der Einrichtung im
 Konsolenfenster (dieselbe Animation zeigt die Oberfläche im Browser, siehe ui/index.html „Lade-Ente“).
