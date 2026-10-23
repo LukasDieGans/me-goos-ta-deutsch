@@ -1,0 +1,174 @@
+# Me Goos-ta Deutsch – Frischtest auf echten GitHub-Rechnern (seit 2.2; seit 2.5 G05 aus dem Quellbaum gebaut).
+# Job bau baut Release-Ordner, ZIP und Web-App selbst (.github/ci/bau.py → Artefakt baum = baum.tar), Job lint prüft mit
+# ruff (ruff.toml). Danach installieren die Testsysteme das Programm wie ein Nutzer über die Startdatei, bedienen die
+# Oberfläche per API, lassen beide Testreihen laufen, prüfen zweiten Start, Update und Deinstallation; dazu der
+# Browser-Test (Oberfläche, Web-App, Download-Seite, Anleitungen in WebKit, Firefox und Chromium). Keine Person nötig.
+# Auslöser: Branch ci (werkstatt/ci_lauf.py, verwaister Commit des Quellbaums), main, Pull Requests auf main (Fork-PRs
+# bekommen nur ein Lese-Token, keine Secrets) und von Hand. Keine Secrets, nur Lesen.
+name: Frischtest
+
+on:
+  push:
+    branches: [ci, main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: frischtest-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  bau:
+    name: bau
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.13"
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/mgd-webapp
+          key: pyodide-${{ hashFiles('werkstatt/bau_webapp.py') }}
+      - name: Programm-Pakete (pakete.lock mit Prüfsummen – Pillow/NumPy für Symbole und Modelle der Web-App)
+        run: |
+          python -m pip install -q --require-hashes --only-binary=:all: -r Me-Goos-ta-Deutsch/Programm/pakete.lock
+      - name: Bau (Release-Ordner, ZIP, Web-App → baum.tar)
+        run: python .github/ci/bau.py --ergebnis ergebnis.json --tar baum.tar --cache ~/.cache/mgd-webapp
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: baum
+          path: baum.tar
+          retention-days: 3
+          if-no-files-found: error
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: ergebnis-bau
+          path: ergebnis.json
+          retention-days: 14
+          if-no-files-found: warn
+
+  lint:
+    name: lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.13"
+      - name: ruff in fester Fassung (lint.lock mit Prüfsummen)
+        run: |
+          python -m pip install -q --require-hashes --only-binary=:all: -r .github/ci/lint.lock
+      - name: ruff check (ruff.toml – Syntaxfehler, undefinierte Namen)
+        run: ruff check --output-format=github .
+
+  frischtest:
+    name: ${{ matrix.name }}
+    needs: bau
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: windows-x64, os: windows-latest }
+          - { name: windows-arm, os: windows-11-arm }
+          - { name: macos-arm, os: macos-15 }        # macos-14 wird am 02.11.2026 abgeschaltet (Brownouts ab 05.10.); Probe 23.10.2026: macos-15/-26/-latest laufen
+          - { name: macos-intel, os: macos-15-intel }
+          - { name: linux-x64, os: ubuntu-latest }
+          - { name: linux-arm, os: ubuntu-24.04-arm }
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: baum
+      - name: Testbaum auspacken
+        run: tar -xf baum.tar
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.13"
+      - name: desktop-file-validate + minisign (nur Linux, zum Prüfen des Menüeintrags und der Signatur)
+        if: runner.os == 'Linux'
+        run: sudo apt-get install -y -qq --no-install-recommends desktop-file-utils minisign > /dev/null
+      - name: Frischtest
+        run: python baum/.github/ci/frischtest.py --system ${{ matrix.name }} --ergebnis ergebnis.json
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: ergebnis-${{ matrix.name }}
+          path: ergebnis.json
+          retention-days: 14
+          if-no-files-found: warn
+
+  debian:
+    # schlankes Debian: nur wget (kein curl), ca-certificates, tar – python3 nur als Dirigent des Tests
+    name: debian-slim
+    needs: bau
+    runs-on: ubuntu-latest
+    container: debian:stable-slim
+    timeout-minutes: 45
+    steps:
+      - name: Minimal-System
+        run: apt-get update -qq && apt-get install -y -qq --no-install-recommends wget ca-certificates tar python3 > /dev/null
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: baum
+      - name: Testbaum auspacken
+        run: tar -xf baum.tar
+      - name: Frischtest
+        run: python3 baum/.github/ci/frischtest.py --system debian-slim --ergebnis ergebnis.json
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: ergebnis-debian-slim
+          path: ergebnis.json
+          retention-days: 14
+          if-no-files-found: warn
+
+  browser:
+    # Playwright (Apache-2.0) nur hier, nie im Programm. WebKit = Safaris Engine (kein echtes iPhone). Windows ohne
+    # Browser-Job (Chromium läuft dort schon über den Frischtest bzw. lokal).
+    name: ${{ matrix.name }}
+    needs: bau
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45                                     # 22.10.2026: apt über den Azure-Spiegel brauchte > 30 min
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: browser-linux, os: ubuntu-latest, engines: "chromium,firefox,webkit" }
+          - { name: browser-macos, os: macos-15-intel, engines: "webkit" }   # WebKit für macOS 14 ist eingefroren (hängt); Intel bleibt, bis WebKit auf arm64 geprüft ist
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: baum
+      - name: Testbaum auspacken
+        run: tar -xf baum.tar
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.13"
+      - name: Programm-Pakete (pakete.lock mit Prüfsummen) und Playwright (Browser-Download bis zu dreimal – der Spiegel von Microsoft ist manchmal kurz weg)
+        run: |
+          if [ -f /etc/apt/apt-mirrors.txt ] && grep -qv 'azure\.archive\.ubuntu\.com' /etc/apt/apt-mirrors.txt; then sudo sed -i '/azure\.archive\.ubuntu\.com/d' /etc/apt/apt-mirrors.txt || true; fi
+          python -m pip install -q --require-hashes --only-binary=:all: -r baum/Programm/pakete.lock
+          python -m pip install -q playwright==1.63.0
+          for i in 1 2 3; do python -m playwright install --with-deps $(echo "${{ matrix.engines }}" | tr ',' ' ') && break; [ "$i" = 3 ] && exit 1; sleep 20; done
+      - name: Browser-Test
+        run: python baum/.github/ci/browser_test.py --system ${{ matrix.name }} --engines ${{ matrix.engines }} --ergebnis ergebnis.json
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: ergebnis-${{ matrix.name }}
+          path: ergebnis.json
+          retention-days: 14
+          if-no-files-found: warn

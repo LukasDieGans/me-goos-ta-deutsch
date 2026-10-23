@@ -1,0 +1,16 @@
+# Me Goos-ta Deutsch - feste Paketfassungen mit SHA-256: Tool Sprachen: uharfbuzz fuer hi/ar (pip --target, ohne Abhaengigkeiten)
+# pip install --require-hashes --only-binary=:all: -r pakete-sprachen.lock
+# Gebaut von bau_lock.py (Arbeitsordner) aus: uharfbuzz==0.56.3 | PyPI-Stand 2026-10-23
+# Python 3.13 (CPython) | Windows x64, Windows ARM (falls vorhanden), macOS Intel, macOS Apple Silicon, Linux x64 (glibc), Linux ARM (glibc)
+# Nicht von Hand aendern - neu bauen: python bau_lock.py [--neueste]
+
+# uharfbuzz 0.56.3: 4 Raeder
+#   uharfbuzz-0.56.3-cp310-abi3-macosx_10_9_universal2.whl
+#   uharfbuzz-0.56.3-cp310-abi3-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl
+#   uharfbuzz-0.56.3-cp310-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl
+#   uharfbuzz-0.56.3-cp310-abi3-win_amd64.whl
+uharfbuzz==0.56.3 \
+    --hash=sha256:888648b3ca86f3ee2f585e2c951741f06365ec3ae3d2eeaddb2562fd68738057 \
+    --hash=sha256:5ab78fbe38777292899cdef9ab189b2253587f55510132483737613f252905f5 \
+    --hash=sha256:450c32c04dfdfe9dc69b68250605538b493c3444823383a2ede100f0e6686d8e \
+    --hash=sha256:6d1a4e9de1fa893e4a2ca7e8140b55073342f965bebb00f047196678d672c799

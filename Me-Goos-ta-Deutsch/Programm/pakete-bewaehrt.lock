@@ -1,0 +1,34 @@
+# Me Goos-ta Deutsch - feste Paketfassungen mit SHA-256: Ersatz-Satz "bewaehrt" (nur Windows, wenn Smart App Control sperrt)
+# pip install --require-hashes --only-binary=:all: -r pakete-bewaehrt.lock
+# Gebaut von bau_lock.py (Arbeitsordner) aus: reportlab>=4.0,<5, pillow>=11.0,<12, numpy>=2.1,<2.3, pypdfium2>=4.30,<5 | PyPI-Stand 2026-10-23
+# Python 3.13 (CPython) | Windows x64
+# Nicht von Hand aendern - neu bauen: python bau_lock.py [--neueste]
+
+# charset-normalizer 3.5.2: 3 Raeder
+#   charset_normalizer-3.5.2-cp313-cp313-win_amd64.whl
+#   charset_normalizer-3.5.2-cp37-abi3-win_amd64.whl
+#   charset_normalizer-3.5.2-py3-none-any.whl
+charset-normalizer==3.5.2 \
+    --hash=sha256:78456a747de8dc58360ffa581f30a002baf5aa28cb262536545e91f113ed7639 \
+    --hash=sha256:9f56f72050826f63dcee7a7f55b0a77168cb3bfc553fd405e7f8f9ece75a4036 \
+    --hash=sha256:b6b751274acb69d77b3323d6b7dbaa3c7fdfc1eb829b7eb61d262f32e1af9685
+
+# numpy 2.2.6: 1 Raeder
+#   numpy-2.2.6-cp313-cp313-win_amd64.whl
+numpy==2.2.6 \
+    --hash=sha256:b0544343a702fa80c95ad5d3d608ea3599dd54d4632df855e4c8d24eb6ecfa1c
+
+# pillow 11.3.0: 1 Raeder
+#   pillow-11.3.0-cp313-cp313-win_amd64.whl
+pillow==11.3.0 \
+    --hash=sha256:0bce5c4fd0921f99d2e858dc4d4d64193407e1b99478bc5cacecba2311abde51
+
+# pypdfium2 4.30.0: 1 Raeder
+#   pypdfium2-4.30.0-py3-none-win_amd64.whl
+pypdfium2==4.30.0 \
+    --hash=sha256:90dbb2ac07be53219f56be09961eb95cf2473f834d01a42d901d13ccfad64b4c
+
+# reportlab 4.5.1: 1 Raeder
+#   reportlab-4.5.1-py3-none-any.whl
+reportlab==4.5.1 \
+    --hash=sha256:06fce8cb56c83307cfa4909cdf4e6a2ddbb44e5d6ef4d2edca896d7e9769f091

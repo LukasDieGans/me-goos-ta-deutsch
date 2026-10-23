@@ -1,0 +1,38 @@
+# Me Goos-ta Deutsch – Quellbaum (seit 2.5). Versioniert wird alles zum Bauen, Testen und Veröffentlichen;
+# private Notizen, Nutzerdaten, Archive und Zwischenstände nie.
+
+# Private Notizen (bleiben nur lokal)
+/UEBERGABE.md
+/FORTSETZUNG.md
+/ARBEITSSTAND.md
+/UMSETZUNGSPLAN.md
+/HANDY_PLAN.md
+/KI_BILD_RECHERCHE.md
+/START_NEUES_PROJEKT.md
+/PROMPT_NEUER_CHAT.txt
+
+# Archive, gebaute Releases, Proben, Ergebnisse
+*.zip
+/Release-*/
+/probe/
+/ci_ergebnis.json
+/ergebnis.json
+/.claude/
+__pycache__/
+*.pyc
+*.tmp
+*.bak
+
+# Nutzerdaten im Programmordner (wie aktualisieren.NUTZER)
+/Me-Goos-ta-Deutsch/Programm/karten.csv
+/Me-Goos-ta-Deutsch/Programm/karten.bak.csv
+/Me-Goos-ta-Deutsch/Programm/ui_einstellungen.json
+/Me-Goos-ta-Deutsch/Programm/ideen.json
+/Me-Goos-ta-Deutsch/Programm/lernstand*.json
+/Me-Goos-ta-Deutsch/Programm/bilder/
+/Me-Goos-ta-Deutsch/Programm/ideen/
+/Me-Goos-ta-Deutsch/Programm/ausgabe/
+/Me-Goos-ta-Deutsch/Programm/_beispiele/
+/Me-Goos-ta-Deutsch/Programm/assets/gans_hintergrund.*
+/Me-Goos-ta-Deutsch/Programm/assets/_alt/
+/Me-Goos-ta-Deutsch/Programm/modelle/realesrgan*.npz
