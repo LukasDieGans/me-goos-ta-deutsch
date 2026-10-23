@@ -3073,6 +3073,11 @@ class Anfrage:
         return self._fehler(404, tx("unbekannt"))
 
 
+def kopf_sauber(wert):
+    """Wert einer Kopfzeile ohne CR/LF/NUL – nie eine zweite Kopfzeile oder Antwort einschleusen (seit 2.5 G05)."""
+    return re.sub(r"[\r\n\x00]", " ", str(wert))
+
+
 class Handler(BaseHTTPRequestHandler):
     """Hülle für den lokalen Server: prüft Host, Origin, Cookie und Token, liefert die Seite aus und reicht alles
     andere an verarbeite() weiter."""
@@ -3117,7 +3122,7 @@ class Handler(BaseHTTPRequestHandler):
         elif isinstance(inhalt, str):
             inhalt = inhalt.encode("utf-8")
         self.send_response(status)
-        self.send_header("Content-Type", mime)
+        self.send_header("Content-Type", kopf_sauber(mime))
         self.send_header("Content-Length", str(len(inhalt)))
         self.send_header("Cache-Control", "no-store")
         self.send_header("X-Content-Type-Options", "nosniff")
@@ -3133,7 +3138,7 @@ class Handler(BaseHTTPRequestHandler):
                              "img-src 'self' blob: data:; font-src 'self'; connect-src 'self'; "
                              "object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'")
         for k, v in (extra or {}).items():
-            self.send_header(k, v)
+            self.send_header(kopf_sauber(k), kopf_sauber(v))
         self.end_headers()
         if self.command != "HEAD":
             self.wfile.write(inhalt)

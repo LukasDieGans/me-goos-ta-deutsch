@@ -15,12 +15,16 @@ Aufruf: python werkstatt/ci_lauf.py [<Ordner Me-Goos-ta-Deutsch>] [--probe] [--s
                 mit diesem Workflow, Auslöser push auf ci statt auf main (ohne Warten auf ein passendes Release);
                 ci_ergebnis.json bleibt unberührt
 
-Ablauf: bau_release.py → Release-Ordner + ZIP im Temp-Ordner (Positivliste, keine Nutzerdaten), bau_webapp.py
---ohne-modelle --release-zip → web-app/ (Handy-App + Download-Seite für den Browser-Test) + .github/ des Quellbaums +
-.gitattributes → ein verwaister Commit → Force-Push **nur** auf Branch ci (jeder andere Branch = Abbruch; main und
-gh-pages bleiben unberührt) → warten, bis GitHub Actions fertig ist → Artefakte (ergebnis-<system>) laden → kurze
-Zusammenfassung (≤ 30 Zeilen) + ci_ergebnis.json im Arbeitsordner (Inhalts-Prüfsumme des Release-Ordners, Lauf-Adresse,
-Ergebnis je System) – veroeffentliche_release.py gibt ein Release nur für genau diesen grünen Inhalt frei. Anmeldung wie
+Ablauf (seit 2.5 G05): Quellbaum (wie quellbaum.py ihn committen würde: versioniert + neue, nicht ignorierte Dateien;
+vorher quellbaum.py-Prüfung) → ein verwaister Commit → Force-Push **nur** auf Branch ci (jeder andere Branch = Abbruch;
+main und gh-pages bleiben unberührt). GitHub Actions baut selbst (Job bau: .github/ci/bau.py = bau_release.py + ZIP +
+bau_webapp.py --ohne-modelle --release-zip → baum.tar mit Release-Inhalt + .github/ + web-app/), Job lint (ruff), dann
+die Testsysteme. Lokal baut ci_lauf.py dasselbe einmal aus dem Arbeitsordner und einmal aus dem exportierten Quellbaum
+(gleiche Prüfsumme = nichts Nötiges unversioniert) → warten → Artefakte (ergebnis-<system>) laden → Prüfsumme des
+CI-Baus = lokale → kurze Zusammenfassung (≤ 30 Zeilen) + ci_ergebnis.json im Arbeitsordner (Inhalts-Prüfsumme des
+Release-Ordners, Lauf-Adresse, Ergebnis je System) – veroeffentliche_release.py gibt ein Release nur für genau diesen
+grünen Inhalt frei. --release-pruefung pusht weiter den gebauten Release-Baum (die Release-Prüfung testet das
+veröffentlichte Release). Anmeldung wie
 veroeffentliche_webapp.py (GH_TOKEN → GitHub CLI → GitHub Desktop; der Schlüssel wird nie ausgegeben). Im Hintergrund
 starten – ein Lauf dauert etwa 10–25 Minuten (je nach Warteschlange von GitHub)."""
 import hashlib
@@ -51,6 +55,8 @@ RELEASE_PRUEFUNG = "release_pruefung.yml"                       # läuft nach je
 QUELLE_GITHUB = ARBEIT / ".github"                              # → .github/ im Branch ci
 ERGEBNIS = ARBEIT / "ci_ergebnis.json"
 AUSFUEHRBAR = ("Me Goos-ta Deutsch - Mac.command", "Me Goos-ta Deutsch - Linux.sh")
+PROJEKT = "Me-Goos-ta-Deutsch"
+OHNE_ARTEFAKT = ("lint",)                                       # Jobs ohne ergebnis-*.json: zählt ihr Ausgang (success)
 
 
 def abbruch(text):
@@ -94,10 +100,10 @@ def baue_zip(projekt, ziel):
     return zips[0]
 
 
-def baue_webapp(projekt, ziel, zip_pfad, ohne_pyodide=False):
+def baue_webapp(projekt, ziel, zip_pfad, ohne_pyodide=False, cache=None):
     """Handy-App + Download-Seite wie für GitHub Pages (ohne Real-ESRGAN-Modell) → <ziel>/web-app."""
     befehl = [sys.executable, str(HIER / "bau_webapp.py"), str(projekt), str(ziel), "--ohne-modelle", "--release-zip",
-              str(zip_pfad)] + (["--ohne-pyodide"] if ohne_pyodide else [])
+              str(zip_pfad)] + (["--ohne-pyodide"] if ohne_pyodide else []) + (["--cache", str(cache)] if cache else [])
     r = subprocess.run(befehl, capture_output=True, text=True, encoding="utf-8", errors="replace",
                        env=dict(os.environ, PYTHONIOENCODING="utf-8", PYTHONDONTWRITEBYTECODE="1"))
     m = re.search(r"Version ([\w.-]+),", r.stdout)
@@ -142,11 +148,31 @@ def branch_inhalt(release, ziel, app=None, release_pruefung=False):
     return sorted(p.relative_to(ziel).as_posix() for p in ziel.rglob("*") if p.is_file())
 
 
-def plan(projekt, tmp, probe=False, release_pruefung=False):
+def quellbaum_inhalt(ziel):
+    """Branch-Inhalt seit 2.5 G05: genau der Quellbaum (versioniert + neue, nicht ignorierte Dateien, wie quellbaum.py
+    ihn committen würde) → ziel. Liefert (Dateiliste, Befund der quellbaum.py-Prüfung) bzw. (None, Grund) ohne .git."""
+    if not (ARBEIT / ".git").is_dir():
+        return None, "kein Git-Quellbaum"
+    import quellbaum as qb
+    ok, befund = qb.pruefen(ausgeben=False)
+    befund["ok"] = ok
+    namen = sorted({z for z in qb.git("ls-files", "-z", "-c", "-o", "--exclude-standard").split("\0") if z})
+    liste = []
+    for n in namen:
+        q = ARBEIT / n
+        if q.is_file() and "__pycache__" not in Path(n).parts:
+            z = ziel / n
+            z.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(q, z)
+            liste.append(n)
+    return liste, befund
+
+
+def plan(projekt, tmp, probe=False, release_pruefung=False, cache=None):
     release = baue_release(projekt, tmp / "release")
     konto, repo = konto_repo(release)
     app, app_version = (None, None) if release_pruefung else baue_webapp(projekt, tmp / "app", baue_zip(projekt, tmp / "zip"),
-                                                                      ohne_pyodide=probe)
+                                                                      ohne_pyodide=probe, cache=cache)
     inhalt = tmp / "branch"
     dateien = branch_inhalt(release, inhalt, app, release_pruefung)
     version = re.search(r'^VERSION = "([\d.]+)', (release / "Programm" / "gans_lernkarten.py").read_text("utf-8"), re.M)[1]
@@ -171,7 +197,7 @@ def pushen(inhalt, konto, repo, tok, ich, nachricht, branch=BRANCH):
         return r
     g("init", "-q", "-b", BRANCH)
     g("add", "-A")
-    da = [n for n in AUSFUEHRBAR if (inhalt / n).is_file()]
+    da = [n for n in AUSFUEHRBAR + tuple(f"{PROJEKT}/{a}" for a in AUSFUEHRBAR) if (inhalt / n).is_file()]
     if da:
         g("update-index", "--chmod=+x", "--", *da)
     g("commit", "-q", "-m", nachricht)
@@ -248,7 +274,11 @@ def ergebnisse(weg, tok, lauf):
     s, j = vw.api("GET", f"{weg}/actions/runs/{lauf['id']}/jobs?per_page=50", tok)
     for job in (j.get("jobs") or []) if s == 200 else []:
         name = job.get("name", "?")
-        if name not in aus:
+        if name in OHNE_ARTEFAKT and name not in aus:
+            gut = job.get("conclusion") == "success"
+            aus[name] = dict(ok=gut, pruefungen=[dict(name=name, ok=gut, grund=job.get("conclusion"))],
+                             fehler=None if gut else f"Job: {job.get('conclusion') or job.get('status')}")
+        elif name not in aus:
             aus[name] = dict(ok=False, pruefungen=[], fehler=f"kein Ergebnis (Job: {job.get('conclusion') or job.get('status')})")
         aus[name]["job"] = dict(conclusion=job.get("conclusion"), url=job.get("html_url"),
                                 dauer=_dauer(job.get("started_at"), job.get("completed_at")))
@@ -346,15 +376,36 @@ def main(argv):
             return 0
         woche = "--release-pruefung" in argv
         p, inhalt = plan(projekt, tmp, probe="--probe" in argv, release_pruefung=woche)
+        if not woche:                                           # seit G05: Branch ci = Quellbaum, die CI baut selbst
+            quelle = tmp / "quellbaum"
+            liste, befund = quellbaum_inhalt(quelle)
+            summe_q = (inhalt_pruefsumme(baue_release(quelle / PROJEKT, tmp / "release-q"))
+                       if liste and (quelle / PROJEKT / "Programm" / "starter.py").is_file() else None)
+            p["quellbaum"] = dict(dateien=len(liste or []), pruefung_ok=bool(liste) and befund.get("ok"),
+                                  pruefsumme_gleich=summe_q == p["pruefsumme"],
+                                  workflows=sorted(x.rsplit("/", 1)[1] for x in liste or []
+                                                   if x.startswith(".github/workflows/")),
+                                  befund={k: v for k, v in (befund.items() if isinstance(befund, dict) else [])
+                                          if k in ("gross", "geheim", "nicht_ausfuehrbar", "nicht_ignoriert", "fehlt") and v}
+                                  or (befund if isinstance(befund, str) else None))
         print(("Plan (Probe – ohne Netz, nichts wird verändert):" if "--probe" in argv else "Plan:"))
         print(f"  Repository {p['konto']}/{p['repo']} · Branch {p['branch']} (verwaister Commit, Force-Push nur hier)")
         print(f"  Inhalt     Release {p['version']} · {p['dateien']} Dateien · Prüfsumme {p['pruefsumme'][:16]}…")
+        if not woche:
+            q = p["quellbaum"]
+            print(f"  Quellbaum  {q['dateien']} Dateien (wird gepusht; die CI baut daraus) · Prüfung "
+                  f"{'✓' if q['pruefung_ok'] else '✗'} · gleiche Prüfsumme {'✓' if q['pruefsumme_gleich'] else '✗'}"
+                  + (f" · {q['befund']}" if q["befund"] else ""))
         print(f"  Workflows  {', '.join(p['workflows'])} · .github: {len(p['github'])} Dateien"
               + (" · Probe der Release-Prüfung (push auf ci, testet das veröffentlichte Release)" if woche
                  else f" · web-app: {p['web_app']} Dateien ({p['web_app_version']})"))
         print("#plan " + json.dumps(p, ensure_ascii=False))
         if "--probe" in argv:
             return 0
+        if not woche and not (p["quellbaum"]["pruefung_ok"] and p["quellbaum"]["pruefsumme_gleich"]):
+            abbruch("Quellbaum nicht pushbar (quellbaum.py --pruefen) oder baut ein anderes Release als der Arbeitsordner "
+                    "(Release-Datei nicht versioniert?) – nichts gepusht.")
+        inhalt = inhalt if woche else tmp / "quellbaum"
         tok, woher = vw.token()
         s, ich = vw.api("GET", "/user", tok)
         if s != 200:
@@ -384,7 +435,11 @@ def main(argv):
         lauf = warte(weg, tok, lauf, ende)
         fertig = lauf.get("status") == "completed"
         systeme = ergebnisse(weg, tok, lauf) if fertig else {}
-        ok = fertig and lauf.get("conclusion") == "success" and bool(systeme) and all(e.get("ok") for e in systeme.values())
+        bau = systeme.get("bau")
+        if not woche and bau is not None and bau.get("ok") and bau.get("pruefsumme") != p["pruefsumme"]:
+            bau.update(ok=False, fehler=f"Prüfsumme des CI-Baus {str(bau.get('pruefsumme'))[:16]}… ≠ lokal {p['pruefsumme'][:16]}…")
+        ok = (fertig and lauf.get("conclusion") == "success" and bool(systeme) and all(e.get("ok") for e in systeme.values())
+              and (woche or bau is not None))
         if woche:                                               # Probe: nur zeigen, ci_ergebnis.json (Release-Schranke) bleibt
             for z in zusammenfassung(systeme, lauf) if fertig else [f"✗ Lauf nach {minuten:.0f} min nicht fertig"]:
                 print(z)

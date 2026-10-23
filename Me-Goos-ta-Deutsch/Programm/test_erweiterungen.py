@@ -4073,8 +4073,9 @@ def test_status_englisch(tmp):
 def test_ci(tmp):
     """E38 (2.2): Automatische Tests auf GitHub-Rechnern – ci_lauf.py --probe zeigt den Plan (Branch ci, Release-Inhalt +
     .github, Prüfsumme) ohne Netz und schreibt nichts, verweigert jeden anderen Branch; frischtest.py verweigert die echte
-    Startdatei ohne GITHUB_ACTIONS; tests.yml statisch (Actions per SHA, nur Lesen, kein pull_request, Zeitlimit,
-    fail-fast aus); Release-ZIP ohne .github. Ohne die Dateien des Arbeitsordners (ci_lauf.py, ci/) entfallen alle 5."""
+    Startdatei ohne GITHUB_ACTIONS; tests.yml statisch (Actions per SHA, nur Lesen, pull_request nur auf main und nie
+    pull_request_target – seit 2.5 G05, Zeitlimit, fail-fast aus); Release-ZIP ohne .github. Ohne die Dateien des
+    Arbeitsordners (ci_lauf.py, .github/) entfallen alle 5."""
     print("\n[E38] Automatische Tests auf allen Systemen (CI)")
     import hashlib
     import importlib.util
@@ -4108,8 +4109,8 @@ def test_ci(tmp):
     subprocess.run([sys.executable, str(rel_bau), str(HIER.parent), str(rel)], env=env, capture_output=True, timeout=300)
     summe = cl.inhalt_pruefsumme(rel / HIER.parent.name) if (rel / HIER.parent.name).is_dir() else ""
     pruefe("ci_lauf.py --probe: Plan für Branch ci (Release-Inhalt + tests.yml + frischtest.py, Prüfsumme = Release-Ordner), ohne Netz, schreibt nichts",
-           pr.returncode == 0 and plan.get("branch") == "ci" and plan.get("workflows") == ["release_pruefung.yml", "tests.yml"]
-           and {".github/workflows/tests.yml", ".github/ci/frischtest.py"} <= set(plan.get("github", []))
+           pr.returncode == 0 and plan.get("branch") == "ci" and plan.get("workflows") == ["release_pruefung.yml", "scorecard.yml", "tests.yml"]
+           and {".github/workflows/tests.yml", ".github/ci/frischtest.py", ".github/ci/bau.py"} <= set(plan.get("github", []))
            and plan.get("pruefsumme") == summe and len(summe) == 64 and plan.get("dateien", 0) > 60 and vorher == nachher,
            (pr.stdout + pr.stderr)[-500:])
     b1, b2 = lauf(ci_lauf, HIER.parent, "--probe", "--branch", "main"), lauf(ci_lauf, HIER.parent, "--branch", "gh-pages")
@@ -4128,13 +4129,15 @@ def test_ci(tmp):
     uses = re.findall(r"^\s*-?\s*uses:\s*(\S+)", y, re.M)
     jobs = re.findall(r"^  ([a-z][a-z0-9_-]*):\s*$", y.split("\njobs:", 1)[1], re.M) if "\njobs:" in y else []
     zeiten = [int(z) for z in re.findall(r"^\s+timeout-minutes:\s*(\d+)", y, re.M)]
-    pruefe("tests.yml: Actions per Commit-SHA, nur contents: read, Auslöser push auf ci + workflow_dispatch (kein pull_request), "
-           "Zeitlimit je Job, fail-fast aus, keine Secrets",
+    pruefe("tests.yml: Actions per Commit-SHA, nur contents: read, Auslöser push auf ci + main, pull_request auf main (nie "
+           "pull_request_target), workflow_dispatch, Zeitlimit je Job, fail-fast aus, keine Secrets",
            uses and all(re.fullmatch(r"actions/[a-z-]+@[0-9a-f]{40}", u) for u in uses)
-           and re.search(r"^permissions:\n  contents: read\n\n", y, re.M) and "write" not in y and "pull_request" not in y
-           and re.search(r"^on:\n  push:\n    branches: \[ci\]\n  workflow_dispatch:\n\n", y, re.M) and "schedule" not in y
+           and re.search(r"^permissions:\n  contents: read\n\n", y, re.M) and "write" not in y and "pull_request_target" not in y
+           and re.search(r"^on:\n  push:\n    branches: \[ci, main\]\n  pull_request:\n    branches: \[main\]\n"
+                         r"  workflow_dispatch:\n\n", y, re.M) and "schedule" not in y
            and len(jobs) >= 2 and len(zeiten) == len(jobs) and all(0 < z <= 45 for z in zeiten)
-           and "fail-fast: false" in y and "secrets." not in y and y.count("persist-credentials: false") == len(jobs)
+           and "fail-fast: false" in y and "secrets." not in y
+           and y.count("persist-credentials: false") == sum(1 for u in uses if u.startswith("actions/checkout@"))
            and all(s in y for s in ("windows-latest", "windows-11-arm", "os: macos-15 }", "macos-15-intel", "ubuntu-latest",
                                     "ubuntu-24.04-arm", "debian:stable-slim")) and "os: macos-14" not in y, f"{uses} {jobs} {zeiten}")
     version = re.search(r'^VERSION = "([\d.]+)', (HIER / "gans_lernkarten.py").read_text(encoding="utf-8"), re.M)[1]
@@ -4229,7 +4232,7 @@ def test_ci_browser(tmp):
     pruefe("tests.yml: Job browser (Ubuntu: Chromium, Firefox, WebKit · macOS: WebKit), Playwright fest 1.63.0, Ergebnis als Artefakt",
            "browser-linux, os: ubuntu-latest, engines: \"chromium,firefox,webkit\"" in job
            and "browser-macos, os: macos-15-intel, engines: \"webkit\"" in job and "playwright==1.63.0" in job
-           and "python .github/ci/browser_test.py --system ${{ matrix.name }}" in job and "name: ergebnis-${{ matrix.name }}" in job
+           and "python baum/.github/ci/browser_test.py --system ${{ matrix.name }}" in job and "name: ergebnis-${{ matrix.name }}" in job
            and "--live" not in job and "for i in 1 2 3; do python -m playwright install" in job, job[:200])
     # 4) ci_lauf.py: web-app/ im Branch ci; --release-pruefung nur die Release-Prüfung mit push-Auslöser auf ci
     cl = modul(ci_lauf, "ci_lauf_e39")
@@ -6391,6 +6394,115 @@ def test_quellbaum(tmp):
     print(f"  E53 {time.time() - t0:.1f} s")
 
 
+def test_ci_quellbaum(tmp):
+    """E54 (2.5): CI baut aus dem Quellbaum – alle Workflows mit Actions per 40-stelligem SHA, nirgends
+    pull_request_target, oben nur contents: read, Schreibrechte nur im Scorecard-Job; tests.yml: Job bau (bau.py → baum.tar)
+    + lint, Testjobs ohne Checkout aus dem Artefakt; ruff.toml + lint.lock (fest, mit Hash); dependabot.yml nur
+    github-actions; ci_lauf.py pusht den Quellbaum (gleiche Prüfsumme wie der Arbeitsordner), bau.py setzt die Rechte im
+    tar; Kopfzeilen ohne CR/LF (CodeQL). Ohne .github/ bzw. werkstatt/ entfallen 5 der 6 Prüfungen."""
+    print("\n[E54] CI baut aus dem Quellbaum")
+    import importlib.util
+    import inspect
+    import tarfile
+    import gans_ui
+    t0 = time.time()
+    boese = gans_ui.kopf_sauber("datei.pdf\r\nSet-Cookie: x=1\n\x00")
+    quelle = inspect.getsource(gans_ui.Handler._senden)
+    pruefe("Kopfzeilen ohne CR/LF/NUL (Antwort-Aufspaltung): kopf_sauber für Content-Type und jede Zusatz-Kopfzeile",
+           "\r" not in boese and "\n" not in boese and "\x00" not in boese and boese.startswith("datei.pdf")
+           and "kopf_sauber(mime)" in quelle and "self.send_header(kopf_sauber(k), kopf_sauber(v))" in quelle, boese)
+    arbeit = HIER.parent.parent
+    gh = arbeit / ".github"
+    wfs = {n: gh / "workflows" / n for n in ("tests.yml", "release_pruefung.yml", "scorecard.yml")}
+    bau, ci_lauf = gh / "ci" / "bau.py", arbeit / "werkstatt" / "ci_lauf.py"
+    if not all(x.is_file() for x in (*wfs.values(), bau, ci_lauf, gh / "dependabot.yml", arbeit / "ruff.toml")):
+        print("  (.github/, werkstatt/ und ruff.toml liegen nur im Quellbaum – 5 Prüfungen entfallen)")
+        return
+    y = {n: w.read_text(encoding="utf-8") for n, w in wfs.items()}
+    fehler = []
+    for n, txt in y.items():
+        uses = re.findall(r"^\s*-?\s*uses:\s*(\S+)", txt, re.M)
+        if not uses or not all(re.fullmatch(r"[a-z0-9-]+/[a-z0-9_./-]+@[0-9a-f]{40}", u) for u in uses):
+            fehler.append(f"{n}: uses {uses}")
+        if "pull_request_target" in txt or "secrets." in txt or not re.search(r"^permissions:\n  contents: read\n\n", txt, re.M):
+            fehler.append(f"{n}: Auslöser/Rechte")
+        if re.search(r"^\s+(- )?(run|name): (?![|>])[^\n]*: ", txt, re.M):     # „: “ in einfacher Zeile = YAML-Fehler (Fund G05)
+            fehler.append(f"{n}: run/name-Zeile mit „: “ – Block (|) nehmen")
+        schreib = re.findall(r"^( +)([a-z-]+): write$", txt, re.M)
+        if n != "scorecard.yml" and ("write" in txt or schreib):
+            fehler.append(f"{n}: write")
+        if n == "scorecard.yml" and (sorted(s[1] for s in schreib) != ["id-token", "security-events"]
+                                     or any(len(s[0]) != 6 for s in schreib) or "publish_results: true" not in txt
+                                     or not re.search(r"^on:\n  push:\n    branches: \[main\]\n  workflow_dispatch:\n\n", txt, re.M)):
+            fehler.append(f"{n}: Schreibrechte nur im Job (security-events, id-token), nur main")
+        jobs = re.findall(r"^  ([a-z][a-z0-9_-]*):\s*$", txt.split("\njobs:", 1)[1], re.M) if "\njobs:" in txt else []
+        zeiten = re.findall(r"^\s+timeout-minutes:\s*(\d+)", txt, re.M)
+        if len(zeiten) != len(jobs) or txt.count("persist-credentials: false") != sum(1 for u in uses if u.startswith("actions/checkout@")):
+            fehler.append(f"{n}: Zeitlimit/persist-credentials")
+    pruefe("Alle Workflows: Actions per 40-stelligem SHA, nie pull_request_target, keine Secrets, oben nur contents: read, "
+           "Schreibrechte nur im Scorecard-Job (security-events + id-token, nur main), Zeitlimit je Job", not fehler, fehler)
+    tt = y["tests.yml"]
+    teile = {}
+    for j in ("bau", "lint", "frischtest", "debian", "browser"):
+        rest = tt.split(f"\n  {j}:\n", 1)[1] if f"\n  {j}:\n" in tt else ""
+        teile[j] = re.split(r"\n  [a-z][a-z0-9_-]*:\n", rest, maxsplit=1)[0]
+    test_jobs = [teile[j] for j in ("frischtest", "debian", "browser")]
+    pruefe("tests.yml: Job bau (bau.py aus dem Quellbaum, Pakete per pakete.lock mit Hashes, Pyodide-Cache, Artefakt baum.tar) "
+           "und Job lint; Testjobs needs: bau, ohne Checkout, packen baum.tar aus und starten baum/.github/ci/…",
+           "python .github/ci/bau.py --ergebnis ergebnis.json --tar baum.tar --cache" in teile["bau"]
+           and "--require-hashes --only-binary=:all: -r Me-Goos-ta-Deutsch/Programm/pakete.lock" in teile["bau"]
+           and "uses: actions/cache@" in teile["bau"] and "name: baum\n" in teile["bau"] and "path: baum.tar" in teile["bau"]
+           and "name: ergebnis-bau" in teile["bau"] and "ruff check" in teile["lint"] and "-r .github/ci/lint.lock" in teile["lint"]
+           and all("needs: bau" in j and "actions/checkout@" not in j and "actions/download-artifact@" in j
+                   and "tar -xf baum.tar" in j and "baum/.github/ci/" in j for j in test_jobs),
+           {k: len(v) for k, v in teile.items()})
+    ruff = (arbeit / "ruff.toml").read_text(encoding="utf-8")
+    lock = (gh / "ci" / "lint.lock").read_text(encoding="utf-8") if (gh / "ci" / "lint.lock").is_file() else ""
+    hashes = re.findall(r"--hash=sha256:([0-9a-f]+)", lock)
+    pruefe("Lint: ruff.toml mit kleinem Regelsatz (E9, F63, F7, F82), Referenz-Testreihe ausgenommen; lint.lock = eine feste "
+           "ruff-Fassung mit SHA-256 je Rad, nur ASCII",
+           re.search(r'^select = \["E9", "F63", "F7", "F82"\]$', ruff, re.M) is not None
+           and '"Me-Goos-ta-Deutsch/Programm/test_gans_lernkarten.py"' in ruff and "[format]" not in ruff
+           and re.search(r"^ruff==\d+\.\d+\.\d+ \\$", lock, re.M) is not None and len(re.findall(r"^[a-z]", lock, re.M)) == 1
+           and hashes and all(len(h) == 64 for h in hashes) and lock.isascii(), (ruff[:120], hashes))
+    dep = (gh / "dependabot.yml").read_text(encoding="utf-8")
+    pruefe("dependabot.yml: Version 2, nur github-actions (Python-Pakete über bau_lock.py), wöchentlich",
+           re.search(r"^version: 2$", dep, re.M) is not None and dep.count("package-ecosystem:") == 1
+           and "package-ecosystem: github-actions" in dep and "interval: weekly" in dep, dep[-200:])
+    # ci_lauf.py --probe: Quellbaum + bau.py: Rechte im tar
+    env = dict(os.environ, PYTHONIOENCODING="utf-8", PYTHONDONTWRITEBYTECODE="1", GH_TOKEN="",
+               HTTPS_PROXY="http://127.0.0.1:9", HTTP_PROXY="http://127.0.0.1:9")     # kein Netz
+    env.pop("GITHUB_ACTIONS", None)
+    pr = subprocess.run([sys.executable, str(ci_lauf), str(HIER.parent), "--probe"], env=env, cwd=str(tmp), capture_output=True,
+                        text=True, encoding="utf-8", errors="replace", timeout=600)
+    mp = re.search(r"^#plan (.*)$", pr.stdout, re.M)
+    q = (json.loads(mp.group(1)) if mp else {}).get("quellbaum") or {}
+    spec = importlib.util.spec_from_file_location("bau_e54", bau)
+    b = importlib.util.module_from_spec(spec)
+    vorher = sys.dont_write_bytecode
+    sys.dont_write_bytecode = True
+    try:
+        spec.loader.exec_module(b)
+    finally:
+        sys.dont_write_bytecode = vorher
+    baum = tmp / "e54-baum"
+    for n in ("Me Goos-ta Deutsch - Mac.command", "Me Goos-ta Deutsch - Linux.sh", "README.md", "Programm/x.sh"):
+        (baum / n).parent.mkdir(parents=True, exist_ok=True)
+        (baum / n).write_text("#", encoding="utf-8")
+    b.tar_bauen(baum, tmp / "e54.tar")
+    with tarfile.open(tmp / "e54.tar") as tf:
+        modi = {m.name: m.mode for m in tf.getmembers() if m.isfile()}
+    git_ok = (arbeit / ".git").is_dir()
+    pruefe("ci_lauf.py --probe: Branch ci = Quellbaum (quellbaum.py-Prüfung ✓, baut dasselbe Release wie der Arbeitsordner, "
+           "3 Workflows); bau.py: Startdateien oben 0755, sonst 0644 im tar",
+           pr.returncode == 0 and (not git_ok or (q.get("pruefung_ok") and q.get("pruefsumme_gleich") and q.get("dateien", 0) >= 90
+                                                  and q.get("workflows") == ["release_pruefung.yml", "scorecard.yml", "tests.yml"]))
+           and modi.get("baum/Me Goos-ta Deutsch - Mac.command") == 0o755 and modi.get("baum/Me Goos-ta Deutsch - Linux.sh") == 0o755
+           and modi.get("baum/README.md") == 0o644 and modi.get("baum/Programm/x.sh") == 0o644,
+           (q, modi, (pr.stdout + pr.stderr)[-300:]))
+    print(f"  E54 {time.time() - t0:.1f} s")
+
+
 def main():
     global ECHTES_KI_BILD, ECHT_DA
     t0 = time.time()
@@ -6459,6 +6571,7 @@ def main():
         test_signatur(Path(tmp))
         test_paket_fassungen(Path(tmp))
         test_quellbaum(Path(tmp))
+        test_ci_quellbaum(Path(tmp))
     ok =sum(1 for e in tg.ergebnisse if e[1])
     print(f"\n{ok} von {len(tg.ergebnisse)} Prüfungen bestanden ({time.time() - t0:.0f} s).")
     if ok == len(tg.ergebnisse):
