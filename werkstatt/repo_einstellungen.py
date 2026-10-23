@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Einstellungen des öffentlichen Repositorys von Me Goos-ta Deutsch setzen (seit 2.5, G01).
-Aufruf: python repo_einstellungen.py [--probe] [--stufe 1|2]
+Aufruf: python repo_einstellungen.py [--probe] [--stufe 1|2] [--nur <id,id…>]
 
 --probe    ohne Netz und ohne Anmeldung: zeigt den Plan der Stufe (Soll-Werte), ändert nichts
 --stufe 1  (Standard) Topics, Wiki/Discussions aus, private Sicherheitsmeldungen, Dependabot-Warnungen, Secret
@@ -10,6 +10,8 @@ Aufruf: python repo_einstellungen.py [--probe] [--stufe 1|2]
            unveränderliche Releases (Assets und Tag eines veröffentlichten Releases bleiben, wie sie sind), Ruleset
            „Signierte Commits main + gh-pages“ (nur signierte Commits; ci frei). Keine Pflicht-Prüfungen vor dem Push:
            die CI prüft einen verwaisten Commit auf ci (andere SHA), die Freigabe macht die CI-Schranke im Skript.
+--nur      nur diese Schritte der Stufe (ids wie im #plan), z. B. `--stufe 2 --nur tags,unveraenderlich` vor dem Release und
+           `--nur signierte_commits` erst, wenn alle neuen Commits auf main „Verified“ zeigen.
 
 Idempotent: jeder Schritt liest zuerst den Ist-Zustand und ändert nur, was abweicht („=“ schon richtig, „✓“ gesetzt);
 danach wird erneut gelesen. Nur mit Lukas’ Erlaubnis-Satz „Einstellungen“ ohne --probe aufrufen.
@@ -160,8 +162,10 @@ def plan(stufe):
                 schritte=[dict(id=i, titel=t, soll=soll) for i, t, soll, *_ in STUFEN[stufe]])
 
 
-def ausfuehren(stufe):
+def ausfuehren(stufe, nur=None):
     p = plan(stufe)
+    if nur and not set(nur) <= {s["id"] for s in p["schritte"]}:
+        abbruch(f"--nur kennt nur: {', '.join(s['id'] for s in p['schritte'])}")
     tok, woher = vw.token()
     s, ich = vw.api("GET", "/user", tok)
     if s != 200:
@@ -176,6 +180,8 @@ def ausfuehren(stufe):
     print(f"Konto {ich['login']} (Anmeldung: {woher}) · Repository {p['repo']} · Stufe {stufe}")
     ergebnis, fehler = {}, 0
     for sid, titel, _soll, lesen, passt, setzen in STUFEN[stufe]:
+        if nur and sid not in nur:
+            continue
         ist = lesen(api)
         if passt(ist):
             print(f"  = {titel}")
@@ -203,7 +209,8 @@ def main(argv):
             print(f"  · {s['titel']}")
         print("#plan " + json.dumps(p, ensure_ascii=False))
         return 0
-    return ausfuehren(stufe)
+    nur = argv[argv.index("--nur") + 1].split(",") if "--nur" in argv and argv.index("--nur") + 1 < len(argv) else None
+    return ausfuehren(stufe, nur)
 
 
 if __name__ == "__main__":

@@ -16,6 +16,7 @@
 /Release-*/
 /probe/
 /ci_ergebnis.json
+/ergebnis.json
 /.claude/
 __pycache__/
 *.pyc
