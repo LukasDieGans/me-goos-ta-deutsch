@@ -15,7 +15,8 @@ Thanks for wanting to help – ideas, bug reports and fixes are all goose-tastic
 - **Every visible text in three languages:** German (`de`), English (`en`, the default) and Spanish (`es`, as spoken in
   Mexico). A new text always gets all three at once – in `Programm/ui/index.html` in the object `TXT`, in Python via
   `L("de", "en", "es")`.
-- **Friendly, positive tone**, goose puns welcome. We never use the word “Warning” – say “Heads-up” instead.
+- **Friendly, positive tone**, goose puns welcome. Notes that need attention start with “Heads-up” (German
+  “Achtung”, Spanish “Atención”) – never with an alarm word.
 - **Nothing may disappear on Windows:** new things are added, existing behaviour stays.
 - No new Python packages without a good reason; licenses must be MIT-compatible (MIT, BSD, Apache-2.0, OFL, MPL
   unchanged) and go into `Programm/requirements.txt` and `Programm/DRITTLIZENZEN.md`.
@@ -64,7 +65,7 @@ Variable names, comments and `SPEC.md` are written in German. A small glossary o
 ---
 
 **Deutsch (kurz):** Bitte zuerst ein Issue öffnen, dann den Pull Request. Jeder sichtbare Text in de/en/es, positiver
-Ton, nie „Warnung“. Beide Testreihen müssen grün sein; `test_gans_lernkarten.py` nie ändern, neue Prüfungen in
+Ton („Achtung“ statt Alarmwort). Beide Testreihen müssen grün sein; `test_gans_lernkarten.py` nie ändern, neue Prüfungen in
 `test_erweiterungen.py`. Leitfäden (de/en/es) und SPEC gehören zur Änderung.
 
 **Español (breve):** Primero abre un issue y después el pull request. Cada texto visible en de/en/es, tono positivo.
