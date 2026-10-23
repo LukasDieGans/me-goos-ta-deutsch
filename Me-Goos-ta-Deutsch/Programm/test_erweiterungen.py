@@ -3331,7 +3331,7 @@ def test_web_app(p, tmp):
            e.get("modell") == ["realesrgan-x4plus.npz", True, True, True], str(e.get("modell")))
     bau = HIER.parent.parent / "werkstatt" / "bau_webapp.py"
     if not bau.is_file():
-        print("  (bau_webapp.py liegt nur im Arbeitsordner – Bau-Prüfungen entfallen)")
+        print("  (werkstatt/bau_webapp.py liegt nur im Quellbaum – Bau-Prüfungen entfallen)")
         return
     ziel = tmp / "e31-bau"
     erst = subprocess.run([sys.executable, str(bau), str(HIER.parent), str(ziel), "--ohne-pyodide"], env=env,
@@ -3934,7 +3934,7 @@ def test_download_seite(tmp):
            and all(seite.count(k + ":") == 3 for k in ("u_download", "u_download_text", "app_rechner")))
     bau, rel_bau, rel_skript = arbeit / "werkstatt" / "bau_webapp.py", arbeit / "werkstatt" / "bau_release.py", arbeit / "werkstatt" / "veroeffentliche_release.py"
     if not all(x.is_file() for x in (bau, rel_bau, rel_skript, arbeit / "web-app-quelle" / "sw.js")):
-        print("  (bau_webapp.py, bau_release.py und veroeffentliche_release.py liegen nur im Arbeitsordner – Bau-Prüfungen entfallen)")
+        print("  (werkstatt/ und web-app-quelle/ liegen nur im Quellbaum – Bau-Prüfungen entfallen)")
         return
     env = dict(os.environ, PYTHONIOENCODING="utf-8")
 
@@ -4082,7 +4082,7 @@ def test_ci(tmp):
     ci_lauf, frisch = arbeit / "werkstatt" / "ci_lauf.py", arbeit / ".github" / "ci" / "frischtest.py"
     wf, rel_bau = arbeit / ".github" / "workflows" / "tests.yml", arbeit / "werkstatt" / "bau_release.py"
     if not all(x.is_file() for x in (ci_lauf, frisch, wf, rel_bau, arbeit / "werkstatt" / "veroeffentliche_webapp.py")):
-        print("  (ci_lauf.py und ci/ liegen nur im Arbeitsordner – CI-Prüfungen entfallen)")
+        print("  (werkstatt/ci_lauf.py und .github/ liegen nur im Quellbaum – CI-Prüfungen entfallen)")
         return
     env = dict(os.environ, PYTHONIOENCODING="utf-8", GH_TOKEN="", HTTPS_PROXY="http://127.0.0.1:9",
                HTTP_PROXY="http://127.0.0.1:9")                  # kein Netz: jede Anfrage liefe ins Leere
@@ -4165,7 +4165,7 @@ def test_ci_browser(tmp):
         ci / "workflows" / "tests.yml"
     ci_lauf, vr, rel_bau = arbeit / "werkstatt" / "ci_lauf.py", arbeit / "werkstatt" / "veroeffentliche_release.py", arbeit / "werkstatt" / "bau_release.py"
     if not all(x.is_file() for x in (bt, nr, woche, wf, ci_lauf, vr, rel_bau, arbeit / "werkstatt" / "bau_webapp.py")):
-        print("  (ci_lauf.py, ci/ und die Release-Skripte liegen nur im Arbeitsordner – Prüfungen entfallen)")
+        print("  (werkstatt/ und .github/ liegen nur im Quellbaum – Prüfungen entfallen)")
         return
     env = dict(os.environ, PYTHONIOENCODING="utf-8", PYTHONDONTWRITEBYTECODE="1", GH_TOKEN="",
                HTTPS_PROXY="http://127.0.0.1:9", HTTP_PROXY="http://127.0.0.1:9")     # kein Netz
@@ -5151,7 +5151,7 @@ def test_fix_download_release(tmp):
     oben, arbeit = HIER.parent, HIER.parent.parent
     bau, sw_q, nr = arbeit / "werkstatt" / "bau_webapp.py", arbeit / "web-app-quelle" / "sw.js", arbeit / ".github" / "ci" / "neuestes_release.py"
     if not all(x.is_file() for x in (bau, sw_q, nr)):
-        print("  (bau_webapp.py, web-app-quelle/ und ci/ liegen nur im Arbeitsordner – Prüfungen entfallen)")
+        print("  (werkstatt/, web-app-quelle/ und .github/ liegen nur im Quellbaum – Prüfungen entfallen)")
         return
     env = dict(os.environ, PYTHONIOENCODING="utf-8", PYTHONDONTWRITEBYTECODE="1")
     ziel = tmp / "e44-web"
@@ -5793,7 +5793,7 @@ def test_github_auftritt(tmp):
     md = {n: ci / n for n in ("SECURITY.md", "CONTRIBUTING.md", "CODE_OF_CONDUCT.md", "PULL_REQUEST_TEMPLATE.md")}
     formulare = {n: ci / "ISSUE_TEMPLATE" / n for n in ("bug_report.yml", "feature_request.yml", "config.yml")}
     if not (ci / "workflows").is_dir() or not skript.is_file():
-        print("  (ci/ und repo_einstellungen.py liegen nur im Arbeitsordner – Prüfungen entfallen)")
+        print("  (.github/ und werkstatt/repo_einstellungen.py liegen nur im Quellbaum – Prüfungen entfallen)")
         return
     texte = {n: (p.read_text(encoding="utf-8") if p.is_file() else "") for n, p in {**md, **formulare}.items()}
     leer = [n for n, t in texte.items() if len(t.strip()) < 200]
@@ -6021,7 +6021,7 @@ def test_signatur(tmp):
     arbeit = HIER.parent.parent
     sr_pfad, vr_pfad, bau = arbeit / "werkstatt" / "signiere_release.py", arbeit / "werkstatt" / "veroeffentliche_release.py", arbeit / "werkstatt" / "bau_webapp.py"
     if not all(x.is_file() for x in (sr_pfad, vr_pfad, bau)) or os.name != "nt":
-        print("  (signiere_release.py, veroeffentliche_release.py, bau_webapp.py liegen nur im Arbeitsordner; DPAPI nur unter Windows – 4 Prüfungen entfallen)")
+        print("  (werkstatt/signiere_release.py, veroeffentliche_release.py, bau_webapp.py liegen nur im Quellbaum; DPAPI nur unter Windows – 4 Prüfungen entfallen)")
         print(f"  E51 Kern {time.time() - t0:.1f} s")
         return
     env = dict(os.environ, PYTHONIOENCODING="utf-8", GH_TOKEN="", HTTPS_PROXY="http://127.0.0.1:9", HTTP_PROXY="http://127.0.0.1:9")
@@ -6300,7 +6300,7 @@ def test_paket_fassungen(tmp):
                and plan.get("locks", {}).get("pakete.lock") == haupt and p2.returncode == 1 and "✗ pakete.lock" in p2.stdout
                and im_release is not False, (p1.stdout + p1.stderr)[-400:] + (p2.stdout + p2.stderr)[-200:])
     else:
-        print("  (bau_lock.py + bau_lock_antworten.json liegen nur im Arbeitsordner – 1 Prüfung entfällt)")
+        print("  (werkstatt/bau_lock.py + bau_lock_antworten.json liegen nur im Quellbaum – 1 Prüfung entfällt)")
     # --- echter pip-Lauf: Locks installierbar, falsche Prüfsumme wird abgelehnt ---
     pip = [sys.executable, "-m", "pip", "install", "--dry-run", "--ignore-installed", "--disable-pip-version-check",
            "--no-input", "--require-hashes", "--only-binary=:all:", "-q"]
@@ -6321,6 +6321,74 @@ def test_paket_fassungen(tmp):
                and "do not match the hashes" in (falsch_lauf.stdout + falsch_lauf.stderr).lower(),
                {n: (r.returncode, (r.stderr or r.stdout)[-200:]) for n, r in laeufe.items()} | {"falsch": falsch_lauf.stderr[-200:]})
     print(f"  E52 {time.time() - t0:.1f} s")
+
+
+def test_quellbaum(tmp):
+    """E53 (2.5): Arbeitsordner = Git-Quellbaum – Update ersetzt nie einen Quellbaum (werkstatt/bau_release.py bzw. .git
+    daneben); werkstatt/quellbaum.py --pruefen: Nutzerdaten (wie aktualisieren.NUTZER) und private Notizen ignoriert, keine
+    Datei > 20 MB, keine Schlüssel/Tokens, Startdateien ausführbar, alle Release-Dateien versioniert; Commits signiert.
+    Ohne Quellbaum (werkstatt/quellbaum.py + .git, z. B. auf den CI-Rechnern) entfallen 4 der 5 Prüfungen."""
+    print("\n[E53] Arbeitsordner als Git-Quellbaum")
+    import importlib.util
+    import aktualisieren as ak
+    t0 = time.time()
+    # --- Update-Schutz für den neuen Aufbau (immer) ---
+    qb = tmp / "e53-quellbaum"
+    prog = qb / "Me-Goos-ta-Deutsch"
+    (prog / "Programm").mkdir(parents=True)
+    for n in ("starter.py", "gans_ui.py"):
+        (prog / "Programm" / n).write_text("#", encoding="utf-8")
+    frei = ak.programm_ordner_ok(prog)
+    (qb / "werkstatt").mkdir()
+    (qb / "werkstatt" / "bau_release.py").write_text("#", encoding="utf-8")
+    mit_werkstatt = ak.programm_ordner_ok(prog)
+    (qb / "werkstatt" / "bau_release.py").unlink()
+    (qb / ".git").mkdir()
+    mit_git = ak.programm_ordner_ok(prog)
+    pruefe("Update ersetzt nie den Quellbaum: werkstatt/bau_release.py oder .git neben Me-Goos-ta-Deutsch → Programmordner gesperrt",
+           frei and not mit_werkstatt and not mit_git, (frei, mit_werkstatt, mit_git))
+    arbeit = HIER.parent.parent
+    skript = arbeit / "werkstatt" / "quellbaum.py"
+    if not (skript.is_file() and (arbeit / ".git").is_dir()):
+        print("  (werkstatt/quellbaum.py + .git gibt es nur im Quellbaum – 4 Prüfungen entfallen)")
+        return
+    env = dict(os.environ, PYTHONIOENCODING="utf-8", PYTHONDONTWRITEBYTECODE="1")
+    r = subprocess.run([sys.executable, str(skript), "--pruefen"], capture_output=True, text=True, encoding="utf-8",
+                       errors="replace", env=env, timeout=120)
+    m = re.search(r"^#pruefung (\{.*\})$", r.stdout, re.M)
+    b = json.loads(m.group(1)) if m else {}
+    spec = importlib.util.spec_from_file_location("quellbaum_e53", skript)
+    q = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(q)
+    programm_nie = [p[len("Me-Goos-ta-Deutsch/"):] for p in q.NIE if p.startswith("Me-Goos-ta-Deutsch/Programm/")]
+    pruefe("Nicht im Repo: private Notizen, Archive/Releases/Proben/ci_ergebnis.json und jedes Nutzerdaten-Muster (alle Beispiele "
+           "passen zu aktualisieren.NUTZER)",
+           m is not None and b.get("nicht_ignoriert") == [] and b.get("ignoriert_geprueft", 0) >= 25
+           and all(n in q.NIE for n in ("UEBERGABE.md", "ARBEITSSTAND.md", "PROMPT_NEUER_CHAT.txt", "ci_ergebnis.json"))
+           and len(programm_nie) >= 15 and all(ak.NUTZER.match(p) for p in programm_nie),
+           (b.get("nicht_ignoriert"), [p for p in programm_nie if not ak.NUTZER.match(p)], r.stderr[-300:]))
+    falsch = b"ghp_" + b"A1" * 18 + b"\n-----BEGIN OPENSSH " + b"PRIVATE KEY-----\n" + b"b3BlbnNzaC1rZXk" * 4
+    pruefe("Im Repo keine Datei > 20 MB, keine Schlüssel/Tokens (Muster erkennt echte Werte, nicht ihre Erwähnung); "
+           "Startdateien Mac/Linux ausführbar (100755)",
+           b.get("gross") == [] and b.get("geheim") == [] and b.get("nicht_ausfuehrbar") == []
+           and len(q.GEHEIM.findall(falsch)) == 2 and not q.GEHEIM.search(b"ghp_ github_pat_ PRIVATE KEY minisign encrypted secret key"),
+           {k: b.get(k) for k in ("gross", "geheim", "nicht_ausfuehrbar")})
+    alt = [n for n in ("ci", "bau_release.py", "bau_webapp.py", "ci_lauf.py", "veroeffentliche_release.py") if (arbeit / n).exists()]
+    pruefe("Aufbau: .github/, werkstatt/ (alle Skripte), web-app-quelle/, Me-Goos-ta-Deutsch/ – jede Release-Datei versioniert, "
+           "nichts mehr am alten Ort",
+           r.returncode == 0 and b.get("fehlt") == [] and b.get("release", 0) >= 60 and not alt,
+           (b.get("fehlt"), alt, r.stdout[-300:]))
+    konf = {k: q.git("config", "--get", k, pruefen=False).strip() for k in
+            ("core.autocrlf", "gpg.format", "commit.gpgsign", "tag.gpgsign", "push.default", "user.email", "user.signingkey")}
+    signiert = q.git("log", "-1", "--format=%G?", pruefen=False).strip()
+    pruefe("Git: signierte Commits (SSH, Schlüssel außerhalb des Repos, letzter Commit gültig), noreply-Adresse, autocrlf aus, "
+           "push.default nothing",
+           konf["core.autocrlf"] == "false" and konf["gpg.format"] == "ssh" and konf["commit.gpgsign"] == "true"
+           and konf["tag.gpgsign"] == "true" and konf["push.default"] == "nothing"
+           and konf["user.email"].endswith("@users.noreply.github.com")
+           and arbeit.resolve() not in Path(konf["user.signingkey"] or arbeit).resolve().parents and signiert == "G",
+           (konf, signiert))
+    print(f"  E53 {time.time() - t0:.1f} s")
 
 
 def main():
@@ -6390,6 +6458,7 @@ def main():
         test_github_auftritt(Path(tmp))
         test_signatur(Path(tmp))
         test_paket_fassungen(Path(tmp))
+        test_quellbaum(Path(tmp))
     ok =sum(1 for e in tg.ergebnisse if e[1])
     print(f"\n{ok} von {len(tg.ergebnisse)} Prüfungen bestanden ({time.time() - t0:.0f} s).")
     if ok == len(tg.ergebnisse):

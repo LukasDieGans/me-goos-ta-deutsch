@@ -2,7 +2,7 @@
 # Installiert das Programm wie ein Nutzer über die Startdatei, bedient die Oberfläche per API, lässt beide Testreihen
 # laufen, prüft zweiten Start, Update und Deinstallation; dazu der Browser-Test (Oberfläche, Web-App, Download-Seite,
 # Anleitungen in WebKit, Firefox und Chromium). Keine Person nötig, nichts zum Anklicken.
-# Gepusht wird nur Branch ci (ci_lauf.py im Arbeitsordner, verwaister Commit). Keine Secrets, nur Lesen.
+# Gepusht wird nur Branch ci (werkstatt/ci_lauf.py im Quellbaum, verwaister Commit). Keine Secrets, nur Lesen.
 name: Frischtest
 
 on:
