@@ -51,7 +51,7 @@ jobs:
         include:
           - { name: windows-x64, os: windows-latest }
           - { name: windows-arm, os: windows-11-arm }
-          - { name: macos-arm, os: macos-14 }        # macos-latest/-15/-26 (arm64) bekamen am 20.10.2026 keinen Runner
+          - { name: macos-arm, os: macos-15 }        # macos-14 wird am 02.11.2026 abgeschaltet (Brownouts ab 05.10.); Probe 23.10.2026: macos-15/-26/-latest laufen
           - { name: macos-intel, os: macos-15-intel }
           - { name: linux-x64, os: ubuntu-latest }
           - { name: linux-arm, os: ubuntu-24.04-arm }
@@ -107,7 +107,7 @@ jobs:
       matrix:
         include:
           - { name: browser-linux, os: ubuntu-latest, engines: "chromium,firefox,webkit" }
-          - { name: browser-macos, os: macos-15-intel, engines: "webkit" }   # WebKit für macOS 14 ist eingefroren (hängt), macos-latest/-15 arm64 ohne Runner
+          - { name: browser-macos, os: macos-15-intel, engines: "webkit" }   # WebKit für macOS 14 ist eingefroren (hängt); Intel bleibt, bis WebKit auf arm64 geprüft ist
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:

@@ -1,0 +1,63 @@
+name: Bug report
+description: Something does not work as expected – help us catch the goose bug.
+title: "[Bug] "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time! 🪿 Please check the user guide (troubleshooting) first.
+        Security problems belong in a private report, not here (see SECURITY.md).
+        You may write in English, German or Spanish.
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Shown in the menu below the logo or under Help → About this program.
+      placeholder: "2.4"
+    validations:
+      required: true
+  - type: dropdown
+    id: system
+    attributes:
+      label: Where does it happen?
+      options:
+        - Windows
+        - macOS
+        - Linux
+        - Phone app (iPhone/iPad)
+        - Phone app (Android)
+        - Phone access in the home network
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open …
+        2. Click …
+        3. See …
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: log
+    attributes:
+      label: Messages or log (optional)
+      description: Error text, the log of the run, or a screenshot. Please remove personal data and your own cards.
+      render: text
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: I use the latest version (or checked that the problem still exists there).
+          required: true
+        - label: This report contains no personal data, passwords or keys.
+          required: true
