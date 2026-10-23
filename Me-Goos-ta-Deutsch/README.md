@@ -27,17 +27,16 @@ program counts.
 **Already have it?** From version 2.4 on, **Tools → “Keep the program up to date”** finds a new version and installs it
 in the same folder – no second folder, your cards stay.
 
-## New in 2.4
+## New in 2.5
 
-**Update right inside the program** – “🔎 Check for updates” now also sits below the version number in the menu and
-under Tools; if a newer goose is out, “⬆️ Update now” downloads the release (checksum and contents checked) and
-“🔄 Restart now” replaces the program files in the same folder and starts again – no second folder, no doubled disk
-space, cards, images, ideas, learning progress and settings stay · **Undo and redo everywhere** – ↶ ↷ in the header
-or Ctrl+Z / Ctrl+Y, up to 30 steps for cards, images, “Prepare images”, ideas, imports, word lists and the goose image ·
-**every card needs its goose** – if “Gans” is missing from the German text, saving puts it at the start with a short
-note (it may also stand in the middle, like “Die Gans ist alt”); “Add the goose” fixes older cards in one go ·
-**fixed:** clicking with a tiny drag in the before/after comparison no longer creates a new image in “Prepare images”.
-Updating keeps your cards, ideas, settings and learning progress.
+**Signed releases** – every release’s `SHA256SUMS.txt` carries the project’s minisign/Ed25519 signature (key ID
+`6885AC6ACBF317E0`), and “⬆️ Update now” installs a new version only if that signature is valid; the download page shows
+how to check it yourself (“Check it’s genuine”) · **pinned packages** – the setup installs the Python packages in exactly
+the checked versions, every file with a SHA-256 checksum (`Programm/pakete.lock`) · **all the source code on GitHub** –
+every change and every pull request is built and tested automatically on Windows, macOS and Linux (x64 and ARM) and in
+three browser engines; releases come from signed tags and are immutable once published · also new: this program’s
+change list `CHANGELOG.md`, a privacy section on the download page, and a clearer note that phone access is meant for
+your own home network only. Updating keeps your cards, ideas, settings and learning progress.
 
 Earlier versions: see `CHANGELOG.md`.
 

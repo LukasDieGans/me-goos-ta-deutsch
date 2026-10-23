@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-ME GOOS-TA DEUTSCH – Oberfläche                                     Version 2.4 (22.10.2026)
+ME GOOS-TA DEUTSCH – Oberfläche                                     Version 2.5 (23.10.2026)
 =============================================================================================
 Startet eine lokale Oberfläche im Browser, von der aus alles bedient wird: Meine Karten, Tabelle (Vorder- und
 Rückseite nebeneinander), Bildverbesserung, Schritt 1 „Bilder vorbereiten“ (auch viele auf einmal), Schritt 2
@@ -65,7 +65,7 @@ except ImportError:                                      # Datei fehlt (Testkopi
     sprachen = None
 
 L, T = gl.L, gl.T
-UI_VERSION = "2.4 (22.10.2026)"
+UI_VERSION = "2.5 (23.10.2026)"
 EINSTELLUNGEN = HIER / "ui_einstellungen.json"
 UI_DATEI = HIER / "ui" / "index.html"
 MAX_BILD = gl.MAX_DATEI_MB * 1024 * 1024

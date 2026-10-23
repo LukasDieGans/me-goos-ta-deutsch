@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-ME GOOS-TA DEUTSCH – Neue Version direkt im Programm übernehmen     Version 2.4 (22.10.2026)
+ME GOOS-TA DEUTSCH – Neue Version direkt im Programm übernehmen     Version 2.5 (23.10.2026)
 =============================================================================================
 Bis 2.3 hieß ein Update: ZIP laden, in einen neuen Ordner entpacken, Karten übernehmen – danach lagen zwei Ordner da
 (oder der neue hatte denselben Namen wie der alte). Seit 2.4 geht es an Ort und Stelle, nur auf Klick

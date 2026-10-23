@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-ME GOOS-TA DEUTSCH – Signatur der Releases prüfen (Ed25519, minisign-kompatibel)     Version 2.4 (22.10.2026)
+ME GOOS-TA DEUTSCH – Signatur der Releases prüfen (Ed25519, minisign-kompatibel)     Version 2.5 (23.10.2026)
 =============================================================================================
 Seit 2.5 ist SHA256SUMS.txt jedes Releases mit Lukas’ Schlüssel signiert (SHA256SUMS.txt.minisig). „Jetzt
 aktualisieren“ übernimmt nur ein ZIP, dessen Prüfsumme in einer gültig signierten SHA256SUMS.txt steht und deren

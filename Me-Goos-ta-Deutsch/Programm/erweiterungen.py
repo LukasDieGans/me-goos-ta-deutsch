@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-ME GOOS-TA DEUTSCH – Erweiterungen der Oberfläche                   Version 2.4 (22.10.2026)
+ME GOOS-TA DEUTSCH – Erweiterungen der Oberfläche                   Version 2.5 (23.10.2026)
 =============================================================================================
 Zusätzliche Funktionen, die gans_ui.py einbindet (verbinde(gans_ui)). Fehlt diese Datei, läuft die Oberfläche
 genau wie bisher – nur ohne diese Funktionen.

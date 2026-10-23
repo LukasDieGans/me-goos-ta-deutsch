@@ -1,6 +1,6 @@
 #!/bin/sh
 # ============================================================================
-#  Me Goos-ta Deutsch – start for macOS                            Version 2.4
+#  Me Goos-ta Deutsch – start for macOS                            Version 2.5
 #
 #  Just double-click. The first start sets everything up: a Python of its own
 #  in your user folder (no administrator rights needed) and the packages

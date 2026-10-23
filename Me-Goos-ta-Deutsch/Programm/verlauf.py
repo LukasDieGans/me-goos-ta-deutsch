@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-ME GOOS-TA DEUTSCH – Rückgängig und Wiederholen                     Version 2.4 (22.10.2026)
+ME GOOS-TA DEUTSCH – Rückgängig und Wiederholen                     Version 2.5 (23.10.2026)
 =============================================================================================
 Jede Anfrage, die eigene Daten ändert (Karten, Bilder, „Bilder vorbereiten“, Ideen, Gänse-Bild), wird ein Schritt:
 

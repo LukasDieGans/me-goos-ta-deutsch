@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-ME GOOS-TA DEUTSCH – Digitale Lernkarten                            Version 2.4 (22.10.2026)
+ME GOOS-TA DEUTSCH – Digitale Lernkarten                            Version 2.5 (23.10.2026)
 =============================================================================================
 Macht aus den fertigen Karten (verbesserte Vorderseiten aus dem Zwischenspeicher + Wort auf Spanisch) Dateien
 zum digitalen Lernen – am Rechner und auf dem Handy. Aufgerufen vom Generator mit `--nur digital`.

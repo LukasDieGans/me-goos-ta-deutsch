@@ -1,6 +1,6 @@
 # Me Goos-ta Deutsch – Guía
 
-Actualizada: 22/10/2026 · programa e interfaz versión 2.4 · Alemán: `LEITFADEN.md` · Inglés: `LEITFADEN_en.md`
+Actualizada: 23/10/2026 · programa e interfaz versión 2.5 · Alemán: `LEITFADEN.md` · Inglés: `LEITFADEN_en.md`
 
 ¡Qué bueno que estás aquí! Esta guía te acompaña desde el primer doble clic hasta la carta terminada, paso a paso y sin tecnicismos. No tienes que leerla de principio a fin: salta a la parte que necesites. Y tranquilo: aquí nadie te apura; cada paso va a tu ritmo, como un ganso que pasea a gusto.
 

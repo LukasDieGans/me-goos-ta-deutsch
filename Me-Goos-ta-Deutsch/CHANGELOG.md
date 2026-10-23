@@ -6,6 +6,8 @@ version such as 2.5.1). Updating always keeps your cards, images, ideas, setting
 
 ## [Unreleased]
 
+## [2.5] – 2026-10-23
+
 ### Security
 - Releases are signed: `SHA256SUMS.txt` carries a minisign/Ed25519 signature, and “Update now” installs a new version
   only if that signature is valid (key ID `6885AC6ACBF317E0`).
@@ -91,7 +93,8 @@ version such as 2.5.1). Updating always keeps your cards, images, ideas, setting
 ### Changed
 - Updating keeps your own cards: the example cards ship as `beispiel-karten.csv` and `beispiel-bilder/`.
 
-[Unreleased]: https://github.com/lukasdiegans/me-goos-ta-deutsch/compare/v2.4...HEAD
+[Unreleased]: https://github.com/lukasdiegans/me-goos-ta-deutsch/compare/v2.5...HEAD
+[2.5]: https://github.com/lukasdiegans/me-goos-ta-deutsch/releases/tag/v2.5
 [2.4]: https://github.com/lukasdiegans/me-goos-ta-deutsch/releases/tag/v2.4
 [2.3]: https://github.com/lukasdiegans/me-goos-ta-deutsch/releases/tag/v2.3
 [2.2]: https://github.com/lukasdiegans/me-goos-ta-deutsch/releases/tag/v2.2

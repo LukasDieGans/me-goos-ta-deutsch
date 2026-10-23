@@ -1,6 +1,6 @@
 # Me Goos-ta Deutsch – Guide
 
-Updated: 22 Oct 2026 · program and interface version 2.4 · German: `LEITFADEN.md` · Spanish: `LEITFADEN_es.md`
+Updated: 23 Oct 2026 · program and interface version 2.5 · German: `LEITFADEN.md` · Spanish: `LEITFADEN_es.md`
 
 Great to have you here! This guide takes you from the first double-click to the finished card – step by step and without jargon. You don’t have to read it cover to cover: just jump to the part you need right now. And relax – no need to waddle along in single file; take every step at your own pace.
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-ME GOOS-TA DEUTSCH – Selbsttest der Erweiterungen                   Version 2.4 (22.10.2026)
+ME GOOS-TA DEUTSCH – Selbsttest der Erweiterungen                   Version 2.5 (23.10.2026)
 Prüft Import/Export, Ideen, Programmstart-Wahl, die Schutzregeln des Deinstallierens und die Hilfe – wie der Selbsttest in
 einer Kopie des Projekts mit den Beispielkarten und einem eigenen Datenordner (nichts Eigenes wird berührt, nichts
 wird wirklich deinstalliert, kein Browser wird geöffnet). Ergänzt test_gans_lernkarten.py (der bleibt unverändert).
