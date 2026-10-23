@@ -499,7 +499,13 @@ def b_lernen(s, gelernt_vorher=0, aktivieren=True):
         s.page.click("#tool-fenster [data-tool-dlg='installieren']")
     s.page.click("#lern-inhalt [data-ln='lernen']")
     s.page.click("#lern-inhalt [data-ln='zeigen']")
-    s.page.click("#lern-inhalt [data-ln='note'][data-note='3']")
+    note = "#lern-inhalt [data-ln='note'][data-note='3']"
+    try:
+        s.page.wait_for_selector(note, state="visible", timeout=15000)
+    except Exception:  # noqa: BLE001 – 23.10.2026 live WebKit/Handy: Klick traf die Karte beim Neuzeichnen, Noten kamen nie
+        log(f"· [{s.kurz}] Lernen: „Antwort zeigen“ ohne Wirkung – einmal neu geklickt")
+        s.page.click("#lern-inhalt [data-ln='zeigen']")
+    s.page.click(note)
     s.warte("n => api('/api/lernen').then(r => r.statistik.heute.gelernt === n)", gelernt_vorher + 1)
     s.page.click("#lern-inhalt [data-ln='beenden']")
     return s.js("async () => (await api('/api/lernen')).statistik.heute.gelernt"), t0
