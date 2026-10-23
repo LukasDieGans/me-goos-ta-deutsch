@@ -201,6 +201,8 @@ def git_umgebung(tok, ich, extra=None):
 def signier_konfig():
     """git-Konfiguration für SSH-signierte Commits (Schlüssel aus quellbaum.py) – seit 2.5 G06 auch für gh-pages, weil
     das Ruleset „Signierte Commits main + gh-pages“ (repo_einstellungen.py Stufe 2) unsignierte Commits ablehnt."""
+    if str(Path(__file__).resolve().parent) not in sys.path:     # eigenes Python (._pth): Skriptordner fehlt in sys.path (Fund G08)
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
     import quellbaum as qb
     if not (qb.SCHLUESSEL.is_file() and Path(f"{qb.SCHLUESSEL}.pub").is_file()):
         sys.exit(f"✗ Signaturschlüssel fehlt ({qb.SCHLUESSEL}) – erst `python werkstatt\\quellbaum.py --einrichten`.")
