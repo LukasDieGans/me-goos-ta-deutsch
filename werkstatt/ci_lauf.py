@@ -259,7 +259,8 @@ def ergebnisse(weg, tok, lauf):
     """{system: ergebnis.json} aus den Artefakten + Jobs ohne Artefakt (z. B. abgebrochen)."""
     aus = {}
     s, r = vw.api("GET", f"{weg}/actions/runs/{lauf['id']}/artifacts?per_page=50", tok)
-    for a in (r.get("artifacts") or []) if s == 200 else []:
+    # nach einem neu gestarteten Job gibt es je Name ein Artefakt pro Versuch → älteste zuerst, das neueste gilt (Fund G08)
+    for a in sorted((r.get("artifacts") or []) if s == 200 else [], key=lambda a: (a.get("created_at") or "", a.get("id") or 0)):
         if not a["name"].startswith("ergebnis-") or a.get("expired"):
             continue
         for versuch in range(6):                       # 23.10.2026: „503 Egress is over the account limit“ kam sporadisch
