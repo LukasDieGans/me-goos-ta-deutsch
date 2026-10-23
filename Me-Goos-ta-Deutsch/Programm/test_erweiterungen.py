@@ -6237,6 +6237,7 @@ def test_paket_fassungen(tmp):
         if (HIER / n).is_file():
             shutil.copy2(HIER / n, kopie / n)
     alt_hier = starter.HIER                                   # starter kann aus der Testkopie stammen (ohne Locks)
+    os.environ.pop("MGD_PAKETE_NEUESTE", None)                # Job „neueste“ setzt sie – erst s4 schaltet sie ein (Fund G08)
     try:
         starter.HIER = HIER
         echt = starter.paket_signatur()
