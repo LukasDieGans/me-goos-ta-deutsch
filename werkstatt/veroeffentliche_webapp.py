@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Veröffentlicht die gebaute Handy-App (Ordner web-app/ aus bau_webapp.py) auf GitHub Pages.
 Aufruf: python veroeffentliche_webapp.py <Ordner web-app> [--repo me-goos-ta-deutsch] [--nachricht "Text"]
+                                                            [--desktop-anmeldung]
 
 Ablauf: Anmeldung holen → öffentliches Repository anlegen (falls es fehlt) → Inhalt von web-app/ als Branch gh-pages
 pushen (Verlauf bleibt, nur Geändertes wird übertragen) → GitHub Pages für gh-pages einschalten → warten, bis die Seite
@@ -8,8 +9,11 @@ mit der neuen Version ausgeliefert wird (und die Download-Seite download/, falls
 keine Nutzerdaten (die baut bau_webapp.py nie ein). Das Programm-Release (Branch main, Tag, ZIP) macht
 veroeffentliche_release.py.
 
-Anmeldung (der Schlüssel wird nie ausgegeben oder gespeichert, git bekommt ihn nur über Umgebungsvariablen):
-GH_TOKEN/GITHUB_TOKEN → `gh auth token` (GitHub CLI) → Anmeldung von GitHub Desktop (Windows-Anmeldeinformationen).
+Anmeldung (seit 2.5 G06; der Schlüssel wird nie ausgegeben oder gespeichert, git bekommt ihn nur über Umgebungsvariablen):
+GH_TOKEN/GITHUB_TOKEN → Windows-Anmeldeinformation „MGD-Release-Token“ (eigenes Fine-grained Token nur für dieses
+Repository) → sonst Abbruch mit Anleitung. GitHub CLI bzw. GitHub Desktop (Token mit Zugriff auf alle Repositories) nur
+noch ausdrücklich mit --desktop-anmeldung („Achtung: breiter Zugriff“; dann statt des eigenen Tokens). Vor der Arbeit prüft rechte_pruefen(), ob das Token die
+nötigen Bereiche lesen darf, und meldet Fehlendes mit dem Namen des Token-Rechts.
 git: aus dem PATH, sonst das von GitHub Desktop mitgebrachte. Commits laufen unter der noreply-Adresse des Kontos."""
 import base64
 import hashlib
@@ -26,22 +30,100 @@ import urllib.request
 from pathlib import Path
 
 API = "https://api.github.com"
+TOKEN_ZIEL = "MGD-Release-Token"                               # Windows → Anmeldeinformationsverwaltung (generisch)
+ANLEITUNG = f"""✗ Kein eigenes Token gefunden (seit 2.5 nötig – das Token von GitHub Desktop darf alle Repositories).
+  So legst du es an (einmalig, ~3 min):
+  1. github.com → Settings → Developer settings → Personal access tokens → Fine-grained tokens → Generate new token
+  2. Name MGD-Release, Ablauf 1 Jahr, Repository access „Only select repositories“ → me-goos-ta-deutsch
+  3. Repository permissions: Administration, Contents, Pages, Workflows = Read and write; Actions = Read-only
+  4. Windows → Anmeldeinformationsverwaltung → Windows-Anmeldeinformationen → „Generische Anmeldeinformationen
+     hinzufügen“: Adresse {TOKEN_ZIEL}, Benutzername LukasDieGans, Kennwort = Token (nie in einen Chat oder eine Datei)
+  Ausnahmsweise mit der breiten Anmeldung von GitHub Desktop: --desktop-anmeldung anhängen."""
+# Bereich → (Abfrage nur zum Lesen, erlaubte Antworten, Name des Token-Rechts)
+RECHTE = {
+    "contents": ("/commits?per_page=1", (200, 409), "Contents (Read and write)"),
+    "pages": ("/pages", (200, 404), "Pages (Read and write)"),
+    "administration": ("/actions/permissions", (200,), "Administration (Read and write)"),
+    "actions": ("/actions/runs?per_page=1", (200,), "Actions (Read-only)"),
+}
+KOPF = {}                                                      # Kopfzeilen der letzten API-Antwort (X-OAuth-Scopes …)
 
 
-def token():
+def token(desktop=None):
+    """→ (Token, woher). Reihenfolge: GH_TOKEN/GITHUB_TOKEN → mit --desktop-anmeldung (bzw. desktop=True) ausdrücklich
+    GitHub CLI/GitHub Desktop → Anmeldeinformation MGD-Release-Token → sonst Abbruch mit Anleitung."""
+    if desktop is None:
+        desktop = "--desktop-anmeldung" in sys.argv
     for n in ("GH_TOKEN", "GITHUB_TOKEN"):
-        if os.environ.get(n):
+        if os.environ.get(n, "").strip():
             return os.environ[n].strip(), n
+    if desktop:
+        print("Achtung: breiter Zugriff – die Anmeldung von GitHub CLI/GitHub Desktop darf alle deine Repositories. "
+              f"Besser ein eigenes Token als {TOKEN_ZIEL} hinterlegen.", flush=True)
+        t = _gh_cli()
+        if t:
+            return t, "GitHub CLI (breiter Zugriff)"
+        if sys.platform == "win32":
+            t = _github_desktop()
+            if t:
+                return t, "GitHub Desktop (breiter Zugriff)"
+    if sys.platform == "win32":
+        t = _anmeldeinformation(TOKEN_ZIEL)
+        if t:
+            return t, f"Windows-Anmeldeinformation {TOKEN_ZIEL}"
+    sys.exit(ANLEITUNG)
+
+
+def rechte_pruefen(tok, konto, repo, bereiche):
+    """Liest je Bereich einmal (nichts wird geändert) und bricht mit dem Namen des fehlenden Token-Rechts ab.
+    Schreibrechte lassen sich ohne Schreiben nicht prüfen – Fehler beim Schreiben nennen das Recht ebenfalls."""
+    s, r = api("GET", f"/repos/{konto}/{repo}", tok)
+    if s in (403, 404):
+        sys.exit(f"✗ Das Token sieht {konto}/{repo} nicht – unter „Repository access“ me-goos-ta-deutsch wählen.")
+    if KOPF.get("x-oauth-scopes"):
+        print(f"Achtung: breiter Zugriff – klassisches Token mit {KOPF['x-oauth-scopes']} (alle Repositories).", flush=True)
+    fehlt = []
+    for b in bereiche:
+        weg, gut, name = RECHTE[b]
+        s, _ = api("GET", f"/repos/{konto}/{repo}{weg}", tok)
+        if s not in gut:
+            fehlt.append(f"{name} – Antwort {s}")
+    if fehlt:
+        sys.exit("✗ Dem Token fehlen Rechte für dieses Repository: " + "; ".join(fehlt)
+                 + " (github.com → Settings → Developer settings → Fine-grained tokens → MGD-Release → Edit).")
+    return True
+
+
+def _gh_cli():
     gh = shutil.which("gh")
     if gh:
         r = subprocess.run([gh, "auth", "token"], capture_output=True, text=True)
         if r.returncode == 0 and r.stdout.strip():
-            return r.stdout.strip(), "GitHub CLI"
-    if sys.platform == "win32":
-        t = _github_desktop()
-        if t:
-            return t, "GitHub Desktop"
-    sys.exit("Keine GitHub-Anmeldung gefunden: GitHub CLI (`gh auth login`) oder GitHub Desktop anmelden.")
+            return r.stdout.strip()
+    return None
+
+
+def _anmeldeinformation(ziel):
+    """Kennwort der generischen Windows-Anmeldeinformation `ziel` (z. B. MGD-Release-Token) oder None."""
+    import ctypes
+    from ctypes import wintypes
+
+    class CRED(ctypes.Structure):
+        _fields_ = [("Flags", wintypes.DWORD), ("Type", wintypes.DWORD), ("TargetName", wintypes.LPWSTR),
+                    ("Comment", wintypes.LPWSTR), ("LastWritten", wintypes.FILETIME), ("CredentialBlobSize", wintypes.DWORD),
+                    ("CredentialBlob", ctypes.POINTER(ctypes.c_ubyte)), ("Persist", wintypes.DWORD),
+                    ("AttributeCount", wintypes.DWORD), ("Attributes", ctypes.c_void_p), ("TargetAlias", wintypes.LPWSTR),
+                    ("UserName", wintypes.LPWSTR)]
+    adv = ctypes.WinDLL("advapi32", use_last_error=True)
+    zeiger = ctypes.POINTER(CRED)()
+    if not adv.CredReadW(ziel, 1, 0, ctypes.byref(zeiger)):    # 1 = CRED_TYPE_GENERIC
+        return None
+    try:
+        c = zeiger.contents
+        roh = bytes(c.CredentialBlob[:c.CredentialBlobSize])
+        return ((roh.decode("utf-16-le") if b"\0" in roh else roh.decode("utf-8")).strip()) or None
+    finally:
+        adv.CredFree(zeiger)
 
 
 def _github_desktop():
@@ -76,9 +158,13 @@ def api(methode, weg, tok, daten=None, ok=(200, 201, 204)):
                                           "X-GitHub-Api-Version": "2022-11-28", "User-Agent": "me-goos-ta-deutsch"})
     try:
         with urllib.request.urlopen(req, timeout=60) as r:
+            KOPF.clear()
+            KOPF.update({k.lower(): v for k, v in r.headers.items()})
             text = r.read().decode("utf-8")
             return r.status, json.loads(text) if text else {}
     except urllib.error.HTTPError as f:
+        KOPF.clear()
+        KOPF.update({k.lower(): v for k, v in (f.headers or {}).items()})
         text = f.read().decode("utf-8", "replace")
         if f.code in ok:
             return f.code, {}
@@ -96,17 +182,30 @@ def git_exe():
     sys.exit("git nicht gefunden (GitHub Desktop oder Git für Windows installieren).")
 
 
-def git_umgebung(tok, ich):
-    """Umgebung für git: Schlüssel nur als Kopfzeile (nie in Adresse/Konfiguration), Bytes 1:1, noreply-Adresse."""
+def git_umgebung(tok, ich, extra=None):
+    """Umgebung für git: Schlüssel nur als Kopfzeile (nie in Adresse/Konfiguration), Bytes 1:1, noreply-Adresse;
+    extra = weitere Konfiguration (z. B. signier_konfig())."""
     kopf = "AUTHORIZATION: basic " + base64.b64encode(f"x-access-token:{tok}".encode()).decode()
     konto = ich["login"]
-    return dict(os.environ, GIT_TERMINAL_PROMPT="0", GCM_INTERACTIVE="never", GIT_CONFIG_COUNT="3",
-                GIT_CONFIG_KEY_0="http.https://github.com/.extraheader", GIT_CONFIG_VALUE_0=kopf,
-                GIT_CONFIG_KEY_1="credential.helper", GIT_CONFIG_VALUE_1="",
-                GIT_CONFIG_KEY_2="core.autocrlf", GIT_CONFIG_VALUE_2="false",   # Bytes 1:1 (Prüfsummen im Service Worker)
-                GIT_AUTHOR_NAME=konto, GIT_COMMITTER_NAME=konto,
-                GIT_AUTHOR_EMAIL=f"{ich['id']}+{konto}@users.noreply.github.com",
-                GIT_COMMITTER_EMAIL=f"{ich['id']}+{konto}@users.noreply.github.com")
+    konfig = [("http.https://github.com/.extraheader", kopf), ("credential.helper", ""),
+              ("core.autocrlf", "false")] + list((extra or {}).items())   # Bytes 1:1 (Prüfsummen im Service Worker)
+    env = dict(os.environ, GIT_TERMINAL_PROMPT="0", GCM_INTERACTIVE="never", GIT_CONFIG_COUNT=str(len(konfig)),
+               GIT_AUTHOR_NAME=konto, GIT_COMMITTER_NAME=konto,
+               GIT_AUTHOR_EMAIL=f"{ich['id']}+{konto}@users.noreply.github.com",
+               GIT_COMMITTER_EMAIL=f"{ich['id']}+{konto}@users.noreply.github.com")
+    for i, (k, v) in enumerate(konfig):
+        env[f"GIT_CONFIG_KEY_{i}"], env[f"GIT_CONFIG_VALUE_{i}"] = k, v
+    return env
+
+
+def signier_konfig():
+    """git-Konfiguration für SSH-signierte Commits (Schlüssel aus quellbaum.py) – seit 2.5 G06 auch für gh-pages, weil
+    das Ruleset „Signierte Commits main + gh-pages“ (repo_einstellungen.py Stufe 2) unsignierte Commits ablehnt."""
+    import quellbaum as qb
+    if not (qb.SCHLUESSEL.is_file() and Path(f"{qb.SCHLUESSEL}.pub").is_file()):
+        sys.exit(f"✗ Signaturschlüssel fehlt ({qb.SCHLUESSEL}) – erst `python werkstatt\\quellbaum.py --einrichten`.")
+    return {"gpg.format": "ssh", "user.signingkey": f"{qb.SCHLUESSEL}.pub", "gpg.ssh.program": qb.ssh_keygen(),
+            "commit.gpgsign": "true"}
 
 
 def main():
@@ -134,8 +233,9 @@ def main():
         print("✓ Repository angelegt (öffentlich)")
     elif s != 200:
         sys.exit(f"Repository nicht lesbar: {s} {r.get('message', '')}")
+    rechte_pruefen(tok, konto, repo, ("contents", "pages"))
     git = git_exe()
-    env = git_umgebung(tok, ich)
+    env = git_umgebung(tok, ich, signier_konfig())             # signierte Commits (Pflicht auf gh-pages ab G08)
     arbeit = Path(tempfile.mkdtemp(prefix="mgd-pages-"))
     url = f"https://github.com/{konto}/{repo}.git"
 
@@ -159,7 +259,7 @@ def main():
         if g("diff", "--cached", "--quiet", pruefen=False).returncode == 0:
             print("= Inhalt unverändert – nichts zu pushen")
         else:
-            g("commit", "-q", "-m", nachricht)
+            g("commit", "-q", "-S", "-m", nachricht)
             g("push", "-q", "origin", "gh-pages")
             print(f"✓ gh-pages gepusht ({nachricht})")
     finally:

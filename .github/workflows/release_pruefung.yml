@@ -1,7 +1,7 @@
 # Me Goos-ta Deutsch – Prüfung des veröffentlichten Releases (seit 2.2; ersetzt am 21.10.2026 den wöchentlichen Lauf).
-# Läuft, sobald etwas für das Release auf main landet (veroeffentliche_release.py pusht main), und von Hand. Wartet, bis
-# das neueste Release-ZIP genau den Inhalt dieses main-Commits hat (gegen SHA256SUMS.txt und Datei für Datei) und die
-# Download-Seite seine Prüfsumme nennt, installiert es dann auf allen Systemen frisch wie ein Nutzer (seit 2.5 feste
+# Läuft, sobald ein Release veröffentlicht ist (seit 2.5 G06: am Release, nicht am Push auf main – main entwickelt sich
+# weiter), und von Hand. Wartet, bis das neueste Release-ZIP genau den Inhalt von Me-Goos-ta-Deutsch/ im Tag-Commit hat
+# (Signatur, SHA256SUMS.txt, Datei für Datei) und die Download-Seite seine Prüfsumme nennt, installiert es dann auf allen Systemen frisch wie ein Nutzer (seit 2.5 feste
 # Fassungen aus pakete.lock mit Prüfsummen) und prüft Download-Seite und Web-App live in WebKit, Firefox und Chromium.
 # Job „neueste“ (Frühwarnung): dasselbe Release mit den neuesten Fassungen innerhalb von requirements.txt – rot heißt:
 # in der nächsten Release-Gruppe nicht einfach `bau_lock.py --neueste` übernehmen. Keine Person nötig, keine Secrets,
@@ -9,8 +9,8 @@
 name: Release-Pruefung
 
 on:
-  push:
-    branches: [main]
+  release:
+    types: [published]
   workflow_dispatch:
 
 permissions:
@@ -32,8 +32,8 @@ jobs:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.13"
-      - name: Prüfsumme des neuesten Releases (ZIP gegen SHA256SUMS.txt, auf main = Inhalt dieses Commits)
-        run: python .github/ci/neuestes_release.py --ziel release --ergebnis ergebnis.json ${{ github.ref == 'refs/heads/main' && '--passend 40' || '' }}
+      - name: Prüfsumme des neuesten Releases (Signatur, ZIP gegen SHA256SUMS.txt, beim Release = Inhalt des Tags)
+        run: python .github/ci/neuestes_release.py --ziel release --ergebnis ergebnis.json ${{ github.event_name == 'release' && '--passend 40' || '' }}
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:

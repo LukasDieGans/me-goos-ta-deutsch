@@ -868,6 +868,18 @@ DT = {   # Texte der Download-Seite (dürfen <b>/<code> enthalten); gleiche Schl
         handy_text="Die Handy-App ist dasselbe Programm für Android, iPhone/iPad (ab iOS 16.4) und Google Pixel – direkt aus "
                    "dem Browser installiert, ohne App-Store, auch offline.",
         handy_qr="Mit der Handy-Kamera scannen", qr_aria="QR-Code mit der Adresse der Handy-App",
+        ds_titel="Datenschutz – kurz und ehrlich",
+        ds_lead="Deine Karten, Bilder und dein Lernstand bleiben bei dir – auf deinem Rechner bzw. im Speicher deines Handys. "
+                "Kein Konto, keine Werbung, keine Statistik.",
+        ds_punkte=[("Diese Seite und die Handy-App", "liegen auf GitHub Pages. Wie jeder Webserver protokolliert GitHub dabei "
+                    "technische Daten wie deine IP-Adresse. Das Projekt selbst nutzt keine Tracker und keine Statistik."),
+                   ("Das Programm", "geht nur ins Internet, wenn es nötig ist: einmal bei der Einrichtung (python.org, pypi.org, "
+                    "github.com), wenn du ein Tool installierst (github.com bzw. huggingface.co) und wenn du „Nach neuer Version "
+                    "suchen“ klickst – eine Anfrage an api.github.com, ohne Daten über dich oder deine Karten."),
+                   ("Übersetzungsvorschläge", "sind aus, bis du zustimmst. Dann geht nur das einzelne Wort an den gewählten "
+                    "Dienst (Wiktionary, MyMemory oder DeepL) – nie deine Karten oder Bilder."),
+                   ("Handy-Zugang im WLAN", "ist aus und PIN-geschützt. Er ist nur fürs eigene Heimnetz gedacht: Die Verbindung "
+                    "im WLAN ist unverschlüsselt – nie in öffentlichen Netzen einschalten.")],
         faq_titel="Fragen? Antworten!",
         faq=[("Ist das sicher?", "Gans sicher. Me Goos-ta Deutsch ist Open Source unter der MIT-Lizenz – jede Zeile steht auf "
               "GitHub. Die ZIP-Datei enthält keinen Installer und keine versteckten Extras. Beim ersten Start lädt sie nur "
@@ -957,6 +969,18 @@ DT = {   # Texte der Download-Seite (dürfen <b>/<code> enthalten); gleiche Schl
         handy_text="The phone app is the same program for Android, iPhone/iPad (iOS 16.4 or later) and Google Pixel – "
                    "installed straight from the browser, no app store, works offline.",
         handy_qr="Scan with your phone’s camera", qr_aria="QR code with the address of the phone app",
+        ds_titel="Privacy – short and honest",
+        ds_lead="Your cards, images and learning progress stay with you – on your computer or in your phone’s storage. "
+                "No account, no ads, no statistics.",
+        ds_punkte=[("This page and the phone app", "are hosted on GitHub Pages. Like every web server, GitHub logs technical "
+                    "data such as your IP address. The project itself uses no trackers and no statistics."),
+                   ("The program", "only goes online when it has to: once during setup (python.org, pypi.org, github.com), "
+                    "when you install a tool (github.com or huggingface.co) and when you click “Check for a new version” – one "
+                    "request to api.github.com, with no data about you or your cards."),
+                   ("Translation suggestions", "are off until you agree. Then only the single word goes to the service you "
+                    "picked (Wiktionary, MyMemory or DeepL) – never your cards or images."),
+                   ("Phone access in your Wi-Fi", "is off and protected by a PIN. It is meant for your own home network only: "
+                    "the connection in the Wi-Fi is unencrypted – never switch it on in public networks.")],
         faq_titel="Questions? Answers!",
         faq=[("Is it safe?", "Yes. Me Goos-ta Deutsch is open source under the MIT license – every line is on GitHub. The ZIP "
               "holds no installer and no hidden extras. On the first start it only fetches Python and packages from the "
@@ -1050,6 +1074,18 @@ DT = {   # Texte der Download-Seite (dürfen <b>/<code> enthalten); gleiche Schl
         handy_text="La app para celular es el mismo programa para Android, iPhone/iPad (desde iOS 16.4) y Google Pixel: se "
                    "instala desde el navegador, sin tienda de apps, y funciona sin conexión.",
         handy_qr="Escanéalo con la cámara del celular", qr_aria="Código QR con la dirección de la app para celular",
+        ds_titel="Privacidad, breve y honesta",
+        ds_lead="Tus cartas, imágenes y tu progreso se quedan contigo: en tu computadora o en la memoria de tu celular. "
+                "Sin cuenta, sin publicidad, sin estadísticas.",
+        ds_punkte=[("Esta página y la app del celular", "están en GitHub Pages. Como todo servidor web, GitHub registra datos "
+                    "técnicos como tu dirección IP. El proyecto no usa rastreadores ni estadísticas."),
+                   ("El programa", "solo se conecta cuando hace falta: una vez al instalarse (python.org, pypi.org, github.com), "
+                    "cuando instalas una herramienta (github.com o huggingface.co) y cuando haces clic en «Buscar una versión "
+                    "nueva»: una consulta a api.github.com, sin datos sobre ti ni tus cartas."),
+                   ("Sugerencias de traducción", "están apagadas hasta que aceptes. Entonces solo la palabra va al servicio "
+                    "elegido (Wiktionary, MyMemory o DeepL), nunca tus cartas ni tus imágenes."),
+                   ("Acceso desde el celular por wifi", "está apagado y protegido con PIN. Es solo para tu propia red de casa: "
+                    "la conexión en la wifi no va cifrada; nunca lo actives en redes públicas.")],
         faq_titel="¿Preguntas? ¡Respuestas!",
         faq=[("¿Es seguro?", "Sí. Me Goos-ta Deutsch es de código abierto con licencia MIT: cada línea está en GitHub. El ZIP "
               "no trae instalador ni extras ocultos. En el primer inicio solo descarga Python y paquetes de las fuentes "
@@ -1268,6 +1304,10 @@ svg.skizze text.mono { font-family:ui-monospace,Consolas,Menlo,monospace; font-w
 .faq details[open] summary::after { content:"–"; }
 .faq details p { margin:0; padding:0 18px 16px; color:var(--leise); }
 .faq details p.echt code { overflow-wrap:anywhere; word-break:break-all; }
+.datenschutz .breit > * { max-width:820px; }
+.ds { margin:0; padding:0 0 0 20px; color:var(--leise); }
+.ds li { margin:0 0 10px; }
+.ds b { color:var(--text); }
 footer { border-top:1px solid var(--rand); padding:28px 0 44px; font-size:14px; color:var(--leise); }
 footer p { margin:0 0 8px; }
 footer .zeile { display:flex; flex-wrap:wrap; gap:4px 18px; }
@@ -1476,6 +1516,11 @@ def downloadseite(version, zip_info, adresse):
 <section class="abschnitt faq" id="{l}-fragen"><div class="breit">
 <h2>{e(t["faq_titel"])}</h2>
 {fragen}
+</div></section>
+<section class="abschnitt hell datenschutz" id="{l}-datenschutz"><div class="breit">
+<h2>{e(t["ds_titel"])}</h2>
+<p class="unter">{e(t["ds_lead"])}</p>
+<ul class="ds">{"".join(f"<li><b>{e(k)}</b> {e(x)}</li>" for k, x in t["ds_punkte"])}</ul>
 </div></section>
 </main>
 <footer><div class="breit">

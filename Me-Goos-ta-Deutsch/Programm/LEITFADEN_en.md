@@ -484,7 +484,7 @@ Upload photos straight from your phone? Under **Tools → “Open on your phone 
 
 The address stays the same the next time you switch it on – so a bookmark on your phone keeps working. The very first time, Windows or macOS asks whether Python may accept connections: please allow it (private network).
 
-For your safety: the connection is unencrypted within your home network, so only use it at home. It switches itself off after 2 hours, after 5 wrong PINs and when the program stops. Stopping, uninstalling and opening folders only work directly on the computer.
+For your safety: phone access is meant for your own home network only – the connection in the Wi-Fi is unencrypted. Never switch it on in public or other people’s networks (café, hotel, school, guest Wi-Fi). It switches itself off after 2 hours, after 5 wrong PINs and when the program stops. Stopping, uninstalling and opening folders only work directly on the computer.
 
 ## Get it as a phone app
 
@@ -522,6 +522,7 @@ Five freely available models were tested against the simpler FSRCNN on small, he
 - Other websites can’t remote-control it; files are only read and written in the project folders, and “Open” never starts programs or scripts.
 - Automatic translation only sends after your consent and only the word to translate (for AI images, on click, the short description), encrypted to three fixed services.
 - “Check for a new version” only asks when you click the button: one request to api.github.com, with no data about you or your cards. The program never looks for updates on its own.
+- The download page and the phone app are hosted on GitHub Pages: like every web server, GitHub logs technical data such as the IP address. The project itself uses no trackers, no ads and no statistics; your cards never leave your device.
 - Read aloud (🔊) only uses voices of your system that work offline – no text goes to the internet for it.
 - The AI image model runs entirely on your computer; descriptions and images never leave it.
 - Texts that Excel would treat as a formula (starting with = + - @) are rejected – also on import. Images are checked and saved without metadata.

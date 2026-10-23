@@ -430,14 +430,21 @@ charset-normalizer aus der `pyodide-lock.json`, ReportLab 5.0.1 von PyPI – all
   Datenschutz, Sicherung, Update/Entfernen; gebaut mit `bau_webapp.py <Quelle> --installationsdateien`.
 - **Download für den Rechner (seit 2.1):** ein Paket für Windows, macOS und Linux (das ZIP aus `bau_release.py`) als
   **GitHub-Release** `v<Version>` im selben Repository (Assets `Me-Goos-ta-Deutsch-<Version>.zip` + `SHA256SUMS.txt` im
-  Format von `sha256sum`, seit 2.5 + `SHA256SUMS.txt.minisig`, siehe „Signierte Releases“); Branch `main` = Inhalt des Release-Ordners (Standard-Branch, die Repo-Startseite zeigt die
-  README; `.gitattributes` `* -text`, `.command`/`.sh` ausführbar), Pages bleibt auf `gh-pages`. Kein Installer/Store
+  Format von `sha256sum`, seit 2.5 + `SHA256SUMS.txt.minisig`, siehe „Signierte Releases“); Branch `main` = bis 2.4 Inhalt des
+  Release-Ordners, ab 2.5 der Quellbaum (Programm unter `Me-Goos-ta-Deutsch/`, dazu `werkstatt/`, `web-app-quelle/`, `.github/`,
+  `docs/`; die Repo-Startseite zeigt die Wurzel-README mit Bildern aus `docs/bilder/`, Badges und Entwickler-Teil, die
+  README im ZIP nur den Nutzerteil; `.gitattributes` `* -text`, `.command`/`.sh` ausführbar), Pages bleibt auf `gh-pages`.
+  Änderungsliste `CHANGELOG.md` (Keep a Changelog, Englisch, auch im ZIP; Abschnitt „## [<Version>] – <Datum>“), Lizenz
+  `LICENSE.txt` = reiner MIT-Text (seit 2.5, GitHub erkennt „MIT“; Drittlizenzen in `Programm/DRITTLIZENZEN.md`), gleiche
+  Datei als `LICENSE` an der Repo-Wurzel. Kein Installer/Store
   (ohne kostenpflichtige Signatur blockieren Smart App Control und Gatekeeper ihn genauso). **Download-Seite**
   `web_adresse.txt` + `download/` (`https://lukasdiegans.github.io/me-goos-ta-deutsch/download/`): baut `bau_webapp.py`
   nach `web-app/download/` (`index.html` + `seite.js`; mit `--release-zip <ZIP>` Direktlink auf das Asset, Größe und
   SHA-256, sonst Link auf `…/releases/latest`). Englisch Standard, EN · DE · ES (Anker `#de/#es/#en`, sonst gemerkte Wahl
   in `localStorage`, nie die Gerätesprache), erkanntes System → großer Knopf + drei Schritte mit Skizzen + Hilfe zu
-  SmartScreen/Smart App Control/Gatekeeper, „Was drin ist“, Handy-Abschnitt (QR), Fragen, Fuß mit Lizenz, Quellcode,
+  SmartScreen/Smart App Control/Gatekeeper, „Was drin ist“, Handy-Abschnitt (QR), Fragen, Datenschutz (seit 2.5: GitHub
+  Pages protokolliert IP-Adressen; Programm und App senden nur das Übersetzungswort nach Zustimmung, Tool-Downloads und die
+  Update-Suche auf Klick; Handy-Zugang nur im eigenen Heimnetz), Fuß mit Lizenz, Quellcode,
   Versionshinweisen und SHA-256. Ohne Skript: Englisch, alle drei Systeme. Nur eigene Quellen (Schrift/Symbol relativ aus
   dem App-Ordner, CSP `connect-src 'none'`), kein Tracking. Der Service Worker der App lässt `download/` durch (sonst
   bekäme ein Gerät mit installierter App die App statt der Seite); die Seite steht nicht in der Vorrat-Liste und ändert
@@ -446,9 +453,15 @@ charset-normalizer aus der `pyodide-lock.json`, ReportLab 5.0.1 von PyPI – all
   an die wartende neue Version („weiter“) bzw. meldet den alten Service Worker nach 20 s ab und lädt neu (höchstens dreimal;
   Nutzerdaten der App bleiben; Text „Eine alte App-Version watschelt gerade hinaus …“ in de/en/es). Links: README oben, LIES MICH (Abschnitt Update, de/en/es), Hilfe → „Über dieses Programm“,
   App-Blatt „Mehr“ („Auch für den Rechner holen“). Veröffentlichen: `veroeffentliche_release.py <Release-Ordner> <ZIP>`
-  (Quellbaum `werkstatt/`; `--probe` = Plan ohne Netz, `--ersetzen` für ein vorhandenes Release): prüft Ordner = ZIP und keine
-  Nutzerdaten, pusht `main`, setzt Standard-Branch/Homepage, legt das Release als Entwurf an, lädt die Assets hoch,
-  veröffentlicht es als „Latest“ und vergleicht das heruntergeladene Asset per SHA-256 (seit 2.5 auch die Signatur).
+  (Quellbaum `werkstatt/`; `--probe` = ganzer Plan ohne Netz): prüft Ordner = ZIP und keine Nutzerdaten, CI-Schranke und
+  (seit 2.5) den Quellbaum – Arbeitsbaum sauber, HEAD signiert, `Me-Goos-ta-Deutsch/` in HEAD = Release-Ordner –, legt den
+  signierten annotierten Tag `v<Version>` an, pusht `main` (nur Fast-Forward) und den Tag in einem atomaren Push (nie Force),
+  setzt Standard-Branch/Homepage, legt das Release als Entwurf an, lädt die Assets hoch, lädt sie angemeldet zurück und prüft
+  Bytes + Signatur, erst dann veröffentlicht es als „Latest“ und vergleicht die öffentlichen Assets. Veröffentlichte
+  Releases und Tags sind unveränderlich (Repo-Regeln „Schutz Tags v*“ + unveränderliche Releases): ein Fix wird eine neue
+  Patch-Version (`--ersetzen` gibt es nicht mehr). Anmeldung über ein eigenes Fine-grained Token nur für dieses Repository
+  (`GH_TOKEN` bzw. Windows-Anmeldeinformation `MGD-Release-Token`; GitHub Desktop nur mit `--desktop-anmeldung`), Rechte
+  werden vorab gelesen. Release-Notizen aus `CHANGELOG.md`.
 - **Signierte Releases (seit 2.5, `signatur.py`, nur Standardbibliothek):** `SHA256SUMS.txt` jedes Releases ist mit dem
   Schlüssel von Me Goos-ta Deutsch signiert – minisign-Format (Algorithmus `ED`: Ed25519 nach RFC 8032 über den
   BLAKE2b-512-Vorhash; `Ed` ohne Vorhash wird auch geprüft), 8-Byte-Schlüssel-ID, „trusted comment“ genau
@@ -1024,9 +1037,10 @@ neuer Ordner, pip aus dem Rad, beschädigtes NumPy mit automatischer Reparatur, 
   echte Kamera/Teilen-Leiste). Seit 2.5 baut GitHub Actions Release-Ordner, ZIP und Web-App selbst aus dem Quellbaum (Job
   `bau`, auch für jeden Pull Request auf `main`; Fork-PRs nur mit Lese-Rechten, ohne Secrets), dazu ein kleiner Lint
   (ruff: Syntaxfehler, undefinierte Namen), OpenSSF Scorecard auf `main` und Dependabot für die Actions. Ein Release wird
-  nur nach grünem Lauf für genau diesen Inhalt (gleiche Prüfsumme lokal und im CI-Bau) veröffentlicht; nach jedem Push
-  auf `main` prüft die Release-Prüfung das veröffentlichte Release erneut (sobald ZIP und Download-Seite zu `main` passen;
-  frisch installiert mit den dann neuesten Paketfassungen) und die Live-Adressen.
+  nur nach grünem Lauf für genau diesen Inhalt (gleiche Prüfsumme lokal und im CI-Bau) veröffentlicht; sobald ein Release
+  veröffentlicht ist (seit 2.5 am Ereignis `release: published`, vorher nach jedem Push auf `main`), prüft die
+  Release-Prüfung es erneut (sobald ZIP und Download-Seite zu `Me-Goos-ta-Deutsch/` im Tag passen; frisch installiert, auch
+  mit den dann neuesten Paketfassungen) und die Live-Adressen.
 - Ob Smart App Control die Paket-DLLs zulässt, hängt von deren Ruf bei Microsoft ab und kann sich ändern; das
   Startprogramm erkennt eine Sperre und reagiert, kann sie aber nicht umgehen. Beim Test von 1.6 waren bei der ganz
   neuen NumPy 2.5.4 nur die Teile von `numpy.random` gesperrt, die das Programm nicht braucht; der Selbsttest
@@ -1071,6 +1085,7 @@ Me-Goos-ta-Deutsch/
 ├─ Me Goos-ta Deutsch - Mac.command   Startdatei Mac (und Linux)
 ├─ Me Goos-ta Deutsch - Linux.sh      Startdatei Linux (ruft die Mac-/Linux-Startdatei auf)
 ├─ LIES MICH ZUERST.html              Anleitung mit Bildern (Deutsch, Englisch, Spanisch)
+├─ README.md · CHANGELOG.md · LICENSE.txt   Kurzüberblick (Englisch), Änderungsliste (seit 2.5), MIT-Lizenz
 ├─ Me Goos-ta Deutsch - Android.html  Handy-App installieren: Link, QR-Code, Schritte (auch … - iPhone / - Google Pixel)
 └─ Programm/
    ├─ starter.py                Startprogramm: Erkennung, Einrichtung, Start, Reparatur

@@ -1498,13 +1498,16 @@ def _werkzeuge_anmelden():
 
     @UI.werkzeug("handy", L("Am Handy öffnen (WLAN)", "Open on your phone (Wi-Fi)", "Abrir en el celular (wifi)"),
                  L("Die Oberfläche im eigenen WLAN auf Handy oder Tablet benutzen – z. B. um Fotos direkt vom Handy "
-                   "hochzuladen. Zugang nur mit PIN, schaltet sich nach 2 Stunden von selbst ab. Oder die Gans als App "
+                   "hochzuladen. Nur fürs eigene Heimnetz (Verbindung unverschlüsselt, nie in öffentlichen WLANs), Zugang nur mit "
+                   "PIN, schaltet sich nach 2 Stunden von selbst ab. Oder die Gans als App "
                    "aufs Handy holen (QR-Code).",
                    "Use the interface on your phone or tablet in your own Wi-Fi – e.g. to upload photos straight from "
-                   "your phone. Access only with a PIN; switches itself off after 2 hours. Or get the goose onto your "
+                   "your phone. Only for your own home network (the connection is unencrypted – never in public Wi-Fi); "
+                   "access only with a PIN; switches itself off after 2 hours. Or get the goose onto your "
                    "phone as an app (QR code).",
                    "Usa la interfaz en el celular o la tableta dentro de tu wifi, p. ej. para subir fotos directo del "
-                   "celular. Acceso solo con PIN; se apaga solo después de 2 horas. O llévate el ganso al celular como "
+                   "celular. Solo para tu propia red de casa (la conexión no va cifrada; nunca en wifi públicas); acceso "
+                   "solo con PIN; se apaga solo después de 2 horas. O llévate el ganso al celular como "
                    "app (código QR)."),
                  L("Einrichten …", "Set up …", "Configurar …"), art="dialog", zustand=_lan_zustand, nur_rechner=True)
     def _w_handy():

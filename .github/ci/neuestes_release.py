@@ -6,9 +6,11 @@ SHA256SUMS.txt über die öffentlichen Adressen …/releases/latest/download/…
 (Startdateien 0755). Nur Standardbibliothek.
     python neuestes_release.py [--ziel <Ordner>] [--repo <konto/repo>] [--passend <min>]
                                                                         → Zeile „#release {json}“, Exit-Code 0/1
---passend <min>  (Push auf main) höchstens so lange warten, bis das Release genau den Inhalt des Checkouts hat (jede Datei
-                 gleich, keine fehlt oder ist zu viel; .github/ und .gitattributes gehören nur zum Branch) und die
-                 Download-Seite seine Prüfsumme nennt – main wird vor dem Release-Asset und der Seite gepusht.
+--passend <min>  (Release veröffentlicht) höchstens so lange warten, bis das Release genau den Inhalt des Checkouts hat
+                 (jede Datei gleich, keine fehlt oder ist zu viel; .github/, .gitattributes, __pycache__ zählen nicht) und
+                 die Download-Seite seine Prüfsumme nennt – die Seite erscheint erst nach dem Release.
+Checkout: seit 2.5 G06 der Quellbaum im Tag (Programm unter Me-Goos-ta-Deutsch/), bei der Probe auf ci der gebaute
+Release-Baum (Programm an der Wurzel) – programm_wurzel() findet beides.
 Konto/Repository: --repo, sonst GITHUB_REPOSITORY (GitHub Actions), sonst Programm/web_adresse.txt im Checkout."""
 import hashlib
 import importlib.util
@@ -23,6 +25,7 @@ import urllib.request
 import zipfile
 from pathlib import Path
 
+sys.dont_write_bytecode = True                                  # signatur.py laden legt kein __pycache__ in den Checkout
 ZIP_NAME = re.compile(r"^([0-9a-f]{64})  (Me-Goos-ta-Deutsch-(\d+(?:\.\d+)+)\.zip)$", re.M)
 
 
@@ -42,16 +45,22 @@ def holen(url, versuche=3):
             time.sleep(4 * (i + 1))
 
 
+def programm_wurzel(wurzel):
+    """Ordner mit Programm/ im Checkout: Quellbaum (Me-Goos-ta-Deutsch/Programm, seit 2.5) oder Release-Baum (Programm)."""
+    w = Path(wurzel)
+    return w / "Me-Goos-ta-Deutsch" if (w / "Me-Goos-ta-Deutsch" / "Programm").is_dir() else w
+
+
 def repo_von(wurzel, repo=None):
     if repo or os.environ.get("GITHUB_REPOSITORY"):
         return repo or os.environ["GITHUB_REPOSITORY"]
-    zeile = (Path(wurzel) / "Programm" / "web_adresse.txt").read_text(encoding="utf-8").strip().splitlines()[0]
+    zeile = (programm_wurzel(wurzel) / "Programm" / "web_adresse.txt").read_text(encoding="utf-8").strip().splitlines()[0]
     m = re.match(r"^https://([a-z0-9-]+)\.github\.io/([A-Za-z0-9._-]+)/$", zeile.strip())
     return f"{m.group(1)}/{m.group(2)}"
 
 
 def signatur_modul(wurzel):
-    pfad = Path(wurzel) / "Programm" / "signatur.py"
+    pfad = programm_wurzel(wurzel) / "Programm" / "signatur.py"
     if not pfad.is_file():
         return None
     spec = importlib.util.spec_from_file_location("signatur_checkout", pfad)
@@ -118,13 +127,13 @@ def laden(ziel, repo, wurzel=None):
 def abweichungen(zip_pfad, wurzel, ohne=()):
     """Release-ZIP gegen den Checkout: → Liste der Unterschiede (leer = gleicher Inhalt). Im Checkout zählen .git/,
     .github/, .gitattributes und die Ordner in `ohne` (z. B. das Ziel zum Entpacken) nicht mit."""
-    wurzel = Path(wurzel).resolve()
+    wurzel = programm_wurzel(Path(wurzel).resolve())
     weg = [Path(o).resolve() for o in ohne]
     hier = {}
     for p in wurzel.rglob("*"):
         rel = p.relative_to(wurzel)
         if (not p.is_file() or rel.parts[0] in (".git", ".github") or rel.as_posix() == ".gitattributes"
-                or any(p.resolve().is_relative_to(w) for w in weg)):
+                or "__pycache__" in rel.parts or any(p.resolve().is_relative_to(w) for w in weg)):
             continue
         hier[rel.as_posix()] = p
     aus = []
@@ -135,7 +144,7 @@ def abweichungen(zip_pfad, wurzel, ohne=()):
             if n not in hier:
                 aus.append(f"nur im Release: {n}")
             elif n not in drin:
-                aus.append(f"nur auf main: {n}")
+                aus.append(f"nur im Checkout: {n}")
             elif z.read(drin[n]) != hier[n].read_bytes():
                 aus.append(f"anders: {n}")
     return aus
@@ -143,7 +152,7 @@ def abweichungen(zip_pfad, wurzel, ohne=()):
 
 def seite_nennt(wurzel, sha):
     """Nennt die Download-Seite (web_adresse.txt + download/) die Prüfsumme? Ohne Adresse: ja (nichts zu prüfen)."""
-    pfad = Path(wurzel) / "Programm" / "web_adresse.txt"
+    pfad = programm_wurzel(wurzel) / "Programm" / "web_adresse.txt"
     adresse = pfad.read_text(encoding="utf-8").strip().splitlines()[0].strip() if pfad.is_file() else ""
     if not adresse.startswith("https://"):
         return True
@@ -159,7 +168,7 @@ def passend_laden(ziel, repo, wurzel, minuten):
             r = laden(ziel, repo, wurzel)
             unterschiede = abweichungen(Path(ziel) / r["name"], wurzel, ohne=[ziel])
             if unterschiede:
-                grund = f"Release {r['version']} ≠ main ({len(unterschiede)}: {', '.join(unterschiede[:3])})"
+                grund = f"Release {r['version']} ≠ Checkout ({len(unterschiede)}: {', '.join(unterschiede[:3])})"
             elif not seite_nennt(wurzel, r["sha256"]):
                 grund = f"Download-Seite nennt SHA-256 {r['sha256'][:16]}… noch nicht"
             else:
@@ -194,7 +203,7 @@ def main(argv):
         name = (f"Neuestes Release {r['version']} geladen, {r['signatur']}, SHA-256 = SHA256SUMS.txt, entpackt mit Unix-Rechten"
                 if r else "Neuestes Release laden, Signatur (ab 2.5) und SHA256SUMS.txt prüfen")
         if passend:
-            name += " · Inhalt = main, Download-Seite nennt die Prüfsumme"
+            name += " · Inhalt = Checkout (Tag), Download-Seite nennt die Prüfsumme"
         Path(wert("--ergebnis")).write_text(json.dumps(dict(
             system="release", ok=bool(r), version=r and r["version"], release=r, pruefungen=[dict(
                 name=name, ok=bool(r), grund=grund[:600], dauer=round(time.time() - t0, 1))]), ensure_ascii=False, indent=1),

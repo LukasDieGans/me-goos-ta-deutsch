@@ -4209,13 +4209,13 @@ def test_ci_browser(tmp):
     uses = re.findall(r"^\s*-?\s*uses:\s*(\S+)", y, re.M)
     jobs = re.findall(r"^  ([a-z][a-z0-9_-]*):\s*$", y.split("\njobs:", 1)[1], re.M) if "\njobs:" in y else []
     zeiten = [int(z) for z in re.findall(r"^\s+timeout-minutes:\s*(\d+)", y, re.M)]
-    pruefe("release_pruefung.yml: nach jedem Push auf main + workflow_dispatch (kein Zeitplan, kein pull_request), nur Lesen, "
-           "Actions per SHA, Prüfsummen-Schritt wartet auf main auf das passende Release (--passend), Frischtest mit dem "
+    pruefe("release_pruefung.yml: beim Veröffentlichen eines Releases + workflow_dispatch (kein Push, kein Zeitplan, kein "
+           "pull_request), nur Lesen, Actions per SHA, Prüfsummen-Schritt wartet beim Release auf das passende Release (--passend), Frischtest mit dem "
            "veröffentlichten Release auf 7 Systemen, Job „neueste“ (Spannen statt Lock) auf 3 Systemen, Browser live, "
            "Playwright-Download mit Wiederholung",
-           re.search(r'^on:\n  push:\n    branches: \[main\]\n  workflow_dispatch:\n\n', y, re.M)
-           and "schedule" not in y and "cron" not in y and "pull_request" not in y and y.count("push:") == 1
-           and "${{ github.ref == 'refs/heads/main' && '--passend 40' || '' }}" in y
+           re.search(r'^on:\n  release:\n    types: \[published\]\n  workflow_dispatch:\n\n', y, re.M)
+           and "schedule" not in y and "cron" not in y and "pull_request" not in y and "push:" not in y
+           and "${{ github.event_name == 'release' && '--passend 40' || '' }}" in y
            and y.count("for i in 1 2 3; do python -m playwright install") == 1
            and re.search(r"^permissions:\n  contents: read\n", y, re.M)
            and "write" not in y and "secrets." not in y and uses and all(re.fullmatch(r"actions/[a-z-]+@[0-9a-f]{40}", u) for u in uses)
@@ -5212,7 +5212,7 @@ def test_fix_download_release(tmp):
                           ohne=[co / "release"])
     pruefe("Release-Prüfung: Release-ZIP = main Datei für Datei (Bytes, auch Zeilenenden), .github/ + .gitattributes + "
            "Zielordner zählen nicht; anders / fehlt / zu viel werden genannt",
-           gleich == [] and anders == ["anders: Programm/a.py"] and fehlt == ["nur auf main: Programm/a.py"]
+           gleich == [] and anders == ["anders: Programm/a.py"] and fehlt == ["nur im Checkout: Programm/a.py"]
            and mehr == ["nur im Release: neu.txt"], f"{gleich} {anders} {fehlt} {mehr}")
 
 
@@ -5846,8 +5846,11 @@ def test_github_auftritt(tmp):
     plan = json.loads(mp.group(1)) if mp else {}
     schritte = {s["id"]: s["soll"] for s in plan.get("schritte", [])}
     regel = schritte.get("ruleset") or {}
+    mp2 = re.search(r"^#plan (.*)$", r2.stdout, re.M)
+    s2 = {s["id"]: s["soll"] for s in (json.loads(mp2.group(1)) if mp2 else {}).get("schritte", [])}
     pruefe("repo_einstellungen.py --probe: Stufe 1 vollständig (Topics, Sicherheitsmeldungen, Dependabot, Secret Scanning, CodeQL, "
-           "Ruleset main + gh-pages ohne ci und ohne Umgehung, Probe aus), ohne Netz, schreibt nichts; Stufe 2 noch leer → sauberes Ende",
+           "Ruleset main + gh-pages ohne ci und ohne Umgehung, Probe aus), ohne Netz, schreibt nichts; Stufe 2 (seit G06): Tags v* "
+           "nicht löschen/verschieben, unveränderliche Releases, signierte Commits auf main + gh-pages (ci frei), ohne Umgehung",
            r1.returncode == 0 and plan.get("konto") == konto and plan.get("stufe") == 1
            and set(schritte) == {"topics", "wiki_discussions", "private_meldungen", "dependabot_warnungen", "secret_scanning",
                                  "codeql", "ruleset", "probe_aus"}
@@ -5855,7 +5858,11 @@ def test_github_auftritt(tmp):
            and len(schritte.get("topics", [])) <= 20 and all(re.fullmatch(r"[a-z0-9][a-z0-9-]{0,49}", t) for t in schritte.get("topics", []))
            and sorted(regel.get("include", [])) == ["refs/heads/gh-pages", "refs/heads/main"] and regel.get("umgehung") == []
            and sorted(regel.get("regeln", [])) == ["deletion", "non_fast_forward"]
-           and r2.returncode != 0 and "Traceback" not in r2.stderr and "#plan" not in r2.stdout and vorher == nachher,
+           and r2.returncode == 0 and set(s2) == {"tags", "unveraenderlich", "signierte_commits"} and s2["unveraenderlich"] is True
+           and s2["tags"]["include"] == ["refs/tags/v*"] and sorted(s2["tags"]["regeln"]) == ["deletion", "non_fast_forward", "update"]
+           and sorted(s2["signierte_commits"]["include"]) == ["refs/heads/gh-pages", "refs/heads/main"]
+           and s2["signierte_commits"]["regeln"] == ["required_signatures"]
+           and all(x["umgehung"] == [] for x in (s2["tags"], s2["signierte_commits"])) and vorher == nachher,
            (r1.stdout + r1.stderr + r2.stderr)[-400:])
 
 
@@ -6503,6 +6510,323 @@ def test_ci_quellbaum(tmp):
     print(f"  E54 {time.time() - t0:.1f} s")
 
 
+def test_veroeffentlichung(tmp):
+    """E55 (2.5): Veröffentlichung neu – Token-Reihenfolge (GH_TOKEN → Anmeldeinformation MGD-Release-Token → nur mit
+    --desktop-anmeldung GitHub CLI/Desktop, sonst Anleitung) und Rechte-Prüfung mit nachgebildeter Anmeldung (ohne Netz);
+    kein --ersetzen, kein Force; Release-Schritte Entwurf → Prüfen → Veröffentlichen gegen eine nachgebildete API;
+    Trockenlauf gegen ein lokales Bare-Repo (signierter annotierter Tag, Fast-Forward, nie Force); --probe zeigt den ganzen
+    Plan; Release-Prüfung findet das Programm im Quellbaum (Me-Goos-ta-Deutsch/). Ohne werkstatt/ entfallen alle 5."""
+    print("\n[E55] Veröffentlichung: Token, signierter Tag, unveränderliche Releases")
+    import contextlib
+    import hashlib
+    import importlib.util
+    import io
+    import types
+    import zipfile
+    import signatur as sg
+    t0 = time.time()
+    arbeit = HIER.parent.parent
+    vw_pfad, vr_pfad = arbeit / "werkstatt" / "veroeffentliche_webapp.py", arbeit / "werkstatt" / "veroeffentliche_release.py"
+    nr_pfad = arbeit / ".github" / "ci" / "neuestes_release.py"
+    if not (vw_pfad.is_file() and vr_pfad.is_file() and nr_pfad.is_file()):
+        print("  (werkstatt/ und .github/ liegen nur im Quellbaum – Prüfungen entfallen)")
+        return
+
+    def modul(pfad, name):
+        spec = importlib.util.spec_from_file_location(name, pfad)
+        m = importlib.util.module_from_spec(spec)
+        sys.dont_write_bytecode, vorher = True, sys.dont_write_bytecode
+        try:
+            spec.loader.exec_module(m)
+        finally:
+            sys.dont_write_bytecode = vorher
+        return m
+
+    def ende(f, *a, **k):
+        """→ (Ergebnis oder None, Abbruch-Text oder None, Ausgabe)"""
+        aus = io.StringIO()
+        try:
+            with contextlib.redirect_stdout(aus):
+                return f(*a, **k), None, aus.getvalue()
+        except SystemExit as e:
+            return None, str(e.code), aus.getvalue()
+    # 1) Token-Reihenfolge + Rechte (nachgebildet)
+    vw = modul(vw_pfad, "vw_e55")
+    gerufen = []
+    vw.sys = types.SimpleNamespace(platform="win32", argv=[], exit=sys.exit)
+    vw._gh_cli = lambda: gerufen.append("gh") or "tok-gh"
+    vw._github_desktop = lambda: gerufen.append("desktop") or "tok-desktop"
+    alt_env = {n: os.environ.pop(n, None) for n in ("GH_TOKEN", "GITHUB_TOKEN")}
+    try:
+        os.environ["GH_TOKEN"] = "tok-env"
+        vw._anmeldeinformation = lambda ziel: "tok-cred" if ziel == "MGD-Release-Token" else None
+        a = ende(vw.token)
+        os.environ.pop("GH_TOKEN")
+        b = ende(vw.token)
+        d = ende(vw.token, desktop=True)                      # ausdrücklich: breite Anmeldung statt des eigenen Tokens
+        vw._anmeldeinformation = lambda ziel: None
+        c = ende(vw.token)
+    finally:
+        for n, v in alt_env.items():
+            os.environ.pop(n, None)
+            if v is not None:
+                os.environ[n] = v
+    antworten = {"/repos/k/r": 200, "/repos/k/r/commits?per_page=1": 200, "/repos/k/r/actions/permissions": 403}
+    vw.api = lambda m, weg, tok, daten=None, ok=(): (antworten.get(weg, 200), {})
+    r_ok = ende(vw.rechte_pruefen, "t", "k", "r", ("contents",))
+    r_fehlt = ende(vw.rechte_pruefen, "t", "k", "r", ("contents", "administration"))
+    antworten["/repos/k/r"] = 404
+    r_repo = ende(vw.rechte_pruefen, "t", "k", "r", ("contents",))
+    pruefe("Token: GH_TOKEN → Anmeldeinformation MGD-Release-Token → ohne Token Abbruch mit Anleitung (GitHub CLI/Desktop "
+           "unberührt); nur ausdrücklich mit --desktop-anmeldung die breite Anmeldung mit „Achtung: breiter Zugriff“; Rechte-Prüfung "
+           "nennt das fehlende Token-Recht",
+           a[0] == ("tok-env", "GH_TOKEN") and b[0] == ("tok-cred", "Windows-Anmeldeinformation MGD-Release-Token")
+           and c[0] is None and "MGD-Release-Token" in c[1] and "Fine-grained" in c[1] and gerufen == ["gh"]
+           and d[0] == ("tok-gh", "GitHub CLI (breiter Zugriff)") and "Achtung: breiter Zugriff" in d[2]
+           and r_ok[0] is True and r_fehlt[1] and "Administration (Read and write)" in r_fehlt[1]
+           and r_repo[1] and "Repository access" in r_repo[1] and not re.search(r"(?i)\bwarn(ing|ung)\b", c[1] + d[2]),
+           (a, b, c[1], d, gerufen, r_fehlt[1], r_repo[1]))
+    # 2) kein --ersetzen, kein Force
+    vr = modul(vr_pfad, "vr_e55")
+    q = vr_pfad.read_text(encoding="utf-8")
+    env = dict(os.environ, PYTHONIOENCODING="utf-8", PYTHONDONTWRITEBYTECODE="1", GH_TOKEN="",
+               HTTPS_PROXY="http://127.0.0.1:9", HTTP_PROXY="http://127.0.0.1:9")
+    ers = subprocess.run([sys.executable, str(vr_pfad), "a", "b.zip", "--ersetzen"], env=env, capture_output=True, text=True,
+                         encoding="utf-8", errors="replace", timeout=120)
+    pruefe("Kein --ersetzen und kein Force: Aufruf mit --ersetzen endet mit Hinweis „neue Patch-Version“; kein main_pushen, "
+           "kein Tag-Verschieben, kein --force im Skript",
+           ers.returncode != 0 and "Patch-Version" in ers.stderr and "Traceback" not in ers.stderr
+           and not hasattr(vr, "main_pushen") and '"--force"' not in q and "force=True" not in q and "git/refs/tags" not in q
+           and '"push", "--atomic"' in q, ers.stderr[-300:])
+    # 3) Entwurf → Prüfen → Veröffentlichen gegen eine nachgebildete API
+    seed, sid = hashlib.sha256(b"mgd-e55-testschluessel").digest(), b"MGDTEST5"
+    test_mod = types.SimpleNamespace(KOMMENTAR=sg.KOMMENTAR, pruefe=lambda n, m, s, k: sg.pruefe(
+        n, m, [("test", sid, sg.ed25519_oeffentlich(seed))], k))
+    daten = b"PK-e55-zip"
+    summen = f"{hashlib.sha256(daten).hexdigest()}  Me-Goos-ta-Deutsch-9.9.zip\n"
+    ms = sg.signiere(seed, sid, summen.encode(), "me-goos-ta-deutsch v9.9")
+    p = dict(version="9.9", tag="v9.9", titel="Me Goos-ta Deutsch 9.9", notizen="n", summen=summen, sha256=hashlib.sha256(daten).hexdigest(),
+             assets=["Me-Goos-ta-Deutsch-9.9.zip", "SHA256SUMS.txt", "SHA256SUMS.txt.minisig"],
+             download="https://github.com/k/r/releases/download/v9.9/Me-Goos-ta-Deutsch-9.9.zip")
+
+    class Nachbildung:
+        def __init__(self, kaputt=None):
+            self.log, self.kaputt, self.ablage = [], kaputt, {}
+
+        def api(self, m, rest, d=None):
+            self.log.append((m, rest, dict(d or {}).get("draft")))
+            return (201 if m == "POST" else 200), {"id": 7, "upload_url": "u{?name}", "html_url": "h"}
+
+        def hochladen(self, rel, name, d, typ):
+            self.log.append(("hoch", name, None))
+            self.ablage[name] = d
+            return {"url": name}
+
+        def asset(self, a):
+            self.log.append(("asset", a["url"], None))
+            return b"falsch" if a["url"] == self.kaputt else self.ablage[a["url"]]
+
+        def oeffentlich(self, url, versuche=12):
+            self.log.append(("oeffentlich", url.rsplit("/", 1)[1], None))
+            return self.ablage[url.rsplit("/", 1)[1]]
+    gut, schlecht = Nachbildung(), Nachbildung(kaputt="Me-Goos-ta-Deutsch-9.9.zip")
+    g1 = ende(vr.release_schritte, gut, p, daten, ms, test_mod)
+    g2 = ende(vr.release_schritte, schlecht, p, daten, ms, test_mod)
+    arten = [x[0] if x[0] in ("hoch", "asset", "oeffentlich") else f"{x[0]} {x[1]} {x[2]}" for x in gut.log]
+    soll = ["POST /releases True", "hoch", "hoch", "hoch", "asset", "asset", "asset", "PATCH /releases/7 False",
+            "oeffentlich", "oeffentlich", "oeffentlich"]
+    pruefe("Release-Schritte (nachgebildete API): Entwurf → 3 Assets hoch → angemeldet laden + Signatur prüfen → erst dann "
+           "veröffentlichen → öffentlich prüfen; falsches Asset im Entwurf → Entwurf gelöscht, nie veröffentlicht",
+           g1[1] is None and arten == soll and g2[1] and "nichts veröffentlicht" in g2[1]
+           and ("DELETE", "/releases/7", None) in schlecht.log and not any(x[0] == "PATCH" for x in schlecht.log)
+           and list(vr.REIHENFOLGE).index("angemeldet pruefen") < list(vr.REIHENFOLGE).index("veroeffentlichen"),
+           (arten, g1[1], g2[1], schlecht.log[-3:]))
+    # 4) Trockenlauf gegen ein lokales Bare-Repo
+    import veroeffentliche_webapp as vw_echt
+    git = vw_echt.git_exe()
+    kg = next((str(k) for k in (Path(os.environ.get("SystemRoot", r"C:\Windows")) / "System32" / "OpenSSH" / "ssh-keygen.exe",
+                                Path(shutil.which("ssh-keygen") or "-")) if Path(k).is_file()), None)
+    befund = {}
+    if kg:
+        w, bare, kd = tmp / "e55-werk", tmp / "e55-bare.git", tmp / "e55-key"
+        kd.mkdir()
+        subprocess.run([kg, "-q", "-t", "ed25519", "-N", "", "-C", "e55", "-f", str(kd / "k")], capture_output=True)
+        (kd / "erlaubt").write_text(f"e55@users.noreply.github.com {(kd / 'k.pub').read_text().strip()}\n", encoding="ascii")
+
+        def g(*a, cwd=w):
+            return subprocess.run([git, *a], cwd=cwd, capture_output=True, text=True, encoding="utf-8", errors="replace")
+        w.mkdir()
+        g("init", "-q", "-b", "main")
+        for k, v in (("user.name", "E55"), ("user.email", "e55@users.noreply.github.com"), ("gpg.format", "ssh"),
+                     ("user.signingkey", str(kd / "k.pub")), ("gpg.ssh.program", kg), ("core.autocrlf", "false"),
+                     ("gpg.ssh.allowedSignersFile", str(kd / "erlaubt")), ("commit.gpgsign", "true"), ("tag.gpgsign", "true")):
+            g("config", "--local", k, v)
+        (w / "Me-Goos-ta-Deutsch").mkdir()
+        (w / "Me-Goos-ta-Deutsch" / "a.txt").write_bytes(b"eins\r\n")
+        g("add", "-A")
+        g("commit", "-q", "-m", "eins")
+        g("init", "-q", "--bare", str(bare), cwd=tmp)
+        g("push", "-q", str(bare), "HEAD:refs/heads/main")
+        (w / "Me-Goos-ta-Deutsch" / "b.txt").write_bytes(b"zwei\n")
+        g("add", "-A")
+        g("commit", "-q", "-m", "zwei")
+        head = g("rev-parse", "HEAD").stdout.strip()
+        rel = tmp / "e55-rel"
+        rel.mkdir()
+        for n in ("a.txt", "b.txt"):
+            shutil.copyfile(w / "Me-Goos-ta-Deutsch" / n, rel / n)
+        st_gut = vr.quellbaum_stand(rel, ["a.txt", "b.txt"], "9.9", w)
+        r1 = ende(vr.tag_und_pushen, w, str(bare), head, "9.9", None, "Me Goos-ta Deutsch 9.9")
+        r2 = ende(vr.tag_und_pushen, w, str(bare), head, "9.9", None, "Me Goos-ta Deutsch 9.9")
+        tag_obj = g("cat-file", "-p", "refs/tags/v9.9", cwd=bare).stdout
+        befund.update(stand=st_gut["hindernisse"], r1=r1[1], r2=(r2[0] or [None, None])[1],
+                      main=g("rev-parse", "refs/heads/main", cwd=bare).stdout.strip() == head,
+                      signiert="-----BEGIN SSH SIGNATURE-----" in tag_obj and tag_obj.startswith(f"object {head}"))
+        # fremder Stand auf dem Server: main dort weiter als HEAD → kein Fast-Forward → Abbruch, Server unverändert
+        anders = tmp / "e55-anders"
+        g("clone", "-q", "-b", "main", str(bare), str(anders), cwd=tmp)
+        for k, v in (("user.name", "E55"), ("user.email", "e55@users.noreply.github.com"), ("commit.gpgsign", "false")):
+            g("config", "--local", k, v, cwd=anders)
+        (anders / "c.txt").write_text("drei", encoding="utf-8")
+        g("add", "-A", cwd=anders)
+        g("commit", "-q", "-m", "drei", cwd=anders)
+        g("push", "-q", "origin", "HEAD:refs/heads/main", cwd=anders)
+        server = g("rev-parse", "refs/heads/main", cwd=bare).stdout.strip()
+        (w / "Me-Goos-ta-Deutsch" / "b.txt").write_bytes(b"zwei!\n")
+        st_offen = vr.quellbaum_stand(rel, ["a.txt", "b.txt", "c.txt"], "9.9", w)
+        g("add", "-A")
+        g("commit", "-q", "-m", "vier")
+        r3 = ende(vr.tag_und_pushen, w, str(bare), g("rev-parse", "HEAD").stdout.strip(), "9.10", None, "9.10")
+        befund.update(r3=r3[1], unveraendert=g("rev-parse", "refs/heads/main", cwd=bare).stdout.strip() == server,
+                      kein_tag=g("rev-parse", "-q", "--verify", "refs/tags/v9.10", cwd=bare).returncode != 0,
+                      offen=st_offen["hindernisse"])
+    pruefe("Trockenlauf Bare-Repo: signierter annotierter Tag auf HEAD, main per Fast-Forward + Tag in einem Push, zweiter Lauf "
+           "pusht nichts; main auf dem Server weiter → Abbruch ohne Push (kein Force); Quellbaum-Stand erkennt sauber/geändert",
+           bool(kg) and befund.get("stand") == [] and befund.get("r1") is None and befund.get("main") and befund.get("signiert")
+           and befund.get("r2") == [] and befund.get("r3") and "Fast-Forward" in befund["r3"] and befund.get("unveraendert")
+           and befund.get("kein_tag") and any("nicht sauber" in h for h in befund.get("offen", []))
+           and any("≠" in h for h in befund.get("offen", [])), befund)
+    # 5) --probe: ganzer Plan; Release-Prüfung im Quellbaum-Layout
+    rel36 = tmp / "e36-release"
+    zips = sorted(rel36.glob("Me-Goos-ta-Deutsch-*.zip"))
+    pr = subprocess.run([sys.executable, str(vr_pfad), str(rel36 / "Me-Goos-ta-Deutsch"), str(zips[0] if zips else "x.zip"),
+                         "--probe", "--ohne-ci", "E55 prüft nur den Plan"], env=env, capture_output=True, text=True,
+                        encoding="utf-8", errors="replace", timeout=300)
+    mp = re.search(r"^#plan (.*)$", pr.stdout, re.M)
+    plan = json.loads(mp.group(1)) if mp else {}
+    nr = modul(nr_pfad, "nr_e55")
+    co = tmp / "e55-checkout"
+    for n, d in (("Me-Goos-ta-Deutsch/README.md", b"Gans"), ("Me-Goos-ta-Deutsch/Programm/a.py", b"x"),
+                 ("Me-Goos-ta-Deutsch/Programm/__pycache__/a.pyc", b"!"), ("werkstatt/w.py", b"w"), (".github/x.yml", b"y")):
+        (co / n).parent.mkdir(parents=True, exist_ok=True)
+        (co / n).write_bytes(d)
+    z = tmp / "e55.zip"
+    with zipfile.ZipFile(z, "w") as f:
+        f.writestr("Me-Goos-ta-Deutsch/README.md", b"Gans")
+        f.writestr("Me-Goos-ta-Deutsch/Programm/a.py", b"x")
+    wf = (arbeit / ".github" / "workflows" / "release_pruefung.yml").read_text(encoding="utf-8")
+    pruefe("--probe zeigt den ganzen Plan (Quellbaum-HEAD, signierter Tag, Fast-Forward ohne Force, Reihenfolge Entwurf → Prüfen → "
+           "Veröffentlichen, unveränderlich, Hindernisse); Release-Prüfung am Release (release: published) findet Programm/ unter "
+           "Me-Goos-ta-Deutsch/ und ignoriert __pycache__",
+           pr.returncode == 0 and plan.get("reihenfolge") == list(vr.REIHENFOLGE) and plan.get("unveraenderlich") is True
+           and plan.get("push", {}).get("force") is False and re.fullmatch(r"[0-9a-f]{40}", str(plan.get("quellbaum", {}).get("head")))
+           and isinstance(plan.get("hindernisse"), list) and "signiert + annotiert" in pr.stdout
+           and nr.programm_wurzel(co) == co / "Me-Goos-ta-Deutsch" and nr.programm_wurzel(co / "Me-Goos-ta-Deutsch") == co / "Me-Goos-ta-Deutsch"
+           and nr.abweichungen(z, co) == [] and "  release:\n    types: [published]\n" in wf,
+           ((pr.stdout + pr.stderr)[-400:], nr.abweichungen(z, co) if z.is_file() else None))
+    print(f"  E55 {time.time() - t0:.1f} s")
+
+
+E56_MIT = ("Permission is hereby granted, free of charge, to any person obtaining a copy", "THE SOFTWARE IS PROVIDED \"AS IS\"",
+           "OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n")
+
+
+def test_auftritt(tmp):
+    """E56 (2.5): Auftritt und Doku – LICENSE.txt = reiner MIT-Text (GitHub erkennt MIT), Wurzel-LICENSE gleich; Wurzel-README
+    mit Bildern (vorhanden, je < 300 KB, Alt-Text), Badges und Links nur auf dieses Repo bzw. web_adresse.txt (Bilder der
+    Badges von GitHub, shields.io, securityscorecards.dev – jeweils für dieses Repo); CHANGELOG.md (Keep a Changelog) mit
+    einem Abschnitt je Version, im Release; ZIP-README nur „New in“ der neuesten Version; Datenschutz-Abschnitt der
+    Download-Seite in de/en/es gleich gegliedert; Handy-Zugang „nie in öffentlichen Netzen“ in Hover, Hinweis und
+    Leitfäden. Ohne Quellbaum (README/LICENSE an der Wurzel, werkstatt/) entfallen 3 der 5 Prüfungen."""
+    print("\n[E56] Auftritt: README, Bilder, CHANGELOG, Lizenz, Datenschutz")
+    import gans_lernkarten as gl
+    t0 = time.time()
+    oben = HIER.parent
+    arbeit = oben.parent
+    lic = (oben / "LICENSE.txt").read_bytes()
+    lt = lic.decode("utf-8")
+    pruefe("LICENSE.txt = reiner MIT-Text (nur Titel, Copyright „Eine Gans namens Lukas“, Erlaubnis, Haftung) – ohne Zusatzzeilen",
+           lt.startswith("MIT License\n\nCopyright (c) 2026 Eine Gans namens Lukas\n\n") and all(s in lt for s in E56_MIT)
+           and lt.endswith(E56_MIT[2]) and len(lt.split("\n\n")) == 5 and "\r" not in lt and "DRITTLIZENZEN" not in lt, lt[-200:])
+    cl = (oben / "CHANGELOG.md").read_text(encoding="utf-8")
+    abschnitte = re.findall(r"^## \[([^\]]+)\](.*)$", cl, re.M)
+    versionen = [v for v, _ in abschnitte]
+    kategorien = set(re.findall(r"^### (.+)$", cl, re.M))
+    readme_zip = (oben / "README.md").read_text(encoding="utf-8")
+    rel_liste = (arbeit / "werkstatt" / "bau_release.py").read_text(encoding="utf-8") if (arbeit / "werkstatt").is_dir() else '"CHANGELOG.md"'
+    pruefe("CHANGELOG.md (Keep a Changelog): [Unreleased] zuerst, je Version ein Abschnitt mit Datum (1.6 … aktuelle Version), nur "
+           "Standard-Kategorien, Links nur auf dieses Repo; im Release; ZIP-README nur „New in“ der neuesten Version + Verweis",
+           versionen[:1] == ["Unreleased"] and {"1.6", "2.0", "2.1", "2.2", "2.3", "2.4", gl.VERSION.split()[0]} <= set(versionen)
+           and all(re.fullmatch(r" – \d{4}-\d{2}-\d{2}", d) for v, d in abschnitte if v != "Unreleased")
+           and len(versionen) == len(set(versionen)) and kategorien <= {"Added", "Changed", "Deprecated", "Removed", "Fixed", "Security"}
+           and all(u.startswith("https://github.com/lukasdiegans/me-goos-ta-deutsch/") or u.startswith("https://keepachangelog.com/")
+                   for u in re.findall(r"https?://[^\s)>\]]+", cl))
+           and '"CHANGELOG.md"' in rel_liste and len(re.findall(r"^## New in ", readme_zip, re.M)) == 1 and "CHANGELOG.md" in readme_zip,
+           (versionen, kategorien))
+    readme = arbeit / "README.md"
+    if not (readme.is_file() and (arbeit / "LICENSE").is_file() and (arbeit / "werkstatt" / "bau_webapp.py").is_file()):
+        print("  (README/LICENSE an der Wurzel und werkstatt/ gibt es nur im Quellbaum – 3 Prüfungen entfallen)")
+        return
+    rt = readme.read_text(encoding="utf-8")
+    wa = (HIER / "web_adresse.txt").read_text(encoding="utf-8").strip().splitlines()[0].strip()
+    m = re.match(r"^https://([a-z0-9-]+)\.github\.io/([A-Za-z0-9._-]+)/$", wa)
+    repo = f"https://github.com/{m.group(1)}/{m.group(2)}/"
+    bilder = re.findall(r"!\[([^\]]*)\]\(([^)\s]+)\)", rt) + [(a, s) for s, a in re.findall(r'<img src="([^"]+)"[^>]*alt="([^"]*)"', rt)]
+    lokal = [(a, s) for a, s in bilder if not s.startswith("https://")]
+    gross = [s for _, s in lokal if not (arbeit / s).is_file() or (arbeit / s).stat().st_size >= 300 * 1024]
+    from PIL import Image
+    sp = arbeit / "docs" / "social-preview.png"
+    with Image.open(sp) as b:
+        sp_mass = b.size
+    pruefe("Wurzel-README: Bilder (Start, Karte, Lernen, Druck, Handy) vorhanden, je < 300 KB, mit Alt-Text; docs/social-preview.png "
+           "1280×640 < 1 MB; LICENSE an der Wurzel = LICENSE.txt",
+           len(lokal) >= 6 and not gross and all(a.strip() for a, _ in lokal)
+           and {f"docs/bilder/{n}.png" for n in ("start", "karte", "lernen", "druck", "handy")} <= {s for _, s in lokal}
+           and sp_mass == (1280, 640) and sp.stat().st_size < 1024 * 1024 and (arbeit / "LICENSE").read_bytes() == lic,
+           (gross, sp_mass, [s for _, s in lokal]))
+    links = re.findall(r'href="([^"]+)"', rt) + re.findall(r"\]\((https?://[^)\s]+)\)", rt) + re.findall(r"(?<![\"(])(https://[^\s)<\"]+)", rt)
+    quellen = [s for s in re.findall(r'src="(https://[^"]+)"', rt)]
+    eigen = lambda u: u.startswith(repo) or u.startswith(wa)                       # noqa: E731
+    badge = lambda u: (u.startswith(repo + "actions/workflows/") or u.startswith(f"https://img.shields.io/github/v/release/{m.group(1)}/{m.group(2)}")
+                       or u.startswith("https://img.shields.io/badge/license-MIT")
+                       or u == f"https://api.securityscorecards.dev/projects/github.com/{m.group(1)}/{m.group(2)}/badge")  # noqa: E731
+    fremd = [u for u in links if u.startswith("http") and not eigen(u) and not badge(u)] + [u for u in quellen if not badge(u)]
+    pruefe("Wurzel-README: Badges (Release, Lizenz, Tests, Release-Prüfung, Scorecard) und alle Links nur auf dieses Repository "
+           "bzw. web_adresse.txt; Download-Knopf, Datenschutz, Entwickler-Teil, Kurzfassung de/es",
+           not fremd and len(quellen) == 5 and f'href="{wa}download/"' in rt and "## Privacy and security" in rt
+           and "## For developers" in rt and "## Deutsch (kurz)" in rt and "## Español (breve)" in rt
+           and not re.search(r"(?i)\bwarn(ing|ung)\b", rt), fremd[:5])
+    env = dict(os.environ, PYTHONIOENCODING="utf-8", PYTHONDONTWRITEBYTECODE="1")
+    b = subprocess.run([sys.executable, str(arbeit / "werkstatt" / "bau_webapp.py"), str(oben), str(tmp / "e56-web"), "--ohne-pyodide",
+                        "--ohne-modelle"], env=env, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=300)
+    html = (tmp / "e56-web" / "web-app" / "download" / "index.html").read_text(encoding="utf-8") if b.returncode == 0 else ""
+    teile = {l: (re.search(rf'<section class="abschnitt hell datenschutz" id="{l}-datenschutz">(.*?)</section>', html, re.S) or [None, ""])[1]
+             for l in ("de", "en", "es")}
+    seite = (HIER / "ui" / "index.html").read_text(encoding="utf-8")
+    leit = {n: (HIER / n).read_text(encoding="utf-8") for n in ("LEITFADEN.md", "LEITFADEN_en.md", "LEITFADEN_es.md")}
+    erw = (HIER / "erweiterungen.py").read_text(encoding="utf-8")
+    pruefe("Datenschutz auf der Download-Seite (de/en/es gleich gegliedert: Titel, Einleitung, 4 Punkte mit GitHub Pages/IP, "
+           "Übersetzung, Handy-Zugang); Handy-Zugang „nie in öffentlichen Netzen“ in Hinweis, Werkzeug und Leitfäden; Leitfäden nennen GitHub Pages",
+           all(x.count("<li>") == 4 and x.count("<h2>") == 1 and "GitHub Pages" in x and "IP" in x for x in teile.values())
+           and all(re.search(p, seite) for p in (r"lan_warnung: \"[^\"]*nie in öffentlichen", r"lan_warnung: \"[^\"]*never in public",
+                                                 r"lan_warnung: \"[^\"]*nunca en redes wifi públicas"))
+           and all(s in erw for s in ("nie in öffentlichen WLANs", "never in public Wi-Fi", "nunca en wifi públicas"))
+           and "nie in öffentlichen oder fremden Netzen" in leit["LEITFADEN.md"] and "Never switch it on in public" in leit["LEITFADEN_en.md"]
+           and "Nunca lo actives en redes públicas" in leit["LEITFADEN_es.md"] and all("GitHub Pages" in t for t in leit.values()),
+           ({l: x.count("<li>") for l, x in teile.items()}, (b.stdout + b.stderr)[-300:]))
+    print(f"  E56 {time.time() - t0:.1f} s")
+
+
 def main():
     global ECHTES_KI_BILD, ECHT_DA
     t0 = time.time()
@@ -6572,6 +6896,8 @@ def main():
         test_paket_fassungen(Path(tmp))
         test_quellbaum(Path(tmp))
         test_ci_quellbaum(Path(tmp))
+        test_veroeffentlichung(Path(tmp))
+        test_auftritt(Path(tmp))
     ok =sum(1 for e in tg.ergebnisse if e[1])
     print(f"\n{ok} von {len(tg.ergebnisse)} Prüfungen bestanden ({time.time() - t0:.0f} s).")
     if ok == len(tg.ergebnisse):

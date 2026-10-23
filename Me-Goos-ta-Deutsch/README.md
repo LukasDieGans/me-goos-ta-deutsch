@@ -39,40 +39,7 @@ note (it may also stand in the middle, like “Die Gans ist alt”); “Add the 
 **fixed:** clicking with a tiny drag in the before/after comparison no longer creates a new image in “Prepare images”.
 Updating keeps your cards, ideas, settings and learning progress.
 
-## New in 2.3
-
-**Ideas get their image more easily** – one “🖼️ Choose image …” button (or a click on the empty image area, or
-dragging) for photos and finished images, with a preview: put “GANS + word” on it or use it unchanged · **“🪄 Create
-with AI …”** right on an idea (with the optional “AI images” tool) – the new goose goes straight to the idea · a new
-**“Image idea”** field: your note on what a fitting image could look like, which is also the description for the AI.
-Updating keeps your cards, ideas, settings and learning progress.
-
-## New in 2.2
-
-**Hear the German** – when you learn, 🔊 now also reads the German text aloud after you reveal the answer (offline
-voices of your system) · **word lists in Ideas** – “📋 Word list …” turns a file or pasted text into up to 500 ideas
-at once, with a preview (nothing gets cut quietly, undo with one click), and “🌐 Translate all” suggests the missing
-words · **“🔎 Check for a new version”** in Help → About this program – only when you click · for developers: every
-version is tested automatically on Windows, macOS and Linux (x64 and ARM) and in WebKit, Firefox and Chromium before
-it is released, and the published version is checked again as soon as it is online. Updating keeps your cards, settings and
-learning progress.
-
-## New in 2.1
-
-**Download for every system** – one ZIP for Windows, macOS and Linux as a GitHub release, with a friendly download
-page (English, German, Spanish; detects your system, three illustrated steps, help for SmartScreen and Gatekeeper) ·
-everything **before the setup starts in English** – afterwards the language you pick in the program counts · a **new
-goose on the back side**: the word stays on a calm, plain background while the program’s goose paddles in a little pond
-in the corner · the “Faster ×2” button in Tools is neatly laid out. Updating keeps your cards, settings and learning
-progress.
-
-## New in 2.0
-
-Optional **tools** on demand (installed when you need them, removable again) · a **queue** for background jobs ·
-**learn your cards** with FSRS spaced repetition · **15 back-side languages** · **colours & display** · a **phone app**
-for Android, iPhone and Google Pixel · “Spanish” everywhere (as spoken in Mexico) · the specification in Help no longer
-loads endlessly · change a card’s picture in the editor · realistic AI geese offline · phone polish and friendlier
-error messages. Updating keeps your cards, settings and learning progress.
+Earlier versions: see `CHANGELOG.md`.
 
 ## What it can do
 
@@ -120,14 +87,11 @@ you deliberately enable phone access.
 
 ## For developers
 
-Python 3.13 with Pillow, NumPy, ReportLab and pypdfium2: version ranges in `Programm/requirements.txt`, the exact versions
-with SHA-256 per file in `Programm/pakete.lock` (`pip install --require-hashes -r Programm/pakete.lock`).
-Self-tests: `python Programm/test_gans_lernkarten.py` and `python Programm/test_erweiterungen.py`.
-Command line without the interface: `python Programm/gans_lernkarten.py --help`.
+Source code, build and test tools, automatic checks and how to contribute: https://github.com/lukasdiegans/me-goos-ta-deutsch (see `CONTRIBUTING.md` there). Self-tests: `python Programm/test_gans_lernkarten.py` and `python Programm/test_erweiterungen.py`.
 
 ## License
 
-MIT – see `LICENSE.txt`. Third-party components (Poppins font, FSRCNN and Real-ESRGAN weights, Python packages) keep
+MIT – see `LICENSE.txt` (© Eine Gans namens Lukas). Third-party components (Poppins font, FSRCNN and Real-ESRGAN weights, Python packages) keep
 their own licenses – see `Programm/DRITTLIZENZEN.md`.
 
 Have fun learning – you’re doing great! 🪿

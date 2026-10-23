@@ -26,6 +26,10 @@ Key ID `6885AC6ACBF317E0`; then compare the SHA-256 of the ZIP with the line in 
 (ID `01C92660376DB3D4`) is kept offline. If both keys were ever lost, the next version would have to be installed by
 hand once (download page) – the program never trusts an unsigned update.
 
+From version 2.5 on, every release is also built from a **signed, annotated tag** `v<version>` of the source code in
+this repository, and published releases are **immutable**: tags `v*` cannot be moved or deleted, assets cannot be
+replaced. A fix always gets a new version number (for example 2.5.1). Commits on `main` and `gh-pages` are signed.
+
 ## How to report a vulnerability
 
 Please **do not** open a public issue for security problems.
@@ -70,11 +74,11 @@ impact.
 https://github.com/LukasDieGans/me-goos-ta-deutsch/security/advisories/new („Report a vulnerability“). Unterstützt
 wird nur das neueste Release. Antwort innerhalb von 7 Tagen, Einschätzung innerhalb von 14 Tagen. Dazu gehören Update
 im Programm, Startdateien, lokaler Server, Handy-Zugang, Web-App und die Workflows. Ab 2.5 ist `SHA256SUMS.txt`
-signiert (minisign, Schlüssel-ID `6885AC6ACBF317E0`) – das Programm übernimmt nur Updates mit gültiger Signatur.
+signiert (minisign, Schlüssel-ID `6885AC6ACBF317E0`) – das Programm übernimmt nur Updates mit gültiger Signatur. Jedes Release entsteht aus einem signierten Tag und ist danach unveränderlich (Fix = neue Patch-Version).
 
 **Español (breve):** Por favor, no reportes vulnerabilidades en un issue público; usa el reporte privado en
 https://github.com/LukasDieGans/me-goos-ta-deutsch/security/advisories/new (“Report a vulnerability”). Solo la versión
 más reciente recibe correcciones. Respuesta en 7 días, evaluación en 14 días. Incluye la actualización dentro del
 programa, los archivos de inicio, el servidor local, el acceso desde el celular, la app web y los workflows. Desde la
 2.5, `SHA256SUMS.txt` está firmado (minisign, ID de clave `6885AC6ACBF317E0`): el programa solo instala actualizaciones
-con una firma válida.
+con una firma válida. Cada versión sale de una etiqueta firmada y después es inmutable (una corrección = nueva versión).

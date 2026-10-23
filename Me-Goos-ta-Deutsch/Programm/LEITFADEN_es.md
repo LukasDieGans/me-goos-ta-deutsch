@@ -484,7 +484,7 @@ En **Mis cartas → «⇅ Importar / exportar»** (también en Ideas y Herramien
 
 La dirección sigue igual la próxima vez que lo actives, así que un marcador en el celular sigue sirviendo. La primerísima vez, Windows o macOS pregunta si Python puede aceptar conexiones: permítelo (red privada).
 
-Por tu seguridad: dentro de tu red de casa la conexión no está cifrada, así que úsalo solo en casa. Se apaga solo después de 2 horas, tras 5 PIN incorrectos y al cerrar el programa. Cerrar, desinstalar y abrir carpetas solo se puede directamente en la computadora.
+Por tu seguridad: el acceso desde el celular es solo para tu propia red de casa; la conexión en la wifi no está cifrada. Nunca lo actives en redes públicas o ajenas (cafetería, hotel, escuela, wifi de invitados). Se apaga solo después de 2 horas, tras 5 PIN incorrectos y al cerrar el programa. Cerrar, desinstalar y abrir carpetas solo se puede directamente en la computadora.
 
 ## Como app en el celular
 
@@ -522,6 +522,7 @@ Se probaron cinco modelos libres contra el más sencillo FSRCNN con fotos peque�
 - Otras páginas web no pueden controlarla; los archivos solo se leen y escriben en las carpetas del proyecto, y «Abrir» nunca ejecuta programas ni scripts.
 - La traducción automática solo envía datos con tu permiso y solo la palabra a traducir (en la imagen IA, al hacer clic, la descripción corta), cifrada, a tres servicios fijos.
 - «Buscar una versión nueva» solo pregunta cuando haces clic en el botón: una consulta a api.github.com, sin datos sobre ti ni tus cartas. El programa nunca busca actualizaciones por sí solo.
+- La página de descarga y la app del celular están en GitHub Pages: como todo servidor web, GitHub registra datos técnicos como la dirección IP. El proyecto no usa rastreadores, publicidad ni estadísticas; tus cartas nunca salen de tu dispositivo.
 - Leer en voz alta (🔊) solo usa voces de tu sistema que funcionan sin conexión; ningún texto va a internet para eso.
 - El modelo de imágenes IA trabaja por completo en tu computadora; las descripciones y las imágenes no salen de ella.
 - Los textos que Excel tomaría como fórmula (que empiezan con = + - @) se rechazan, también al importar. Las imágenes se revisan y se guardan sin metadatos.

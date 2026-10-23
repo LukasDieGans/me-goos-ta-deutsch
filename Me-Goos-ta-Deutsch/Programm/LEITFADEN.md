@@ -484,7 +484,7 @@ Fotos direkt vom Handy hochladen? Unter **Werkzeuge → „Am Handy öffnen (WLA
 
 Die Adresse bleibt beim nächsten Einschalten gleich – ein Lesezeichen am Handy passt also weiter. Beim allerersten Mal fragt Windows bzw. macOS, ob Python Verbindungen annehmen darf: bitte erlauben (privates Netzwerk).
 
-Zu deiner Sicherheit: Die Verbindung ist im Heimnetz unverschlüsselt, deshalb den Zugang nur zu Hause nutzen. Er schaltet sich nach 2 Stunden, nach 5 falschen PINs und beim Beenden von selbst aus. Beenden, Deinstallieren und das Öffnen von Ordnern gehen nur direkt am Rechner.
+Zu deiner Sicherheit: Der Handy-Zugang ist nur für dein eigenes Heimnetz gedacht – die Verbindung im WLAN ist unverschlüsselt. Schalte ihn nie in öffentlichen oder fremden Netzen ein (Café, Hotel, Schule, Gäste-WLAN). Er schaltet sich nach 2 Stunden, nach 5 falschen PINs und beim Beenden von selbst aus. Beenden, Deinstallieren und das Öffnen von Ordnern gehen nur direkt am Rechner.
 
 ## Als App aufs Handy
 
@@ -522,6 +522,7 @@ Getestet wurden fünf frei verfügbare Modelle gegen das einfachere FSRCNN, an k
 - Andere Webseiten können sie nicht fernsteuern; Dateien werden nur in den Projektordnern gelesen und geschrieben, „Öffnen“ startet nie Programme oder Skripte.
 - Die automatische Übersetzung sendet nur nach deiner Zustimmung und nur das zu übersetzende Wort (beim KI-Bild auf Klick die kurze Beschreibung), verschlüsselt an drei fest eingetragene Dienste.
 - „Nach neuer Version suchen“ fragt nur, wenn du auf den Knopf klickst: eine Anfrage an api.github.com, ohne Daten über dich oder deine Karten. Von selbst sucht das Programm nie nach Updates.
+- Download-Seite und Handy-App liegen auf GitHub Pages: Wie jeder Webserver protokolliert GitHub dabei technische Daten wie die IP-Adresse. Das Projekt selbst nutzt keine Tracker, keine Werbung und keine Statistik; deine Karten verlassen nie dein Gerät.
 - Vorlesen (🔊) nutzt nur Stimmen deines Systems, die offline arbeiten – kein Text geht dafür ins Internet.
 - Das KI-Bildmodell rechnet vollständig auf deinem Rechner; Beschreibungen und Bilder verlassen ihn nicht.
 - Texte, die in Excel als Formel gelten würden (Anfang = + - @), werden abgelehnt – auch beim Import. Bilder werden geprüft und ohne Metadaten gespeichert.

@@ -12,7 +12,7 @@ from pathlib import Path
 QUELLE, ZIEL = Path(sys.argv[1]).resolve(), Path(sys.argv[2]).resolve()
 NAME = QUELLE.name                                             # „Me-Goos-ta-Deutsch“
 OBEN = ("Me Goos-ta Deutsch - Windows.cmd", "Me Goos-ta Deutsch - Mac.command", "Me Goos-ta Deutsch - Linux.sh",
-        "LIES MICH ZUERST.html", "README.md", "LICENSE.txt",
+        "LIES MICH ZUERST.html", "README.md", "CHANGELOG.md", "LICENSE.txt",       # CHANGELOG seit 2.5
         "Me Goos-ta Deutsch - Android.html", "Me Goos-ta Deutsch - iPhone.html", "Me Goos-ta Deutsch - Google Pixel.html")
 PROGRAMM_DATEIEN = {".py", ".md", ".lock"} | {"beispiel-karten.csv", "requirements.txt", "web_adresse.txt"}   # .lock: Paketfassungen (2.5)
 PROGRAMM_ORDNER = ("assets", "beispiel-bilder", "modelle", "schrift", "ui", "vorlagen", "werkzeuge")

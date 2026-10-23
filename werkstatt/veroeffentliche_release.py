@@ -1,41 +1,40 @@
 #!/usr/bin/env python3
-"""Veröffentlicht ein Programm-Release von Me Goos-ta Deutsch auf GitHub (seit 2.1).
+"""Veröffentlicht ein Programm-Release von Me Goos-ta Deutsch auf GitHub (seit 2.1; seit 2.5 G06 aus einem signierten Tag).
 Aufruf: python veroeffentliche_release.py <Release-Ordner Me-Goos-ta-Deutsch> <Me-Goos-ta-Deutsch-<Version>.zip>
-                                          [--probe] [--ersetzen] [--ci-ergebnis <Datei>] [--ohne-ci "<Begründung>"]
-                                          [--signatur-ordner <Ordner>]
+                                          [--probe] [--ci-ergebnis <Datei>] [--ohne-ci "<Begründung>"]
+                                          [--signatur-ordner <Ordner>] [--desktop-anmeldung]
 
---probe        ohne Netz und ohne Anmeldung: prüft Ordner, ZIP und CI-Schranke und zeigt den Plan (Tag, Assets,
-               Prüfsummen, .github/, Notizen)
---ersetzen     ein vorhandenes Release bzw. einen vorhandenen Tag v<Version> ändern – sonst wird nichts überschrieben
---ci-ergebnis  Ergebnis des CI-Laufs (Standard: ci_ergebnis.json neben diesem Skript, geschrieben von ci_lauf.py)
+--probe        ohne Netz und ohne Anmeldung: prüft Ordner, ZIP, CI-Schranke und Quellbaum und zeigt den ganzen Plan (Tag,
+               Push, Assets, Prüfsummen, Reihenfolge, Hindernisse, Notizen) – Hindernisse brechen hier nicht ab
+--ci-ergebnis  Ergebnis des CI-Laufs (Standard: ci_ergebnis.json im Arbeitsordner, geschrieben von ci_lauf.py)
 --ohne-ci      Release ohne grünen CI-Lauf – nur mit Begründung (mind. 10 Zeichen); sie steht im Protokoll (Ausgabe,
                #plan), nie in den Release-Notizen
---signatur-ordner  Schlüsselordner von signiere_release.py (Standard %USERPROFILE%\MGD-Signatur; Tests: eigener Ordner)
+--signatur-ordner  Schlüsselordner von signiere_release.py (Standard %USERPROFILE%\\MGD-Signatur; Tests: eigener Ordner)
+--desktop-anmeldung  ausnahmsweise mit der breiten Anmeldung von GitHub Desktop statt des Tokens MGD-Release-Token
+--ersetzen     gibt es seit 2.5 nicht mehr: Releases sind unveränderlich, ein Fix wird eine neue Patch-Version (z. B. 2.5.1)
 
-Signatur (seit 2.5, Pflicht): SHA256SUMS.txt wird mit dem Haupt-Schlüssel signiert (signiere_release.py, minisign-Format,
-„trusted comment“ me-goos-ta-deutsch v<Version>) und gegen die Schlüssel in Programm/signatur.py des Release-Ordners
-geprüft – ohne Schlüssel oder mit einem fremden Abbruch vor jedem Netzverkehr. Asset SHA256SUMS.txt.minisig; beide
-Dateien liegen danach auch neben der ZIP (für bau_webapp.py --release-zip). --probe liest nur den öffentlichen Schlüssel.
-
-CI-Schranke (seit 2.2): ci_ergebnis.json muss einen grünen Lauf (alle Systeme + Browser) für **genau diesen**
-Release-Inhalt haben – gleiche Inhalts-Prüfsumme wie ci_lauf.py, gleiche Version –, sonst Abbruch vor jedem Netzverkehr.
-Ablauf: Ordner + ZIP prüfen (gleicher Inhalt, keine Nutzerdaten, Version passt; ein .github/ im Ordner zählt nicht mit) →
-CI-Schranke → Anmeldung wie veroeffentliche_webapp.py (GH_TOKEN → GitHub CLI → GitHub Desktop; der Schlüssel wird nie
-ausgegeben) → Branch main = Release-Ordner + .github/ des Quellbaums (Workflow release_pruefung.yml: prüft das Release nach jedem Push auf main; nie im ZIP) pushen
-(Verlauf bleibt, Bytes 1:1, .command/.sh ausführbar, noreply-Adresse) → main als Standard-Branch, Beschreibung, Homepage =
-Download-Seite → Release als Entwurf anlegen, ZIP + SHA256SUMS.txt + SHA256SUMS.txt.minisig hochladen, veröffentlichen
-(„Latest“) → Assets über die öffentliche Adresse laden, SHA-256 vergleichen und Signatur prüfen (stimmt es nicht, wird das
-Release wieder Entwurf).
+Voraussetzungen (vor jedem Netzverkehr, sonst Abbruch): Ordner = ZIP (jede Datei per CRC; .github/ im Ordner zählt nicht),
+keine Nutzerdaten, Version = ZIP-Name; CI-Schranke (ci_ergebnis.json: grüner Lauf für genau diesen Release-Inhalt, gleiche
+Inhalts-Prüfsumme wie ci_lauf.py); Quellbaum: Arbeitsbaum sauber, HEAD gültig signiert, Me-Goos-ta-Deutsch/ in HEAD = Release-
+Ordner Datei für Datei, ein lokaler Tag v<Version> zeigt höchstens auf HEAD; Signatur: SHA256SUMS.txt wird mit dem Haupt-
+Schlüssel signiert (signiere_release.py, minisign, „trusted comment“ me-goos-ta-deutsch v<Version>) und gegen
+Programm/signatur.py des Release-Ordners geprüft; SHA256SUMS.txt + .minisig liegen danach neben der ZIP.
+Ablauf: Anmeldung (veroeffentliche_webapp.token: GH_TOKEN → MGD-Release-Token; Rechte werden vorab gelesen) → gibt es
+v<Version> schon veröffentlicht: Abbruch → signierter annotierter Tag v<Version> auf HEAD (git tag -s, Prüfung git tag -v)
+→ ein atomarer Push: HEAD → main (nur Fast-Forward) + Tag – nie --force → Standard-Branch main, Beschreibung, Homepage =
+Download-Seite → Release als Entwurf → ZIP, SHA256SUMS.txt, SHA256SUMS.txt.minisig hochladen → angemeldet laden und
+vergleichen (Bytes + Signatur; sonst Entwurf löschen, Abbruch) → erst dann veröffentlichen („Latest“) → öffentlich laden und
+vergleichen. Release-Notizen: Abschnitt „## [<Version>]“ aus CHANGELOG.md (sonst README „New in“), dazu Kurzanleitung
+EN/DE/ES, SHA-256 und Signatur-Hinweis. Die Release-Prüfung (release_pruefung.yml) startet mit dem Veröffentlichen.
 Konto und Repository stammen aus Programm/web_adresse.txt (https://<konto>.github.io/<repo>/). Handy-App und
-Download-Seite (Branch gh-pages) bleiben unberührt – die veröffentlicht veroeffentliche_webapp.py."""
+Download-Seite (Branch gh-pages) veröffentlicht veroeffentliche_webapp.py."""
 import hashlib
 import importlib.util
 import json
+import os
 import re
-import shutil
 import subprocess
 import sys
-import tempfile
 import time
 import urllib.error
 import urllib.parse
@@ -49,8 +48,9 @@ ARBEIT = HIER.parent                                            # Wurzel des Que
 sys.path.insert(0, str(HIER))
 import veroeffentliche_webapp as vw  # noqa: E402  Anmeldung, GitHub-API, git
 
-QUELLE_GITHUB = ARBEIT / ".github"                              # → .github/ im Branch main (nie im ZIP)
+QUELLE_GITHUB = ARBEIT / ".github"
 CI_ERGEBNIS = ARBEIT / "ci_ergebnis.json"
+PROJEKT = "Me-Goos-ta-Deutsch"
 
 PFLICHT = ("Me Goos-ta Deutsch - Windows.cmd", "Me Goos-ta Deutsch - Mac.command", "Me Goos-ta Deutsch - Linux.sh",
            "LIES MICH ZUERST.html", "README.md", "LICENSE.txt", "Programm/gans_lernkarten.py", "Programm/web_adresse.txt")
@@ -65,6 +65,9 @@ SIGNATUR = SUMMEN + ".minisig"                                   # seit 2.5
 MAX_DATEI = 5 * 1024 * 1024                                     # große Modelle lädt das Programm selbst
 BESCHREIBUNG = ("Learn German with goose puns – picture flash cards to print and to study. Windows, macOS, Linux and a "
                 "phone app. Free, offline, MIT.")
+# Reihenfolge der Schritte (steht im Plan; E55 prüft sie gegen eine nachgebildete API)
+REIHENFOLGE = ("tag", "push main + tag", "repo", "entwurf", "assets hochladen", "angemeldet pruefen", "veroeffentlichen",
+               "oeffentlich pruefen")
 
 
 def abbruch(text):
@@ -87,11 +90,11 @@ def inhalt_pruefsumme(ordner, liste):
 
 
 def github_dateien():
-    """{Pfad unter .github/: Quelldatei} aus .github/ des Quellbaums (Workflows + Test-Skripte für die Release-Prüfung)."""
+    """Pfade unter .github/ des Quellbaums (Workflows, Test-Skripte) – kommen mit dem Quellbaum auf main, nie ins ZIP."""
     if not (QUELLE_GITHUB / "workflows").is_dir():
         abbruch(f".github/workflows fehlt: {QUELLE_GITHUB}")
-    return {".github/" + q.relative_to(QUELLE_GITHUB).as_posix(): q for q in sorted(QUELLE_GITHUB.rglob("*"))
-            if q.is_file() and "__pycache__" not in q.parts and q.suffix != ".pyc"}
+    return sorted(".github/" + q.relative_to(QUELLE_GITHUB).as_posix() for q in QUELLE_GITHUB.rglob("*")
+                  if q.is_file() and "__pycache__" not in q.parts and q.suffix != ".pyc")
 
 
 def ci_schranke(ordner, liste, version, pfad, ohne_ci):
@@ -152,10 +155,95 @@ def pruefen(ordner, zip_pfad):
     return version, daten, liste, adr.group(1), adr.group(2)
 
 
+def _git(wurzel, *args, env=None):
+    return subprocess.run([vw.git_exe(), *args], cwd=wurzel, capture_output=True, text=True, encoding="utf-8",
+                          errors="replace", env=env or dict(os.environ, GIT_TERMINAL_PROMPT="0", GCM_INTERACTIVE="never"))
+
+
+def git_blob(daten):
+    """SHA-1 eines git-Blobs (Bytes 1:1 – .gitattributes `* -text`)."""
+    return hashlib.sha1(b"blob %d\0" % len(daten) + daten).hexdigest()
+
+
+def quellbaum_stand(ordner, liste, version, wurzel=ARBEIT):
+    """Release kommt aus dem Quellbaum: Arbeitsbaum sauber, HEAD gültig signiert, Me-Goos-ta-Deutsch/ in HEAD = Release-
+    Ordner (jede Datei, keine fehlt/zu viel), lokaler Tag v<V> fehlt oder zeigt auf HEAD. → dict(head, hindernisse, …)"""
+    if not (Path(wurzel) / ".git").exists():
+        return dict(head=None, tag_lokal=False, hindernisse=[f"kein Git-Quellbaum in {wurzel} (quellbaum.py --einrichten)"])
+    hindernisse = []
+    head = _git(wurzel, "rev-parse", "HEAD").stdout.strip()
+    offen = [z[3:] for z in _git(wurzel, "status", "--porcelain").stdout.splitlines() if z.strip()]
+    if offen:
+        hindernisse.append(f"Arbeitsbaum nicht sauber ({len(offen)}: {', '.join(offen[:4])}) – erst quellbaum.py --commit")
+    if _git(wurzel, "verify-commit", "HEAD").returncode:
+        hindernisse.append(f"HEAD {head[:10]} nicht gültig signiert (quellbaum.py --commit signiert)")
+    baum = {}
+    for z in _git(wurzel, "ls-tree", "-r", "-z", "HEAD", "--", f"{PROJEKT}/").stdout.split("\0"):
+        if "\t" in z:
+            meta, pfad = z.split("\t", 1)
+            baum[pfad[len(PROJEKT) + 1:]] = meta.split()[2]
+    anders = sorted(set(baum) ^ set(liste)) + [n for n in liste if n in baum and baum[n] != git_blob((ordner / n).read_bytes())]
+    if anders:
+        hindernisse.append(f"Release-Ordner ≠ {PROJEKT}/ in HEAD ({len(anders)}: {', '.join(anders[:4])}) – Release aus "
+                           "genau diesem Commit bauen")
+    t = _git(wurzel, "rev-parse", "-q", "--verify", f"refs/tags/v{version}^{{commit}}")
+    tag_lokal = t.stdout.strip() if t.returncode == 0 else None
+    if tag_lokal and tag_lokal != head:
+        hindernisse.append(f"Tag v{version} zeigt lokal auf {tag_lokal[:10]}, nicht auf HEAD – Tags werden nie verschoben "
+                           "(Fix = neue Patch-Version)")
+    return dict(head=head, tag_lokal=bool(tag_lokal), dateien=len(baum), hindernisse=hindernisse)
+
+
+def tag_und_pushen(wurzel, remote, head, version, env, nachricht):
+    """Signierter annotierter Tag v<V> auf HEAD (legt ihn an, falls er fehlt), dann ein atomarer Push: HEAD → main (nur
+    Fast-Forward) + Tag – nie --force. Liegt derselbe Tag schon auf dem Server (abgebrochener Lauf), nur main nachziehen.
+    → (Tag-Objekt-SHA, gepusht: Liste der Refs)."""
+    tag = f"v{version}"
+
+    def g(*args, netz=False, pruefen=True):
+        r = _git(wurzel, *args, env=env if netz else None)
+        if pruefen and r.returncode:
+            abbruch(f"git {args[0]} fehlgeschlagen: {(r.stderr or r.stdout)[-600:]}"
+                    + (" – Token-Rechte Contents + Workflows (Read and write)?" if args[0] == "push" else ""))
+        return r
+    da = g("rev-parse", "-q", "--verify", f"refs/tags/{tag}^{{commit}}", pruefen=False)
+    if da.returncode:
+        g("tag", "-s", "-a", tag, "-m", nachricht, head)
+    elif da.stdout.strip() != head:
+        abbruch(f"Tag {tag} zeigt lokal nicht auf HEAD – Tags werden nie verschoben (Fix = neue Patch-Version).")
+    if g("cat-file", "-t", f"refs/tags/{tag}").stdout.strip() != "tag":
+        abbruch(f"Tag {tag} ist nicht annotiert (leichter Tag) – nicht veröffentlicht.")
+    if g("tag", "-v", tag, pruefen=False).returncode:
+        abbruch(f"Signatur von Tag {tag} nicht prüfbar (quellbaum.py --einrichten, Signaturschlüssel?) – nichts gepusht.")
+    objekt = g("rev-parse", f"refs/tags/{tag}").stdout.strip()
+    refs = {}
+    for z in g("ls-remote", remote, "refs/heads/main", f"refs/tags/{tag}", netz=True).stdout.splitlines():
+        if "\t" in z:
+            sha, ref = z.split("\t", 1)
+            refs[ref] = sha
+    ziele = []
+    if f"refs/tags/{tag}" in refs:
+        if refs[f"refs/tags/{tag}"] != objekt:
+            abbruch(f"Tag {tag} gibt es auf GitHub schon (anderer Stand) – Releases sind unveränderlich; Fix = neue Patch-Version.")
+    else:
+        ziele.append(f"refs/tags/{tag}:refs/tags/{tag}")
+    alt = refs.get("refs/heads/main")
+    if alt != head:
+        if alt:
+            if g("cat-file", "-e", f"{alt}^{{commit}}", pruefen=False).returncode:
+                g("fetch", "-q", remote, "main", netz=True)
+            if g("merge-base", "--is-ancestor", alt, head, pruefen=False).returncode:
+                abbruch(f"main auf GitHub ({alt[:10]}) ist kein Vorgänger von HEAD – nur Fast-Forward, nie Force.")
+        ziele.insert(0, f"{head}:refs/heads/main")
+    if ziele:
+        g("push", "--atomic", "-q", remote, *ziele, netz=True)
+    return objekt, [z.split(":", 1)[1] for z in ziele]
+
+
 def signatur_modul(ordner):
     """Programm/signatur.py des Release-Ordners (seine SCHLUESSEL prüfen die nächsten Updates), sonst die des
     Arbeitsordners (Releases vor 2.5)."""
-    for pfad in (ordner / "Programm" / "signatur.py", ARBEIT / "Me-Goos-ta-Deutsch" / "Programm" / "signatur.py"):
+    for pfad in (ordner / "Programm" / "signatur.py", ARBEIT / PROJEKT / "Programm" / "signatur.py"):
         if pfad.is_file():
             spec = importlib.util.spec_from_file_location(f"signatur_{abs(hash(str(pfad)))}", pfad)
             mod = importlib.util.module_from_spec(spec)
@@ -189,11 +277,23 @@ def signieren(ordner, version, summen, signatur_ordner):
     return ms, sid
 
 
+def changelog_abschnitt(ordner, version):
+    """Abschnitt „## [<Version>] …“ aus CHANGELOG.md (Keep a Changelog, seit 2.5 G07) – Zeilen unverändert, ohne Überschrift."""
+    pfad = ordner / "CHANGELOG.md"
+    if not pfad.is_file():
+        return ""
+    m = re.search(rf"^## \[{re.escape(version)}\][^\n]*\n(.*?)(?=^## \[|^\[[^\]]+\]: |\Z)", pfad.read_text(encoding="utf-8"),
+                  re.M | re.S)
+    return m.group(1).strip() if m else ""
+
+
 def notizen(ordner, version, zip_name, sha, seite):
-    """Release-Notizen: Englisch (mit „New in …“ aus der README), kurz Deutsch und Spanisch."""
-    readme = (ordner / "README.md").read_text(encoding="utf-8")
-    m = re.search(rf"^## New in {re.escape(version)}[ \t]*\n(.*?)(?=^## |\Z)", readme, re.M | re.S)
-    neu = " ".join(m.group(1).split()) if m else ""
+    """Release-Notizen: Englisch (Abschnitt aus CHANGELOG.md, sonst „New in …“ aus der README), kurz Deutsch und Spanisch."""
+    neu = changelog_abschnitt(ordner, version)
+    if not neu:
+        readme = (ordner / "README.md").read_text(encoding="utf-8")
+        m = re.search(rf"^## New in {re.escape(version)}[ \t]*\n(.*?)(?=^## |\Z)", readme, re.M | re.S)
+        neu = " ".join(m.group(1).split()) if m else ""
     zeilen = [f"## Me Goos-ta Deutsch {version} 🪿", "",
               "Learn German with goose puns – picture flash cards to print and to study. "
               "**One package for Windows, macOS and Linux.**", ""]
@@ -220,114 +320,161 @@ def notizen(ordner, version, zip_name, sha, seite):
             zeilen += [f"**Verify the signature (optional):** `{SUMMEN}` is signed with the Me Goos-ta Deutsch key "
                        f"(minisign, key ID `{mod.schluessel_id(haupt[1])}`): `minisign -Vm {SUMMEN} -P "
                        f"{mod.schluessel_text(haupt[1], haupt[2])}` – then compare the SHA-256 of the ZIP. The program checks "
-                       "this signature by itself before every update.", ""]
-    zeilen += [
-               "MIT License · © Eine Gans namens Lukas · Have fun learning – you’re doing great!"]
+                       "this signature by itself before every update. The tag is signed, the release is immutable.", ""]
+    zeilen += ["MIT License · © Eine Gans namens Lukas · Have fun learning – you’re doing great!"]
     return "\n".join(zeilen) + "\n"
 
 
-def plan(ordner, zip_pfad, ci_pfad=CI_ERGEBNIS, ohne_ci=None, signatur_ordner=None):
+def plan(ordner, zip_pfad, ci_pfad=CI_ERGEBNIS, ohne_ci=None, signatur_ordner=None, wurzel=ARBEIT):
     import signiere_release as sr
     version, daten, liste, konto, repo = pruefen(ordner, zip_pfad)
     ci = ci_schranke(ordner, liste, version, ci_pfad, ohne_ci)
     sig = signatur_plan(ordner, signatur_ordner or sr.STANDARD_ORDNER)
+    qb = quellbaum_stand(ordner, liste, version, wurzel)
     sha = hashlib.sha256(daten).hexdigest()
     seite = f"https://{konto}.github.io/{repo}/download/"
-    github = sorted(github_dateien())
-    return dict(version=version, konto=konto, repo=repo, branch="main", tag=f"v{version}", ci=ci, github=github,
+    hindernisse = list(qb["hindernisse"])
+    if sig.get("fehlt") or not sig.get("vertraut", True):
+        grund = sig.get("fehlt") or f"Haupt-Schlüssel {sig.get('schluessel')} nicht vertraut (nicht in Programm/signatur.py)"
+        hindernisse.append(f"Signatur: {grund}")
+    return dict(version=version, konto=konto, repo=repo, branch="main", tag=f"v{version}", ci=ci, github=github_dateien(),
                 titel=f"Me Goos-ta Deutsch {version}", assets=[zip_pfad.name, SUMMEN, SIGNATUR], signatur=sig,
-                groesse=len(daten), sha256=sha,
-                summen=f"{sha}  {zip_pfad.name}\n", dateien=len(liste) + 1 + len(github), ausfuehrbar=list(AUSFUEHRBAR), latest=True,
+                groesse=len(daten), sha256=sha, quellbaum=qb, hindernisse=hindernisse, reihenfolge=list(REIHENFOLGE),
+                summen=f"{sha}  {zip_pfad.name}\n", dateien=len(liste), ausfuehrbar=list(AUSFUEHRBAR), latest=True,
+                unveraenderlich=True, push=dict(main="nur Fast-Forward", tag="signiert, annotiert", force=False),
                 download=f"https://github.com/{konto}/{repo}/releases/download/v{version}/{zip_pfad.name}", seite=seite,
                 notizen=notizen(ordner, version, zip_pfad.name, sha, seite)), daten
 
 
 def zeige(p, probe):
     print(("Plan (Probe – ohne Netz, nichts wird verändert):" if probe else "Plan:"))
-    print(f"  Repository   {p['konto']}/{p['repo']} · Branch main ← Release-Ordner + .github/ ({p['dateien']} Dateien inkl. "
-          f".gitattributes; ausführbar: {', '.join(p['ausfuehrbar'])}) · Standard-Branch main")
-    print(f"  .github/     {', '.join(n[len('.github/'):] for n in p['github'])} (nicht im ZIP)")
+    q = p["quellbaum"]
+    print(f"  Repository   {p['konto']}/{p['repo']} · main ← HEAD {str(q.get('head'))[:10]} des Quellbaums (nur Fast-Forward, "
+          f"nie Force; {PROJEKT}/ = Release-Ordner, {p['dateien']} Dateien) · Standard-Branch main")
+    print(f"  Tag          {p['tag']} signiert + annotiert" + (" (liegt lokal schon auf HEAD)" if q.get("tag_lokal") else "")
+          + " · ein atomarer Push main + Tag")
+    print(f"  .github/     {len(p['github'])} Dateien kommen mit dem Quellbaum (nicht im ZIP)")
     print("  CI           " + (f"ohne grünen Lauf – Begründung: {p['ci']['ohne']}" if p["ci"].get("ohne")
                               else f"grün: {p['ci']['lauf']} ({len(p['ci']['systeme'])} Systeme)"))
-    print(f"  Release      {p['titel']} · Tag {p['tag']} · Latest")
+    print(f"  Release      {p['titel']} · Entwurf → hochladen → angemeldet prüfen → veröffentlichen (Latest) → öffentlich "
+          "prüfen · danach unveränderlich")
     print(f"  Assets       {p['assets'][0]} ({p['groesse'] / 1e6:.1f} MB) · {p['assets'][1]} · {p['assets'][2]}")
     s = p["signatur"]
-    print("  Signatur     " + (f"fehlt ({s['fehlt']}) – Veröffentlichen bricht ab" if s.get("fehlt") else
-                              f"Schlüssel {s['schluessel']}" + ("" if s["vertraut"] else " – nicht in signatur.py: Veröffentlichen bricht ab")))
+    print("  Signatur     " + (f"fehlt ({s['fehlt']})" if s.get("fehlt") else
+                              f"Schlüssel {s['schluessel']}" + ("" if s["vertraut"] else " – nicht in signatur.py")))
     print(f"  SHA-256      {p['sha256']}")
     print(f"  Download     {p['download']}")
     print(f"  Seite        {p['seite']}")
+    for h in p["hindernisse"]:
+        print(f"  Hindernis    {h}" + (" (Veröffentlichen bricht hier ab)" if probe else ""))
     print("#plan " + json.dumps({k: v for k, v in p.items() if k != "notizen"}, ensure_ascii=False))
     if probe:
         print("\n--- " + SUMMEN + " ---\n" + p["summen"] + "--- Release-Notizen ---\n" + p["notizen"])
 
 
-def hochladen(tok, release, name, daten, typ):
-    url = release["upload_url"].split("{", 1)[0] + "?name=" + urllib.parse.quote(name)
-    req = urllib.request.Request(url, data=daten, method="POST", headers={
-        "Authorization": f"Bearer {tok}", "Accept": "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28",
-        "Content-Type": typ, "User-Agent": "me-goos-ta-deutsch"})
-    try:
-        with urllib.request.urlopen(req, timeout=600) as r:
-            return json.loads(r.read().decode("utf-8"))
-    except urllib.error.HTTPError as f:
-        abbruch(f"Hochladen von {name} fehlgeschlagen: {f.code} {f.read().decode('utf-8', 'replace')[:300]}")
+class _OhneWeiterleitung(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, *args, **kwargs):              # Weiterleitung selbst folgen – ohne Anmeldung
+        return None
 
 
-def laden(url, versuche=12):
-    """Öffentliche Adresse ohne Anmeldung laden (folgt der Weiterleitung zum Speicher von GitHub)."""
-    for i in range(versuche):
+class GitHub:
+    """Die Schritte am Release über die API (E55 ersetzt die Klasse durch eine Nachbildung)."""
+
+    def __init__(self, tok, weg):
+        self.tok, self.weg = tok, weg
+
+    def api(self, methode, rest, daten=None):
+        return vw.api(methode, self.weg + rest, self.tok, daten)
+
+    def hochladen(self, release, name, daten, typ):
+        url = release["upload_url"].split("{", 1)[0] + "?name=" + urllib.parse.quote(name)
+        req = urllib.request.Request(url, data=daten, method="POST", headers={
+            "Authorization": f"Bearer {self.tok}", "Accept": "application/vnd.github+json",
+            "X-GitHub-Api-Version": "2022-11-28", "Content-Type": typ, "User-Agent": "me-goos-ta-deutsch"})
         try:
-            with urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "me-goos-ta-deutsch"}), timeout=300) as r:
+            with urllib.request.urlopen(req, timeout=600) as r:
+                return json.loads(r.read().decode("utf-8"))
+        except urllib.error.HTTPError as f:
+            abbruch(f"Hochladen von {name} fehlgeschlagen: {f.code} {f.read().decode('utf-8', 'replace')[:300]}")
+
+    def asset(self, asset):
+        """Asset eines (Entwurfs-)Releases angemeldet laden; der Weiterleitung zum Speicher ohne Anmeldung folgen."""
+        req = urllib.request.Request(asset["url"], headers={
+            "Authorization": f"Bearer {self.tok}", "Accept": "application/octet-stream",
+            "X-GitHub-Api-Version": "2022-11-28", "User-Agent": "me-goos-ta-deutsch"})
+        try:
+            with urllib.request.build_opener(_OhneWeiterleitung).open(req, timeout=300) as r:
                 return r.read()
+        except urllib.error.HTTPError as f:
+            ziel = f.headers.get("Location") if f.code in (301, 302, 303, 307, 308) else None
+            if not ziel:
+                return None
         except (urllib.error.URLError, OSError):
-            time.sleep(10)
-    return None
+            return None
+        return self.oeffentlich(ziel, 3)
+
+    def oeffentlich(self, url, versuche=12):
+        """Öffentliche Adresse ohne Anmeldung laden (folgt der Weiterleitung zum Speicher von GitHub)."""
+        for _ in range(versuche):
+            try:
+                with urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "me-goos-ta-deutsch"}),
+                                            timeout=300) as r:
+                    return r.read()
+            except (urllib.error.URLError, OSError):
+                time.sleep(10)
+        return None
 
 
-def main_pushen(git, env, url, ordner, liste, version, nachricht=None, nur_github=False):
-    """Branch main = Release-Ordner (Verlauf bleibt). Liefert (Commit, ob etwas neu war).
-    nur_github: nur .github/ nachziehen (Tag/Release bleiben) – Abbruch vor dem Push, wenn sich sonst etwas ändern würde."""
-    arbeit = Path(tempfile.mkdtemp(prefix="mgd-main-"))
-
-    def g(*args, pruefen=True):
-        r = subprocess.run([git, *args], cwd=arbeit, env=env, capture_output=True, text=True, encoding="utf-8", errors="replace")
-        if pruefen and r.returncode:
-            abbruch(f"git {args[0]} fehlgeschlagen: {(r.stderr or r.stdout)[-800:]}")
-        return r
+def _echt(mod, summen, minisig, version):
     try:
-        g("init", "-q", "-b", "main")
-        g("remote", "add", "origin", url)
-        if g("fetch", "-q", "--depth", "1", "origin", "main", pruefen=False).returncode == 0:
-            g("update-ref", "refs/heads/main", "FETCH_HEAD")       # Index leer → Release ersetzt alles, Verlauf bleibt
-        for n in liste:
-            z = arbeit / n
-            z.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copyfile(ordner / n, z)
-        for n, q in github_dateien().items():                   # Workflows (Release-Prüfung) + Test-Skripte
-            z = arbeit / n
-            z.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copyfile(q, z)
-        (arbeit / ".gitattributes").write_bytes(b"* -text\n")    # nie Zeilenenden umschreiben (.cmd CRLF, .sh LF)
-        g("add", "-A")
-        g("update-index", "--chmod=+x", "--", *AUSFUEHRBAR)
-        neu = g("diff", "--cached", "--quiet", pruefen=False).returncode != 0
-        if nur_github:
-            fremd = [n for n in g("diff", "--cached", "--name-only").stdout.splitlines() if not n.startswith(".github/")]
-            if fremd:
-                abbruch(f"nur .github/ sollte sich ändern, aber auch: {', '.join(fremd[:5])}")
-        if neu:
-            g("commit", "-q", "-m", nachricht or f"Me Goos-ta Deutsch {version}")
-            g("push", "-q", "origin", "main")
-        return g("rev-parse", "HEAD").stdout.strip(), neu
-    finally:
-        shutil.rmtree(arbeit, ignore_errors=True)
+        return bool(mod.pruefe(summen, minisig, None, mod.KOMMENTAR.format(version=version)))
+    except (ValueError, TypeError):
+        return False
 
 
-def veroeffentlichen(ordner, zip_pfad, ersetzen, ci_pfad=CI_ERGEBNIS, ohne_ci=None, signatur_ordner=None):
+def release_schritte(gh, p, daten, minisig, mod):
+    """Entwurf → Assets hochladen → angemeldet laden und prüfen → veröffentlichen („Latest“) → öffentlich prüfen.
+    Stimmt vor dem Veröffentlichen etwas nicht, wird der Entwurf gelöscht (Tag bleibt, ein neuer Lauf macht weiter)."""
+    summen = p["summen"].encode("utf-8")
+    soll = {p["assets"][0]: (daten, "application/zip"), SUMMEN: (summen, "text/plain"),
+            SIGNATUR: (minisig, "application/octet-stream")}
+    s, release = gh.api("POST", "/releases", dict(tag_name=p["tag"], name=p["titel"], body=p["notizen"], draft=True,
+                                                  prerelease=False))
+    if s != 201:
+        abbruch(f"Release-Entwurf anlegen fehlgeschlagen: {s} {release.get('message', '')}")
+    print(f"✓ Entwurf {p['titel']} angelegt")
+    hoch = {name: gh.hochladen(release, name, d, typ) for name, (d, typ) in soll.items()}
+    print(f"✓ Assets hochgeladen: {', '.join(hoch)}")
+    zurueck = {name: gh.asset(a) for name, a in hoch.items()}
+    falsch = [n for n in soll if zurueck.get(n) != soll[n][0]]
+    if not falsch and not _echt(mod, zurueck[SUMMEN], zurueck[SIGNATUR], p["version"]):
+        falsch.append("Signatur")
+    if falsch:
+        gh.api("DELETE", f"/releases/{release['id']}")
+        abbruch(f"Entwurf geprüft: {', '.join(falsch)} stimmt nicht – Entwurf gelöscht, nichts veröffentlicht.")
+    print("✓ Entwurf angemeldet geladen und geprüft (Bytes + Signatur)")
+    s, release = gh.api("PATCH", f"/releases/{release['id']}", dict(draft=False, make_latest="true"))
+    if s != 200:
+        abbruch(f"Release veröffentlichen fehlgeschlagen: {s} {release.get('message', '')}")
+    print(f"✓ Release veröffentlicht (unveränderlich): {release.get('html_url')}")
+    basis = p["download"].rsplit("/", 1)[0] + "/"
+    oeff = {n: gh.oeffentlich(basis + n, 12 if n == p["assets"][0] else 3) for n in soll}
+    falsch = [n for n in soll if oeff.get(n) != soll[n][0]]
+    if not falsch and not _echt(mod, oeff[SUMMEN], oeff[SIGNATUR], p["version"]):
+        falsch.append("Signatur")
+    if falsch:
+        abbruch(f"Achtung: Release {p['tag']} ist veröffentlicht, aber öffentlich geladen stimmt {', '.join(falsch)} nicht – "
+                "sofort von Hand prüfen; Releases sind unveränderlich, ein Fix wird eine neue Patch-Version.")
+    print(f"✓ öffentlich geladen und geprüft: SHA-256 {p['sha256'][:16]}… stimmt, Signatur gültig")
+    return release
+
+
+def veroeffentlichen(ordner, zip_pfad, ci_pfad=CI_ERGEBNIS, ohne_ci=None, signatur_ordner=None):
     import signiere_release as sr
     p, daten = plan(ordner, zip_pfad, ci_pfad, ohne_ci, signatur_ordner)
     zeige(p, False)
+    if p["hindernisse"]:
+        abbruch("Nicht veröffentlicht – erst beheben: " + " · ".join(p["hindernisse"]))
     minisig, sid = signieren(ordner, p["version"], p["summen"].encode("utf-8"), signatur_ordner or sr.STANDARD_ORDNER)
     (zip_pfad.parent / SUMMEN).write_bytes(p["summen"].encode("utf-8"))      # für bau_webapp.py --release-zip
     (zip_pfad.parent / SIGNATUR).write_bytes(minisig)
@@ -340,73 +487,30 @@ def veroeffentlichen(ordner, zip_pfad, ersetzen, ci_pfad=CI_ERGEBNIS, ohne_ci=No
     if konto.lower() != p["konto"]:
         abbruch(f"Angemeldet als {konto}, web_adresse.txt gehört zu {p['konto']} – bitte mit dem richtigen Konto anmelden.")
     print(f"Konto {konto} (Anmeldung: {woher})")
-    weg = f"/repos/{konto}/{repo}"
-    s, r = vw.api("GET", weg, tok)
-    if s == 404:
-        s, r = vw.api("POST", "/user/repos", tok, dict(name=repo, private=False, auto_init=False, has_issues=True,
-                                                     has_wiki=False, has_projects=False, homepage=p["seite"],
-                                                     description=BESCHREIBUNG))
-        if s != 201:
-            abbruch(f"Repository anlegen fehlgeschlagen: {s} {r.get('message', '')}")
-        print("✓ Repository angelegt (öffentlich)")
-    elif s != 200:
-        abbruch(f"Repository nicht lesbar: {s} {r.get('message', '')}")
-    s, release = vw.api("GET", f"{weg}/releases/tags/{tag}", tok)
-    release = release if s == 200 else None
-    s, ref = vw.api("GET", f"{weg}/git/ref/tags/{tag}", tok)
-    tag_sha = ref.get("object", {}).get("sha") if s == 200 else None
-    if (release or tag_sha) and not ersetzen:
-        abbruch(f"{'Release' if release else 'Tag'} {tag} gibt es schon – zum Ändern --ersetzen angeben "
-                f"({release['html_url'] if release else 'github.com/' + konto + '/' + repo + '/tags'}).")
-    commit, neu = main_pushen(vw.git_exe(), vw.git_umgebung(tok, ich), f"https://github.com/{konto}/{repo}.git", ordner,
-                              dateien(ordner), p["version"])
-    print(f"✓ main {'gepusht' if neu else 'unverändert'} ({commit[:10]})")
-    s, r = vw.api("PATCH", weg, tok, dict(default_branch="main", homepage=p["seite"], description=BESCHREIBUNG))
+    vw.rechte_pruefen(tok, konto, repo, ("contents", "administration"))
+    gh = GitHub(tok, f"/repos/{konto}/{repo}")
+    s, liste = gh.api("GET", "/releases?per_page=30")
+    for r in liste if s == 200 and isinstance(liste, list) else []:
+        if r.get("tag_name") == tag and not r.get("draft"):
+            abbruch(f"Release {tag} ist schon veröffentlicht ({r.get('html_url')}) – unveränderlich; Fix = neue Patch-Version.")
+        if r.get("tag_name") == tag:
+            gh.api("DELETE", f"/releases/{r['id']}")              # liegengebliebener Entwurf eines abgebrochenen Laufs
+            print(f"= alter Entwurf {tag} gelöscht")
+    objekt, gepusht = tag_und_pushen(ARBEIT, f"https://github.com/{konto}/{repo}.git", p["quellbaum"]["head"], p["version"],
+                                     vw.git_umgebung(tok, ich), p["titel"])
+    print(f"✓ Tag {tag} signiert ({objekt[:10]}) · gepusht: {', '.join(gepusht) or 'nichts (schon da)'}")
+    s, r = gh.api("PATCH", "", dict(default_branch="main", homepage=p["seite"], description=BESCHREIBUNG))
     if s != 200:
-        abbruch(f"Standard-Branch/Beschreibung setzen fehlgeschlagen: {s} {r.get('message', '')}")
+        abbruch(f"Standard-Branch/Beschreibung setzen fehlgeschlagen: {s} {r.get('message', '')} – Token-Recht Administration?")
     print("✓ Standard-Branch main · Homepage = Download-Seite")
-    if tag_sha and tag_sha != commit:                             # nur mit --ersetzen (oben geprüft)
-        s, r = vw.api("PATCH", f"{weg}/git/refs/tags/{tag}", tok, dict(sha=commit, force=True))
-        if s != 200:
-            abbruch(f"Tag {tag} verschieben fehlgeschlagen: {s} {r.get('message', '')}")
-        print(f"✓ Tag {tag} → {commit[:10]}")
-    angaben = dict(tag_name=tag, target_commitish=commit, name=p["titel"], body=p["notizen"], prerelease=False)
-    if release:
-        s, release = vw.api("PATCH", f"{weg}/releases/{release['id']}", tok, angaben)
-        if s != 200:
-            abbruch(f"Release ändern fehlgeschlagen: {s} {release.get('message', '')}")
-        for a in release.get("assets", []):
-            if a["name"] in p["assets"]:
-                vw.api("DELETE", f"{weg}/releases/assets/{a['id']}", tok)
-    else:
-        s, release = vw.api("POST", f"{weg}/releases", tok, dict(angaben, draft=True))
-        if s != 201:
-            abbruch(f"Release anlegen fehlgeschlagen: {s} {release.get('message', '')}")
-    hochladen(tok, release, zip_pfad.name, daten, "application/zip")
-    hochladen(tok, release, SUMMEN, p["summen"].encode("utf-8"), "text/plain")
-    hochladen(tok, release, SIGNATUR, minisig, "application/octet-stream")
-    print(f"✓ Assets hochgeladen: {', '.join(p['assets'])}")
-    s, release = vw.api("PATCH", f"{weg}/releases/{release['id']}", tok, dict(draft=False, make_latest="true"))
-    if s != 200:
-        abbruch(f"Release veröffentlichen fehlgeschlagen: {s} {release.get('message', '')}")
-    print(f"✓ Release veröffentlicht: {release['html_url']}")
-    zurueck = laden(f"https://github.com/{konto}/{repo}/releases/download/{tag}/{zip_pfad.name}")
-    summen = laden(f"https://github.com/{konto}/{repo}/releases/download/{tag}/{SUMMEN}", 3)
-    sig_zurueck = laden(f"https://github.com/{konto}/{repo}/releases/download/{tag}/{SIGNATUR}", 3)
-    mod = signatur_modul(ordner)
-    try:
-        echt = summen is not None and sig_zurueck == minisig and bool(mod.pruefe(summen, sig_zurueck, None,
-                                                                              mod.KOMMENTAR.format(version=p["version"])))
-    except ValueError:
-        echt = False
-    if zurueck is None or hashlib.sha256(zurueck).hexdigest() != p["sha256"] or summen != p["summen"].encode("utf-8") or not echt:
-        vw.api("PATCH", f"{weg}/releases/{release['id']}", tok, dict(draft=True))
-        abbruch("Heruntergeladene Assets stimmen nicht mit ZIP bzw. Signatur überein – Release wieder auf Entwurf gesetzt.")
-    print(f"✓ Assets geladen und geprüft: SHA-256 {p['sha256'][:16]}… stimmt, Signatur gültig ({sid})")
+    release_schritte(gh, p, daten, minisig, signatur_modul(ordner))
     print(f"✓ fertig: {p['download']}\n  Seite: {p['seite']} (mit bau_webapp.py --release-zip bauen, veroeffentliche_webapp.py)")
 
 
 def main(argv):
+    if "--ersetzen" in argv:
+        abbruch("--ersetzen gibt es seit 2.5 nicht mehr: veröffentlichte Releases und Tags sind unveränderlich – ein Fix "
+                "wird eine neue Patch-Version (z. B. 2.5.1).")
     werte = {}
     pos, i = [], 0
     while i < len(argv):
@@ -427,7 +531,7 @@ def main(argv):
     if "--probe" in argv:
         zeige(plan(ordner, zip_pfad, ci_pfad, werte.get("--ohne-ci"), sig_ordner)[0], True)
     else:
-        veroeffentlichen(ordner, zip_pfad, "--ersetzen" in argv, ci_pfad, werte.get("--ohne-ci"), sig_ordner)
+        veroeffentlichen(ordner, zip_pfad, ci_pfad, werte.get("--ohne-ci"), sig_ordner)
 
 
 if __name__ == "__main__":

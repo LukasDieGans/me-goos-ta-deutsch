@@ -3,7 +3,7 @@
 ein schlankes Debian – Frischinstallation über die Startdatei, Oberfläche per API, beide Testreihen, Deinstallation –
 und im Browser-Test Oberfläche, Web-App, Download-Seite und Anleitungen in WebKit, Firefox und Chromium.
 Aufruf: python werkstatt/ci_lauf.py [<Ordner Me-Goos-ta-Deutsch>] [--probe] [--status] [--ohne-warten] [--nachlesen] [--zeit <min>]
-                          [--release-pruefung]
+                          [--release-pruefung] [--desktop-anmeldung]
 
 --probe         ohne Netz und ohne Anmeldung: baut Release-Ordner, ZIP und Web-App (ohne Pyodide) im Temp-Ordner und zeigt
                 den Plan (Branch, Dateien, Prüfsumme, Workflows) – schreibt nichts in den Arbeitsordner, pusht nichts
@@ -25,7 +25,8 @@ CI-Baus = lokale → kurze Zusammenfassung (≤ 30 Zeilen) + ci_ergebnis.json im
 Release-Ordners, Lauf-Adresse, Ergebnis je System) – veroeffentliche_release.py gibt ein Release nur für genau diesen
 grünen Inhalt frei. --release-pruefung pusht weiter den gebauten Release-Baum (die Release-Prüfung testet das
 veröffentlichte Release). Anmeldung wie
-veroeffentliche_webapp.py (GH_TOKEN → GitHub CLI → GitHub Desktop; der Schlüssel wird nie ausgegeben). Im Hintergrund
+veroeffentliche_webapp.py (seit 2.5 G06: GH_TOKEN → Anmeldeinformation MGD-Release-Token; GitHub Desktop nur mit
+--desktop-anmeldung; Rechte Contents + Actions werden vorab gelesen; der Schlüssel wird nie ausgegeben). Im Hintergrund
 starten – ein Lauf dauert etwa 10–25 Minuten (je nach Warteschlange von GitHub)."""
 import hashlib
 import io
@@ -51,7 +52,7 @@ import veroeffentliche_webapp as vw  # noqa: E402  Anmeldung, GitHub-API, git
 
 BRANCH = "ci"                                                   # der einzige Branch, den dieses Skript je schreibt
 WORKFLOW = "tests.yml"
-RELEASE_PRUEFUNG = "release_pruefung.yml"                       # läuft nach jedem Push auf main (seit 2.2, vorher wöchentlich)
+RELEASE_PRUEFUNG = "release_pruefung.yml"                       # läuft beim Veröffentlichen eines Releases (seit 2.5 G06)
 QUELLE_GITHUB = ARBEIT / ".github"                              # → .github/ im Branch ci
 ERGEBNIS = ARBEIT / "ci_ergebnis.json"
 AUSFUEHRBAR = ("Me Goos-ta Deutsch - Mac.command", "Me Goos-ta Deutsch - Linux.sh")
@@ -120,7 +121,7 @@ def konto_repo(release):
     return m.group(1), m.group(2)
 
 
-RP_AUSLOESER = "on:\n  push:\n    branches: [main]\n  workflow_dispatch:\n"
+RP_AUSLOESER = "on:\n  release:\n    types: [published]\n  workflow_dispatch:\n"     # seit 2.5 G06 (vorher push auf main)
 RP_PROBE = "on:\n  push:\n    branches: [ci]\n  workflow_dispatch:\n"
 
 
@@ -412,6 +413,8 @@ def main(argv):
             abbruch(f"Anmeldung ({woher}) abgelehnt: {s} {ich.get('message', '')}")
         if ich["login"].lower() != p["konto"]:
             abbruch(f"Angemeldet als {ich['login']}, web_adresse.txt gehört zu {p['konto']}.")
+        vw.rechte_pruefen(tok, ich["login"], p["repo"], ("contents", "actions"))
+        print(f"Konto {ich['login']} (Anmeldung: {woher})", flush=True)
         konto, weg = ich["login"], f"/repos/{ich['login']}/{p['repo']}"
         nachricht = f"CI Release-Prüfung (Probe) {p['version']}" if woche else f"CI {p['version']} · {p['pruefsumme'][:12]}"
         ende = time.time() + minuten * 60

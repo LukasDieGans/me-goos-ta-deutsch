@@ -6,11 +6,15 @@ Aufruf: python repo_einstellungen.py [--probe] [--stufe 1|2]
 --stufe 1  (Standard) Topics, Wiki/Discussions aus, private Sicherheitsmeldungen, Dependabot-Warnungen, Secret
            Scanning + Push-Schutz, CodeQL (Standard-Einrichtung), Ruleset „Schutz main + gh-pages“ (Löschen und
            Force-Push verboten, keine Umgehung; Branch ci bleibt frei), Workflow „Probe“ abschalten
---stufe 2  Tags, unveränderliche Releases, Pflicht-Prüfungen – legt G06 an, G08 schaltet sie scharf
+--stufe 2  (seit G06, scharf geschaltet in G08) Ruleset „Schutz Tags v*“ (Tags v* weder löschen noch verschieben),
+           unveränderliche Releases (Assets und Tag eines veröffentlichten Releases bleiben, wie sie sind), Ruleset
+           „Signierte Commits main + gh-pages“ (nur signierte Commits; ci frei). Keine Pflicht-Prüfungen vor dem Push:
+           die CI prüft einen verwaisten Commit auf ci (andere SHA), die Freigabe macht die CI-Schranke im Skript.
 
 Idempotent: jeder Schritt liest zuerst den Ist-Zustand und ändert nur, was abweicht („=“ schon richtig, „✓“ gesetzt);
 danach wird erneut gelesen. Nur mit Lukas’ Erlaubnis-Satz „Einstellungen“ ohne --probe aufrufen.
-Anmeldung wie veroeffentliche_webapp.py (GH_TOKEN → GitHub CLI → GitHub Desktop; der Schlüssel wird nie ausgegeben).
+Anmeldung wie veroeffentliche_webapp.py (GH_TOKEN → MGD-Release-Token; GitHub Desktop nur mit --desktop-anmeldung;
+Recht Administration wird vorab gelesen; der Schlüssel wird nie ausgegeben).
 Konto und Repository stammen aus Programm/web_adresse.txt. Nur Standardbibliothek."""
 import json
 import re
@@ -30,6 +34,12 @@ RULESET = "Schutz main + gh-pages"
 RULESET_SOLL = dict(name=RULESET, target="branch", enforcement="active", bypass_actors=[],
                     conditions={"ref_name": {"include": ["refs/heads/main", "refs/heads/gh-pages"], "exclude": []}},
                     rules=[{"type": "deletion"}, {"type": "non_fast_forward"}])
+TAG_SOLL = dict(name="Schutz Tags v*", target="tag", enforcement="active", bypass_actors=[],
+                conditions={"ref_name": {"include": ["refs/tags/v*"], "exclude": []}},
+                rules=[{"type": "deletion"}, {"type": "non_fast_forward"}, {"type": "update"}])
+SIGNIERT_SOLL = dict(name="Signierte Commits main + gh-pages", target="branch", enforcement="active", bypass_actors=[],
+                     conditions={"ref_name": {"include": ["refs/heads/main", "refs/heads/gh-pages"], "exclude": []}},
+                     rules=[{"type": "required_signatures"}])
 PROBE_WORKFLOW = ".github/workflows/probe.yml"
 
 
@@ -56,27 +66,33 @@ def _sicherheit(api):
     return {k: (sa.get(k) or {}).get("status") for k in ("secret_scanning", "secret_scanning_push_protection")}
 
 
-def _ruleset(api):
+def _ruleset(api, soll=RULESET_SOLL):
     s, liste = api("GET", "/rulesets?includes_parents=false")
     for r in liste if s == 200 and isinstance(liste, list) else []:
-        if r.get("name") == RULESET:
+        if r.get("name") == soll["name"]:
             return api("GET", f"/rulesets/{r['id']}")[1]
     return None
 
 
-def _ruleset_passt(ist):
+def _ruleset_passt(ist, soll=RULESET_SOLL):
     if not ist:
         return False
     regeln = sorted(r.get("type") for r in ist.get("rules") or [])
     ref = (ist.get("conditions") or {}).get("ref_name") or {}
-    return (ist.get("enforcement") == "active" and ist.get("target") == "branch" and not ist.get("bypass_actors")
-            and regeln == ["deletion", "non_fast_forward"] and sorted(ref.get("include") or []) ==
-            sorted(RULESET_SOLL["conditions"]["ref_name"]["include"]) and not ref.get("exclude"))
+    return (ist.get("enforcement") == "active" and ist.get("target") == soll["target"] and not ist.get("bypass_actors")
+            and regeln == sorted(r["type"] for r in soll["rules"]) and sorted(ref.get("include") or []) ==
+            sorted(soll["conditions"]["ref_name"]["include"]) and not ref.get("exclude"))
 
 
-def _ruleset_setzen(api):
-    ist = _ruleset(api)
-    return api("PUT", f"/rulesets/{ist['id']}", RULESET_SOLL) if ist else api("POST", "/rulesets", RULESET_SOLL)
+def _ruleset_setzen(api, soll=RULESET_SOLL):
+    ist = _ruleset(api, soll)
+    return api("PUT", f"/rulesets/{ist['id']}", soll) if ist else api("POST", "/rulesets", soll)
+
+
+def _ruleset_schritt(sid, titel, soll):
+    return (sid, titel, {"name": soll["name"], "include": soll["conditions"]["ref_name"]["include"],
+                         "regeln": [r["type"] for r in soll["rules"]], "umgehung": []},
+            lambda api: _ruleset(api, soll), lambda ist: _ruleset_passt(ist, soll), lambda api: _ruleset_setzen(api, soll))
 
 
 def _probe_workflow(api):
@@ -127,7 +143,15 @@ STUFE_1 = [
      lambda ist: ist in (None, "disabled_manually"),
      _probe_abschalten),
 ]
-STUFEN = {1: STUFE_1, 2: []}            # Stufe 2 (Tags, unveränderliche Releases, Pflicht-Prüfungen) legt G06 an
+STUFE_2 = [
+    _ruleset_schritt("tags", "Ruleset „Schutz Tags v*“ (Tags weder löschen noch verschieben, keine Umgehung)", TAG_SOLL),
+    ("unveraenderlich", "Unveränderliche Releases (immutable releases)", True,
+     lambda api: api("GET", "/immutable-releases")[1].get("enabled"),
+     lambda ist: ist is True,
+     lambda api: api("PUT", "/immutable-releases")),
+    _ruleset_schritt("signierte_commits", "Ruleset „Signierte Commits main + gh-pages“ (ci frei)", SIGNIERT_SOLL),
+]
+STUFEN = {1: STUFE_1, 2: STUFE_2}       # Stufe 2 seit G06 angelegt, angewendet erst in G08 (Release 2.5)
 
 
 def plan(stufe):
@@ -144,6 +168,7 @@ def ausfuehren(stufe):
         abbruch(f"Anmeldung ({woher}) abgelehnt: {s} {ich.get('message', '')}")
     if ich["login"].lower() != p["konto"]:
         abbruch(f"Angemeldet als {ich['login']}, web_adresse.txt gehört zu {p['konto']}.")
+    vw.rechte_pruefen(tok, ich["login"], p["repo"], ("administration",))
     weg = f"/repos/{ich['login']}/{p['repo']}"
 
     def api(methode, rest, daten=None):
@@ -171,8 +196,6 @@ def main(argv):
     stufe = int(argv[argv.index("--stufe") + 1]) if "--stufe" in argv and argv.index("--stufe") + 1 < len(argv) else 1
     if stufe not in STUFEN:
         abbruch("--stufe 1 oder 2")
-    if not STUFEN[stufe]:
-        abbruch(f"Stufe {stufe} ist noch nicht angelegt (kommt mit G06, scharf in G08).")
     if "--probe" in argv:
         p = plan(stufe)
         print(f"Plan (Probe – ohne Netz, nichts wird verändert): {p['konto']}/{p['repo']} · Stufe {stufe}")
