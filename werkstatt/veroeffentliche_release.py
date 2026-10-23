@@ -289,7 +289,7 @@ def changelog_abschnitt(ordner, version):
 
 def notizen(ordner, version, zip_name, sha, seite):
     """Release-Notizen: Englisch (Abschnitt aus CHANGELOG.md, sonst „New in …“ aus der README), kurz Deutsch und Spanisch."""
-    neu = changelog_abschnitt(ordner, version)
+    neu = re.sub(r"^### ", "#### ", changelog_abschnitt(ordner, version), flags=re.M)   # Kategorien unter „New in“
     if not neu:
         readme = (ordner / "README.md").read_text(encoding="utf-8")
         m = re.search(rf"^## New in {re.escape(version)}[ \t]*\n(.*?)(?=^## |\Z)", readme, re.M | re.S)
