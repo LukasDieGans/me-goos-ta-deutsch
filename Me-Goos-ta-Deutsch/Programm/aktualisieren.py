@@ -7,9 +7,10 @@ Bis 2.3 hieß ein Update: ZIP laden, in einen neuen Ordner entpacken, Karten üb
 (oder der neue hatte denselben Namen wie der alte). Seit 2.4 geht es an Ort und Stelle, nur auf Klick
 (Werkzeuge → „Jetzt aktualisieren“, nachdem „Nach neuer Version suchen“ eine neuere gefunden hat):
 
-1. laden (Auftrag in der Warteschlange):  SHA256SUMS.txt und Me-Goos-ta-Deutsch-<V>.zip des GitHub-Releases v<V>
-   (Adresse nur aus web_adresse.txt + Versionsnummer, nie aus einer Antwort; Weiterleitungen nur zu GitHub), Prüfsumme
-   vergleichen, ZIP prüfen (nur Me-Goos-ta-Deutsch/…, keine Links/Ausbrüche, Pflichtdateien, Version = <V>, keine
+1. laden (Auftrag in der Warteschlange):  SHA256SUMS.txt, SHA256SUMS.txt.minisig und Me-Goos-ta-Deutsch-<V>.zip des
+   GitHub-Releases v<V> (Adresse nur aus web_adresse.txt + Versionsnummer, nie aus einer Antwort; Weiterleitungen nur
+   zu GitHub), nur eine neuere Version als diese; seit 2.5 muss SHA256SUMS.txt mit dem Schlüssel von Me Goos-ta Deutsch
+   signiert sein und „me-goos-ta-deutsch v<V>“ nennen (signatur.py) – sonst nichts; Prüfsumme vergleichen, ZIP prüfen (nur Me-Goos-ta-Deutsch/…, keine Links/Ausbrüche, Pflichtdateien, Version = <V>, keine
    Nutzerdaten) und nach <Datenordner>/update/neu entpacken → bereit.json.
 2. anwenden (eigener Prozess, nachdem sich die Oberfläche beendet hat): jede Datei des Releases ersetzt die alte
    (die alte kommt vorher nach update/alt; bei einem Fehler wird alles zurückgelegt). Karten, Bilder, Ideen, Lernstand,
@@ -40,6 +41,7 @@ MAX_ZIP = 200 * 1024 * 1024
 MAX_ENTPACKT = 500 * 1024 * 1024
 MAX_DATEIEN = 5000
 MAX_SUMMEN = 64 * 1024
+MAX_SIGNATUR = 4096                                             # SHA256SUMS.txt.minisig (seit 2.5)
 GITHUB_HOSTS = ("github.com", "objects.githubusercontent.com", "release-assets.githubusercontent.com")
 PFLICHT = ("Programm/starter.py", "Programm/gans_ui.py", "Programm/gans_lernkarten.py",
            "Me Goos-ta Deutsch - Windows.cmd", "Me Goos-ta Deutsch - Mac.command", "Me Goos-ta Deutsch - Linux.sh")
@@ -71,8 +73,9 @@ def ordner(daten):
 # =============================================================================================
 # 1. Laden und prüfen
 # =============================================================================================
-def _oeffne(url, erlaubt, timeout=60):
-    """GET mit Zertifikatsprüfung; folgt Weiterleitungen nur zu erlaubten Hosts (https, bzw. http nur für 127.0.0.1)."""
+def _oeffne(url, erlaubt, timeout=60, nicht_da=None):
+    """GET mit Zertifikatsprüfung; folgt Weiterleitungen nur zu erlaubten Hosts (https, bzw. http nur für 127.0.0.1).
+    nicht_da: eigener Text, falls die Datei fehlt (404)."""
     import urllib.error
     import urllib.request
 
@@ -104,7 +107,7 @@ def _oeffne(url, erlaubt, timeout=60):
             return opener.open(urllib.request.Request(url, headers={"User-Agent": "Me-Goos-ta-Deutsch"}), timeout=timeout)
         except urllib.error.HTTPError as e:
             if e.code == 404:
-                raise UpdateFehler(_t("Dieses Release gibt es (noch) nicht auf GitHub.", "This release isn’t on GitHub (yet).",
+                raise UpdateFehler(nicht_da or _t("Dieses Release gibt es (noch) nicht auf GitHub.", "This release isn’t on GitHub (yet).",
                                       "Esta versión (todavía) no está en GitHub.")) from None
             raise UpdateFehler(f"HTTP {e.code}") from None
         except urllib.error.URLError as e:
@@ -189,11 +192,72 @@ def entpacken(pfad, infos, ziel):
     return Path(ziel) / WURZEL_NAME
 
 
+def _laufende_version():
+    """Version dieses Programms (aus gans_lernkarten.py daneben) als Tupel, sonst None."""
+    try:
+        m = re.search(r'^VERSION = "(\d{1,4}(?:\.\d{1,4}){1,2})[ "]', (HIER / "gans_lernkarten.py").read_text(
+            encoding="utf-8")[:20000], re.M)
+    except OSError:
+        return None
+    return _tupel(m.group(1)) if m else None
+
+
+def _tupel(v):
+    t = tuple(int(x) for x in v.split("."))
+    return t + (0,) * (3 - len(t))
+
+
+def _signatur():
+    """signatur.py aus diesem Programmordner – das eingebettete Python unter Windows (._pth) nimmt den Ordner des
+    Skripts nicht von selbst in sys.path (Fund CI 23.10.2026)."""
+    if str(HIER) not in sys.path:
+        sys.path.insert(0, str(HIER))
+    import signatur
+    return signatur
+
+
+def schluessel_fuer(quelle):
+    """Schlüssel, denen dieses Update vertraut: die von Me Goos-ta Deutsch (signatur.SCHLUESSEL). Nur automatische
+    Tests dürfen einen eigenen Testschlüssel setzen – MGD_UPDATE_TESTSCHLUESSEL gilt ausschließlich zusammen mit
+    MGD_UPDATE_QUELLE=http://127.0.0.1:… und einer Quelle auf 127.0.0.1."""
+    signatur = _signatur()
+    test = os.environ.get("MGD_UPDATE_TESTSCHLUESSEL", "")
+    p = urllib.parse.urlsplit(quelle)
+    if (test and p.scheme == "http" and p.hostname == "127.0.0.1"
+            and re.fullmatch(r"http://127\.0\.0\.1:\d{2,5}(/[A-Za-z0-9._/-]*)?", os.environ.get("MGD_UPDATE_QUELLE", ""))):
+        return [("test", *signatur.schluessel_lesen(test))]
+    return signatur.vertraut()
+
+
+def pruefe_signatur(summen, minisig, version, quelle):
+    """SHA256SUMS.txt muss mit einem vertrauten Schlüssel signiert sein und genau „me-goos-ta-deutsch v<version>“
+    nennen (keine ältere signierte Fassung unterschieben). → dict(name, id); sonst UpdateFehler."""
+    try:
+        signatur = _signatur()
+        return signatur.pruefe(summen, minisig, schluessel_fuer(quelle), signatur.KOMMENTAR.format(version=version))
+    except ImportError:
+        grund = "signatur.py"
+    except ValueError as e:                                     # SignaturFehler
+        grund = str(e)
+    raise UpdateFehler(_t(f"Achtung: Die Signatur von Version {version} passt nicht zum Schlüssel von Me Goos-ta Deutsch "
+                          f"({grund}) – so ein Update übernimmt die Gans nicht. Nichts geändert.",
+                          f"Heads-up: the signature of version {version} doesn’t match the Me Goos-ta Deutsch key ({grund}) – "
+                          "the goose won’t install an update like that. Nothing changed.",
+                          f"Atención: la firma de la versión {version} no coincide con la clave de Me Goos-ta Deutsch "
+                          f"({grund}); el ganso no instala una actualización así. No se cambió nada."))
+
+
 def laden(version, quelle, daten, melde=print):
-    """Release v<version> laden, prüfen, entpacken → Pfad des entpackten Ordners (update/neu/Me-Goos-ta-Deutsch).
-    quelle: …/releases/download (GitHub) bzw. für Tests http://127.0.0.1:<port>/…"""
+    """Release v<version> laden, prüfen (Signatur von SHA256SUMS.txt, Prüfsumme, Inhalt), entpacken → Pfad des
+    entpackten Ordners (update/neu/Me-Goos-ta-Deutsch). quelle: …/releases/download (GitHub) bzw. für Tests
+    http://127.0.0.1:<port>/…"""
     if not version_ok(version):
         raise UpdateFehler("version")
+    hier = _laufende_version()
+    if hier and _tupel(version) <= hier:
+        raise UpdateFehler(_t(f"Version {version} ist nicht neuer als diese – nichts zu tun.",
+                              f"Version {version} isn’t newer than this one – nothing to do.",
+                              f"La versión {version} no es más nueva que esta; no hay nada que hacer."))
     p = urllib.parse.urlsplit(quelle)
     erlaubt = GITHUB_HOSTS + (("127.0.0.1",) if p.hostname == "127.0.0.1" else ())
     d = ordner(daten)
@@ -206,6 +270,19 @@ def laden(version, quelle, daten, melde=print):
         summen = r.read(MAX_SUMMEN + 1)
     if len(summen) > MAX_SUMMEN:
         raise UpdateFehler("SHA256SUMS")
+    fehlt = _t(f"Achtung: Zu Version {version} gibt es keine Signatur (SHA256SUMS.txt.minisig) – zur Sicherheit übernimmt "
+               "die Gans nichts. Nichts geändert.",
+               f"Heads-up: version {version} has no signature (SHA256SUMS.txt.minisig) – to stay safe, the goose installs "
+               "nothing. Nothing changed.",
+               f"Atención: la versión {version} no tiene firma (SHA256SUMS.txt.minisig); por seguridad, el ganso no instala "
+               "nada. No se cambió nada.")
+    with _oeffne(basis + "SHA256SUMS.txt.minisig", erlaubt, nicht_da=fehlt) as r:
+        minisig = r.read(MAX_SIGNATUR + 1)
+    if len(minisig) > MAX_SIGNATUR:
+        raise UpdateFehler(fehlt)
+    s = pruefe_signatur(summen, minisig, version, quelle)
+    melde(_t(f"Signatur in Ordnung (Schlüssel {s['id']}).", f"Signature OK (key {s['id']}).",
+             f"Firma correcta (clave {s['id']})."))
     erwartet = next((z.split()[0].lower() for z in summen.decode("utf-8", "replace").splitlines()
                      if len(z.split()) == 2 and z.split()[1].lstrip("*") == name
                      and re.fullmatch(r"[0-9a-fA-F]{64}", z.split()[0])), None)
@@ -249,11 +326,13 @@ def bereit(daten):
 # 2. Anwenden (nach dem Ende der Oberfläche)
 # =============================================================================================
 def programm_ordner_ok(wurzel):
-    """Nur einen Ordner ersetzen, der eindeutig das Programm ist – nie den Entwicklungsordner (Arbeitsordner mit
-    bau_release.py daneben) oder ein Git-Verzeichnis."""
+    """Nur einen Ordner ersetzen, der eindeutig das Programm ist – nie den Entwicklungsordner (Quellbaum: Git-Wurzel
+    bzw. werkstatt/bau_release.py daneben, früher bau_release.py direkt daneben) oder ein Git-Verzeichnis."""
     w = Path(wurzel)
+    oben = w.parent
     return ((w / "Programm" / "starter.py").is_file() and (w / "Programm" / "gans_ui.py").is_file()
-            and not (w.parent / "bau_release.py").exists() and not (w / ".git").exists())
+            and not (oben / "bau_release.py").exists() and not (oben / "werkstatt" / "bau_release.py").exists()
+            and not (w / ".git").exists() and not (oben / ".git").exists())
 
 
 def anwenden(quelle, ziel, sicherung):

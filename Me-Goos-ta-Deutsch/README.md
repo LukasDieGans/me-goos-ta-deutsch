@@ -106,18 +106,22 @@ error messages. Updating keeps your cards, settings and learning progress.
 ## Privacy and security
 
 Everything stays on your computer. Internet is only used for the one-time setup (python.org, pypi.org, github.com –
-every download is checked by checksum), for tools you install yourself (models and fonts from github.com or
+every download is checked by checksum; from version 2.5 on the Python packages come in exactly pinned versions whose
+checksums ship with the program, `Programm/pakete.lock`), for tools you install yourself (models and fonts from github.com or
 huggingface.co, checked by checksum) and, only if you switch it on, for translation suggestions (only the single word
 is sent). Checking for a new version happens only when you click “Check for a new version” (Tools, Help → About this
 program, or below the version number in the menu): one request to api.github.com, with no data about you or your cards –
 the program never checks on its own. “Update now” downloads only the release of this project from github.com, checked
-against its published checksum.
+against its published checksum – and from version 2.5 on only if `SHA256SUMS.txt` carries a valid signature of the
+project’s key (minisign/Ed25519, key ID `6885AC6ACBF317E0`; how to check it yourself: `.github/SECURITY.md` or the
+download page → “Check it’s genuine”).
 Read aloud (🔊) only uses offline voices of your system. The interface is reachable only from your own computer unless
 you deliberately enable phone access.
 
 ## For developers
 
-Python 3.13 with Pillow, NumPy, ReportLab and pypdfium2 (`Programm/requirements.txt`).
+Python 3.13 with Pillow, NumPy, ReportLab and pypdfium2: version ranges in `Programm/requirements.txt`, the exact versions
+with SHA-256 per file in `Programm/pakete.lock` (`pip install --require-hashes -r Programm/pakete.lock`).
 Self-tests: `python Programm/test_gans_lernkarten.py` and `python Programm/test_erweiterungen.py`.
 Command line without the interface: `python Programm/gans_lernkarten.py --help`.
 

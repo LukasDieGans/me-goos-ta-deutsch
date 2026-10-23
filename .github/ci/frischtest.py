@@ -5,8 +5,9 @@ einem Release-Server auf 127.0.0.1, Neustart über die Startdatei – nur auf Gi
 Python des Runners als „Dirigent“ (das Programm richtet wie beim Nutzer sein eigenes Python ein).
 
 GitHub Actions (Branch ci; Wegwerf-Rechner → echte Startdatei, echte Symbole, echter Datenordner):
-    python .github/ci/frischtest.py --system <name> [--ergebnis ergebnis.json] [--neuestes-release]
-    (--neuestes-release: Release-Prüfung nach dem Push auf main – statt des Checkouts das veröffentlichte Release-ZIP, gegen SHA256SUMS.txt geprüft)
+    python .github/ci/frischtest.py --system <name> [--ergebnis ergebnis.json] [--neuestes-release] [--neueste-pakete]
+    (--neuestes-release: Release-Prüfung nach dem Push auf main – statt des Checkouts das veröffentlichte Release-ZIP, gegen SHA256SUMS.txt geprüft;
+     --neueste-pakete: Frühwarnung – der Starter nimmt die Spannen aus requirements.txt statt pakete.lock, MGD_PAKETE_NEUESTE=1)
 Lokal (nur Windows – der bisherige Frischtest aus UEBERGABE §5: LOCALAPPDATA umgelenkt, Symbole im Testordner, keine
 Programm-Deinstallation; Desktop-Symbol und Datenordner dieses Rechners bleiben unberührt):
     python frischtest.py --lokal <kurzer Testordner außerhalb von Temp> --quelle <Release-Ordner> [--ohne-tests]
@@ -170,8 +171,8 @@ class Oberflaeche:
 # Ablauf
 # =============================================================================================
 class Frischtest:
-    def __init__(self, system, quelle, lokal=None, ohne_tests=False):
-        self.system, self.quelle, self.lokal, self.ohne_tests = system, quelle, lokal, ohne_tests
+    def __init__(self, system, quelle, lokal=None, ohne_tests=False, neueste=False):
+        self.system, self.quelle, self.lokal, self.ohne_tests, self.neueste = system, quelle, lokal, ohne_tests, neueste
         self.env = {k: v for k, v in os.environ.items()
                     if not k.startswith(("PYTHON", "MGD_")) and k not in ("VIRTUAL_ENV", "CONDA_PREFIX")}
         loc = os.environ.get("pythonLocation")                  # actions/setup-python: kein Python im PATH wie beim Nutzer
@@ -190,7 +191,10 @@ class Frischtest:
         if ART == "linux":
             self.env["MGD_KEIN_TERMINAL"] = "1"                 # ohne Terminalfenster (wie „sh …Linux.sh“ im Terminal)
         self.env["MGD_KEIN_BROWSER"] = "1"                      # Neustart nach dem Update im Programm: kein Browser
+        if neueste:
+            self.env["MGD_PAKETE_NEUESTE"] = "1"                # Starter: Spannen aus requirements.txt statt pakete.lock
         self.update_server = None
+        self.signiert = False
         self.daten = self._daten_ordner()
         self.env_tests = None
         self.ui = None
@@ -330,6 +334,32 @@ class Frischtest:
         self.python = py
         pruefe("Eigenes Python im Datenordner", gleich(py.parent, self.daten / "python")
                or str(py).startswith(str(self.daten / "python")), str(py))
+        self.pakete_pruefen(py)
+
+    def pakete_pruefen(self, py):
+        """Seit 2.5: installierte Fassungen = pakete.lock (pip --require-hashes, wie beim Nutzer); im Job „neueste“ nur
+        die Fassungen aufzeichnen (Spannen aus requirements.txt)."""
+        code = ("import importlib.metadata as m, json, re; print(json.dumps({re.sub(r'[-_.]+', '-', d.metadata['Name'].lower()): "
+                "d.version for d in m.distributions()}))")
+        r = subprocess.run([str(py), "-c", code], capture_output=True, text=True, timeout=120, env=self.env)
+        try:
+            ist = json.loads(r.stdout.strip().splitlines()[-1])
+        except (ValueError, IndexError):
+            ist = {}
+        lock = self.quelle / "Programm" / "pakete.lock"
+        if self.neueste:
+            pruefe("Neueste Paketfassungen (Spannen aus requirements.txt statt Lock): "
+                   + ", ".join(f"{n} {ist.get(n, '?')}" for n in ("numpy", "pillow", "reportlab", "pypdfium2")),
+                   all(n in ist for n in ("numpy", "pillow", "reportlab")), (r.stderr or str(ist))[-300:])
+        elif not lock.is_file():
+            pruefe(f"Paketfassungen: Release {self.version} ohne pakete.lock (vor 2.5) – übersprungen", True)
+        else:
+            soll = {re.sub(r"[-_.]+", "-", n.lower()): v for n, v in
+                    re.findall(r"^([A-Za-z0-9][A-Za-z0-9._-]*)==([^\s;\\]+)", lock.read_text(encoding="ascii"), re.M)}
+            falsch = {n: (v, ist.get(n)) for n, v in soll.items() if ist.get(n) != v}
+            pruefe(f"Paketfassungen genau wie pakete.lock (pip --require-hashes): "
+                   + ", ".join(f"{n} {v}" for n, v in sorted(soll.items())), bool(soll) and not falsch,
+                   (r.stderr or str(falsch))[-300:])
 
     # ---------- c) API: Status, Erstabfrage, Tools ----------
     def c_api(self):
@@ -546,8 +576,10 @@ class Frischtest:
 
     # ---------- k) Update direkt im Programm (seit 2.4) ----------
     def k_vorbereiten(self):
-        """Wie ein GitHub-Release v9.9 (ZIP + SHA256SUMS.txt) auf 127.0.0.1: Inhalt = dieses Release, nur VERSION 9.9 und
-        eine Merkdatei. Die Oberfläche lädt dort statt bei GitHub (MGD_UPDATE_QUELLE, nur 127.0.0.1)."""
+        """Wie ein GitHub-Release v9.9 (ZIP + SHA256SUMS.txt + SHA256SUMS.txt.minisig) auf 127.0.0.1: Inhalt = dieses
+        Release, nur VERSION 9.9 und eine Merkdatei. Die Oberfläche lädt dort statt bei GitHub (MGD_UPDATE_QUELLE, nur
+        127.0.0.1). Seit 2.5 signiert mit einem Testschlüssel dieses Laufs (MGD_UPDATE_TESTSCHLUESSEL); v9.8 trägt die
+        Signatur eines fremden Schlüssels und muss abgelehnt werden."""
         import functools
         import hashlib
         import http.server
@@ -571,7 +603,23 @@ class Frischtest:
                 z.writestr(info, daten)
             z.writestr(f"{NAME}/Programm/update_probe.txt", "9.9\n")
         sha = hashlib.sha256(zip_pfad.read_bytes()).hexdigest()
-        (ziel / "v9.9" / "SHA256SUMS.txt").write_text(f"{sha}  {NAME}-9.9.zip\n", encoding="utf-8")
+        summen = f"{sha}  {NAME}-9.9.zip\n".encode("utf-8")
+        (ziel / "v9.9" / "SHA256SUMS.txt").write_bytes(summen)
+        sg = self.signatur_modul()
+        self.signiert = sg is not None
+        if sg:
+            import secrets
+            seed, sid = secrets.token_bytes(32), secrets.token_bytes(8)
+            (ziel / "v9.9" / "SHA256SUMS.txt.minisig").write_bytes(sg.signiere(seed, sid, summen, sg.KOMMENTAR.format(version="9.9")))
+            self.env["MGD_UPDATE_TESTSCHLUESSEL"] = sg.schluessel_text(sid, sg.ed25519_oeffentlich(seed))
+            (ziel / "v9.8").mkdir()
+            shutil.copyfile(zip_pfad, ziel / "v9.8" / f"{NAME}-9.8.zip")
+            summen8 = f"{sha}  {NAME}-9.8.zip\n".encode("utf-8")
+            (ziel / "v9.8" / "SHA256SUMS.txt").write_bytes(summen8)
+            (ziel / "v9.8" / "SHA256SUMS.txt.minisig").write_bytes(
+                sg.signiere(secrets.token_bytes(32), secrets.token_bytes(8), summen8, sg.KOMMENTAR.format(version="9.8")))
+            if shutil.which("minisign"):
+                self.k_minisign(sg, ziel / "minisign")
 
         class Leise(http.server.SimpleHTTPRequestHandler):
             def log_message(self, *a):
@@ -581,12 +629,61 @@ class Frischtest:
         self.env["MGD_UPDATE_QUELLE"] = f"http://127.0.0.1:{self.update_server.server_address[1]}"
         log(f"· Release-Server für das Update im Programm: {self.env['MGD_UPDATE_QUELLE']} (ZIP {zip_pfad.stat().st_size // 1024} KB)")
 
+    def signatur_modul(self):
+        """Programm/signatur.py dieses Releases (seit 2.5) – oder None (ältere Releases ohne Signatur)."""
+        pfad = self.quelle / "Programm" / "signatur.py"
+        if not pfad.is_file():
+            return None
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("signatur_frischtest", pfad)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+
+    def k_minisign(self, sg, ordner):
+        """Gegenprobe mit dem echten minisign (Linux, apt): unsere Signatur prüft minisign, minisigns Signatur prüft
+        signatur.py – beide Richtungen, „trusted comment“ inklusive."""
+        import secrets
+        import subprocess as sp
+        t0 = time.time()
+        ordner.mkdir(parents=True, exist_ok=True)
+        datei = ordner / "SHA256SUMS.txt"
+        datei.write_bytes(b"0" * 64 + f"  {NAME}-9.9.zip\n".encode("utf-8"))
+        seed, sid = secrets.token_bytes(32), secrets.token_bytes(8)
+        (ordner / "SHA256SUMS.txt.minisig").write_bytes(sg.signiere(seed, sid, datei.read_bytes(), "me-goos-ta-deutsch v9.9"))
+        (ordner / "unser.pub").write_text(sg.pub_datei(sid, sg.ed25519_oeffentlich(seed)), encoding="utf-8")
+        r1 = sp.run(["minisign", "-V", "-m", str(datei), "-p", str(ordner / "unser.pub")], capture_output=True, text=True, timeout=60)
+        r2 = sp.run(["minisign", "-G", "-W", "-f", "-p", str(ordner / "ms.pub"), "-s", str(ordner / "ms.key")],
+                    capture_output=True, text=True, timeout=60)
+        r3 = sp.run(["minisign", "-S", "-s", str(ordner / "ms.key"), "-m", str(datei), "-x", str(ordner / "ms.minisig"),
+                     "-t", "me-goos-ta-deutsch v9.9"], capture_output=True, text=True, timeout=60)
+        try:
+            k = sg.schluessel_lesen((ordner / "ms.pub").read_text(encoding="utf-8"))
+            zurueck = sg.pruefe(datei.read_bytes(), (ordner / "ms.minisig").read_bytes(), [("minisign", *k)], "me-goos-ta-deutsch v9.9")
+        except (OSError, ValueError) as f:
+            zurueck = f"✗ {f}"
+        pruefe("Signatur minisign-kompatibel: minisign -V prüft unsere Signatur, signatur.py prüft die von minisign",
+               r1.returncode == 0 and "me-goos-ta-deutsch v9.9" in r1.stdout + r1.stderr and r2.returncode == 0
+               and r3.returncode == 0 and isinstance(zurueck, dict),
+               f"V {r1.returncode} {(r1.stdout + r1.stderr)[-160:]} · G {r2.returncode} {r2.stderr[-120:]} · "
+               f"S {r3.returncode} {r3.stderr[-120:]} · zurück {zurueck}", t0=t0)
+
     def k_update_im_programm(self):
         if self.lokal or not self.update_server:
             log("· Lokal: Update im Programm entfällt (der Neustart über die Startdatei legt echte Symbole an) – E48 prüft die Teile")
             return
         t0 = time.time()
         prog = self.o2 / "Programm"
+        if self.signiert:
+            s0, l0 = self.ui.post("/api/update", {"aktion": "laden", "version": "9.8"})
+            f0 = self.ui.warte_lauf(l0.get("id"), 300) if s0 == 200 and l0.get("id") else None
+            zeilen0 = "\n".join((f0 or {}).get("zeilen", []))
+            s, st = self.ui.get("/api/status")
+            pruefe("Update im Programm: Release mit fremder Signatur (9.8) → abgelehnt, nichts bereit",
+                   s0 == 200 and f0 and f0.get("code") != 0 and "fremder_schluessel" in zeilen0
+                   and not (st.get("update") or {}).get("bereit"),
+                   f"{s0} · Code {f0 and f0.get('code')} · {zeilen0[-200:]}", t0=t0)
+            t0 = time.time()
         s, st = self.ui.get("/api/status")
         moeglich = (st.get("update") or {}).get("moeglich")
         s1, l = self.ui.post("/api/update", {"aktion": "laden", "version": "9.9"})
@@ -751,16 +848,16 @@ def main(argv):
             sys.path.insert(0, str(Path(__file__).resolve().parent))
             import neuestes_release
             try:
-                r = neuestes_release.laden(Path.home() / "mgd-release", neuestes_release.repo_von(quelle))
+                r = neuestes_release.laden(Path.home() / "mgd-release", neuestes_release.repo_von(quelle), quelle)
             except (OSError, ValueError) as f:
                 sys.exit(f"✗ Release nicht geladen: {f}")
-            log(f"Release {r['version']} geladen ({r['name']}, SHA-256 {r['sha256'][:16]}… = SHA256SUMS.txt)")
+            log(f"Release {r['version']} geladen ({r['name']}, SHA-256 {r['sha256'][:16]}… = SHA256SUMS.txt, {r['signatur']})")
             quelle = Path(r["ordner"])
         system = wert("--system", f"{ART}-{platform.machine().lower()}")
         t = None
     ergebnis = Path(wert("--ergebnis", "ergebnis.json")).resolve()
     log(f"Frischtest {system} · {platform.platform()} · {platform.machine()} · Dirigent Python {platform.python_version()}")
-    ft = Frischtest(system, quelle, lokal=t, ohne_tests="--ohne-tests" in argv)
+    ft = Frischtest(system, quelle, lokal=t, ohne_tests="--ohne-tests" in argv, neueste="--neueste-pakete" in argv)
     try:
         ft.lauf()
     finally:

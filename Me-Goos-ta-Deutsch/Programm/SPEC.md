@@ -430,7 +430,7 @@ charset-normalizer aus der `pyodide-lock.json`, ReportLab 5.0.1 von PyPI – all
   Datenschutz, Sicherung, Update/Entfernen; gebaut mit `bau_webapp.py <Quelle> --installationsdateien`.
 - **Download für den Rechner (seit 2.1):** ein Paket für Windows, macOS und Linux (das ZIP aus `bau_release.py`) als
   **GitHub-Release** `v<Version>` im selben Repository (Assets `Me-Goos-ta-Deutsch-<Version>.zip` + `SHA256SUMS.txt` im
-  Format von `sha256sum`); Branch `main` = Inhalt des Release-Ordners (Standard-Branch, die Repo-Startseite zeigt die
+  Format von `sha256sum`, seit 2.5 + `SHA256SUMS.txt.minisig`, siehe „Signierte Releases“); Branch `main` = Inhalt des Release-Ordners (Standard-Branch, die Repo-Startseite zeigt die
   README; `.gitattributes` `* -text`, `.command`/`.sh` ausführbar), Pages bleibt auf `gh-pages`. Kein Installer/Store
   (ohne kostenpflichtige Signatur blockieren Smart App Control und Gatekeeper ihn genauso). **Download-Seite**
   `web_adresse.txt` + `download/` (`https://lukasdiegans.github.io/me-goos-ta-deutsch/download/`): baut `bau_webapp.py`
@@ -448,7 +448,19 @@ charset-normalizer aus der `pyodide-lock.json`, ReportLab 5.0.1 von PyPI – all
   App-Blatt „Mehr“ („Auch für den Rechner holen“). Veröffentlichen: `veroeffentliche_release.py <Release-Ordner> <ZIP>`
   (Arbeitsordner; `--probe` = Plan ohne Netz, `--ersetzen` für ein vorhandenes Release): prüft Ordner = ZIP und keine
   Nutzerdaten, pusht `main`, setzt Standard-Branch/Homepage, legt das Release als Entwurf an, lädt die Assets hoch,
-  veröffentlicht es als „Latest“ und vergleicht das heruntergeladene Asset per SHA-256.
+  veröffentlicht es als „Latest“ und vergleicht das heruntergeladene Asset per SHA-256 (seit 2.5 auch die Signatur).
+- **Signierte Releases (seit 2.5, `signatur.py`, nur Standardbibliothek):** `SHA256SUMS.txt` jedes Releases ist mit dem
+  Schlüssel von Me Goos-ta Deutsch signiert – minisign-Format (Algorithmus `ED`: Ed25519 nach RFC 8032 über den
+  BLAKE2b-512-Vorhash; `Ed` ohne Vorhash wird auch geprüft), 8-Byte-Schlüssel-ID, „trusted comment“ genau
+  `me-goos-ta-deutsch v<V>` mit globaler Signatur. `signatur.SCHLUESSEL` = Haupt (ID `6885AC6ACBF317E0`) + Reserve (ID
+  `01C92660376DB3D4`), nur öffentliche Teile. Signiert wird im Arbeitsordner mit `signiere_release.py` (Haupt-Schlüssel
+  privat per Windows-DPAPI unter `%USERPROFILE%\MGD-Signatur`, nie im Repo/ZIP; Reserve nur offline als minisign-
+  verschlüsselte Sicherung, scrypt); `veroeffentliche_release.py` signiert Pflicht und prüft gegen `signatur.py` des
+  Release-Ordners vor jedem Netz, lädt das Asset hoch und prüft es öffentlich. Prüfbar mit dem Standard-Werkzeug:
+  `minisign -Vm SHA256SUMS.txt -P <Schlüssel>`; die Download-Seite erklärt es unter „Echtheit prüfen“ (nur bei einem
+  signierten Release, `bau_webapp.py --release-zip` mit `SHA256SUMS.txt` + `.minisig` neben der ZIP). Haupt verloren →
+  mit der Reserve signieren und einen neuen Haupt-Schlüssel per Update ausliefern; beide verloren → einmal von Hand
+  aktualisieren (Download-Seite). Das Python der Startdateien und Tool-Downloads haben feste SHA-256 im Programm (unverändert).
 - **Nach neuer Version suchen (seit 2.2):** Knopf „🔎 Nach neuer Version suchen“ unter Hilfe → „Über dieses Programm“, seit
   2.4 auch unter Werkzeuge → „Programm aktuell halten“ (`#update-bereich`) und in der Fußzeile des Menüs („🔎 Nach Updates
   suchen“ → Werkzeuge, sucht sofort); alle über `sucheNeueVersion()` (die einzige Stelle mit `/api/neue-version`), nur
@@ -469,7 +481,10 @@ charset-normalizer aus der `pyodide-lock.json`, ReportLab 5.0.1 von PyPI – all
   {aktion: laden, version}` (Version `\d+.\d+[.\d+]`, muss neuer sein, sonst 409 `update_kein_neuer`) → Auftrag
   `aktualisieren.py --laden <V> --quelle https://github.com/<konto>/<repo>/releases/download --daten <Datenordner>`
   (Konto/Repo aus `web_adresse.txt`, nie aus einer Antwort; Weiterleitungen nur zu github.com,
-  objects/release-assets.githubusercontent.com): `SHA256SUMS.txt` (≤ 64 KB) → `v<V>/Me-Goos-ta-Deutsch-<V>.zip`
+  objects/release-assets.githubusercontent.com; nur eine neuere Version als die laufende): `SHA256SUMS.txt` (≤ 64 KB) →
+  seit 2.5 `SHA256SUMS.txt.minisig` (≤ 4 KB, fehlt/ungültig/fremder Schlüssel/anderer „trusted comment“ → „Achtung …“, nichts
+  geändert; Testschlüssel `MGD_UPDATE_TESTSCHLUESSEL` gilt nur mit `MGD_UPDATE_QUELLE=http://127.0.0.1:…`) →
+  `v<V>/Me-Goos-ta-Deutsch-<V>.zip`
   (≤ 200 MB) → SHA-256 vergleichen → ZIP prüfen (jeder Eintrag unter `Me-Goos-ta-Deutsch/`, keine `..`/`\`/`:`/Links,
   ≤ 5000 Dateien / 500 MB, Pflichtdateien Startdateien + starter/gans_ui/gans_lernkarten, `VERSION` = <V>, keine
   Nutzerdaten) → nach `<Datenordner>/update/neu` entpacken → `bereit.json`. Ein gescheiterter Versuch lässt eine schon
@@ -580,7 +595,7 @@ Ansicht, ein Reiter „Ideen“ unter „Neue Karte“ und vier Zeilen unter „
 | Handy-Zugang | Werkzeuge → „Am Handy öffnen (WLAN)“: Schalter, QR-Code, Adresse, 6-stellige PIN, Restzeit | zweiter Server auf der privaten WLAN-Adresse, Port gemerkt in `handy-port.txt` (Datenordner; belegt → anderer freier Port); `GET/POST /api/lan`, `POST /lan-pin` | standardmäßig aus; nur Host `<ip>:<port>`; ohne Cookie PIN-Seite; aus nach 120 min, 5 falschen PINs oder beim Beenden; über das Handy gesperrt: beenden, deinstallieren, öffnen, Start- und Handy-Schalter sowie Werkzeuge mit `nur_rechner` (Ordner öffnen, CSV extern, Programmstart) – die Seite (`AM_HANDY`, Klasse `am-handy`) blendet sie aus; Touch-Regeln (Tippflächen ≥ 44 px, Eingaben 16 px, `…_touch`-Texte); Datei-Felder mit konkreten Bildtypen (iPhone wandelt HEIC dann in der Regel in JPG); Kopieren ohne Zwischenablage-Schnittstelle; die Lauf-Anzeige übersteht ~30 s Verbindungsaussetzer und holt nach Display-Sperre auf |
 | Warteschlange | Höchstens **ein** Hintergrundprozess (Erzeugen, Bildverbesserung, Selbsttest, Tool laden, KI-Bild); weitere Aufträge warten und starten automatisch nacheinander (nur im Arbeitsspeicher). Kopfzeile „⏳ n“ → Fenster: laufender Auftrag (Fortschritt, Dauer, Abbrechen), wartende mit Platz, ▲ ▼ „Als Nächstes“ ✕, „Alle wartenden entfernen“ (Rückfrage), „Zuletzt erledigt“ (10, ✓/✕, Ergebnis/Protokoll). Startknöpfe bleiben frei → Toast „In der Warteschlange – Platz n“; KI-Fenster zeigt „wartet (Platz n)“. Gleicher Auftrag (Art + Befehl) wird nicht doppelt eingereiht; scheitert der Start (z. B. KI-Modell fehlt), landet er als ✕ unter „Zuletzt erledigt“. Beenden fragt nach, Beenden/Deinstallieren verwerfen wartende und stoppen den laufenden | `gans_ui.Warteschlange` (Start des nächsten per Rückruf am Ende von `Lauf._lies`); `POST /api/lauf` → bei leerer Schlange wie bisher `laeuft: true`, sonst `{wartet, position, id, titel, art}`; `GET /api/lauf[?id=]` (laufender bzw. letzter Auftrag + `warteschlange`, `aktiv`); `GET /api/warteschlange` → `{aktiv, wartend, fertig}`; `POST /api/warteschlange {aktion: hoch\|runter\|als-naechstes\|entfernen\|leeren, id}`; `POST /api/lauf-stopp` bricht den laufenden ab; `/api/status` → `warteschlange` |
 
-Selbsttest der Erweiterungen: `python3 test_erweiterungen.py` (511 Prüfungen in den Abschnitten E1–E49, in einer Kopie,
+Selbsttest der Erweiterungen: `python3 test_erweiterungen.py` (534 Prüfungen in den Abschnitten E1–E52, in einer Kopie,
 ohne Internet, ohne echten Browserstart, ohne echtes Deinstallieren; mit Mac-, Linux- und Handy-Prüfungen, der
 KI-Faltung und den KI-Bildern: Rechenkern gegen eine Lehrbuch-Fassung, Prompt, Server-Lauf, Oberfläche, Plattformen;
 der Hilfe: Markdown-Umwandler mit Sonderfällen, jede mitgelieferte `.md` in < 2 s, Spezifikation über den Server;
@@ -589,7 +604,7 @@ Zielsprache, Spalten je Sprache, Wiktionary je Schriftsystem, Zeichenprüfung, D
 `verarbeite()` gleich wie über HTTP, Läufe im selben Prozess samt Abbruch, Weichen mit nachgebildetem `sys.platform`,
 Rückseiten-Vorschau mit der Pillow-Leinwand; der Handy-App: App-Adresse, Worker-Schnittstelle, App-Sicherung, Weichen, Real-ESRGAN aus dem App-Ordner, Lernstand beim Import, Bau mit `bau_webapp.py` (Positivliste, Manifest, Symbole, Liste des Service Workers, `AM_APP`); der Installationsdateien: vorhanden, ohne Skript, Adresse = `web_adresse.txt`, QR-Code = neu erzeugte Matrix und mit eigenem Leser nach Norm lesbar (Versionen 1–6), drei Sprachen; der Fehleranalyse: Oberflächen- und Python-Texte vollständig in drei Sprachen, jede Adresse in dieser Spezifikation, Leitfäden gleich gegliedert, Einstellungen bei gleichzeitigen Anfragen, freundliche Fehlertexte, Generator-Hilfe in einer Sprache, Touch-Tippflächen; Englisch vor der Installation und Tools-Teil-Knopf (E34); der
 Rückseiten-Gans (E35): Platz unten rechts frei vom Text in allen Schriftsystemen, Größenstufen, ruhige Fläche hinter dem
-Wort, Textgrößen wie 2.0, Leinwand = pdfium, sauberer Anschnitt im Druck mit Beschnitt; Download-Seite + Release-Werkzeug (E36); `--status` des Startprogramms ohne Wahl Englisch (E37); Werkzeuge der automatischen Tests auf GitHub-Rechnern (E38: `ci_lauf.py --probe` ohne Netz, Sperre auf Branch `ci`, `frischtest.py` nur auf GitHub-Rechnern, `tests.yml` statisch, Release-ZIP ohne `.github`); Browser-Test, Release-Prüfung und Release-Schranke (E39: `browser_test.py` mit Abläufen in Chromium, Firefox und WebKit ohne feste lange Wartezeiten, `release_pruefung.yml` (Push auf `main`, wartet auf das passende Release) und Browser-Job statisch, Playwright-Download mit Wiederholung, `ci_lauf.py` mit `web-app/` bzw. Probe der Release-Prüfung, `veroeffentliche_release.py --probe` nur mit grünem CI-Lauf für genau diesen Inhalt, `--ohne-ci` nur mit Begründung); der Wortliste (E42: jede Stufe mit eigenen Fällen – Kodierungen, NFD, Zeilenenden, Trenner, Kopf, Spalten, „Gans“, Formeln, Längen, Doppelt auch in nicht-lateinischen Schriften –, Grenzen, 200 Zufalls-Byte-Folgen, API prüfen → übernehmen → rückgängig, veraltete Vorschau, gewechselte Kartensprache, gleichzeitige Übernahmen); der Wortlisten-Oberfläche (E43: Texte de/en/es samt dynamischen Schlüsseln und `_touch`, `esc()` in der Vorschau, `accept`-Liste, „Alle übersetzen“ über `alleUebersetzen` + `/api/idee-wort` mit nachgebildetem Dienst – Kontingent nach 3 → 3 gefüllt, Rest leer, eigenes Wort bleibt, Rückgängig danach); des Fixes 2.2 (E44: Rettung `download/app.js` für eine App von vor 2.1 – Weg über den alten Service Worker, Übergabe/Abmelden, Texte de/en/es; Release-ZIP gegen `main` Datei für Datei); der Ideen-Bilder (E45: ein Bild-Knopf → GANS-Werkzeug mit „unverändert“, KI-Bild mit Ziel-Idee – Lauf-Meta, Übernehmen in eine vorhandene/neue Idee, ungültige id, Handy-Zugang –, Feld „Bildidee“ über API, Export/Import und Wortlisten-Fingerabdruck, Texte de/en/es); ohne geladenes KI-Bildmodell entfallen 9 Prüfungen mit dem echten Modell, ohne Heimnetz die WLAN-Prüfungen, ohne Internet beim ersten Lauf die 13 Prüfungen mit echten Sprachpaketen, ohne `bau_webapp.py` (nur im Arbeitsordner) die 7 Bau-Prüfungen in E31 und (auch ohne `bau_release.py`/`veroeffentliche_release.py`) die 11 in E36, ohne `web-app-quelle\` 1 Prüfung in E34, ohne `ci_lauf.py`/`ci\` (nur im Arbeitsordner) die 5 in E38, die 7 in E39 und die 3 in E44).
+Wort, Textgrößen wie 2.0, Leinwand = pdfium, sauberer Anschnitt im Druck mit Beschnitt; Download-Seite + Release-Werkzeug (E36); `--status` des Startprogramms ohne Wahl Englisch (E37); Werkzeuge der automatischen Tests auf GitHub-Rechnern (E38: `ci_lauf.py --probe` ohne Netz, Sperre auf Branch `ci`, `frischtest.py` nur auf GitHub-Rechnern, `tests.yml` statisch, Release-ZIP ohne `.github`); Browser-Test, Release-Prüfung und Release-Schranke (E39: `browser_test.py` mit Abläufen in Chromium, Firefox und WebKit ohne feste lange Wartezeiten, `release_pruefung.yml` (Push auf `main`, wartet auf das passende Release) und Browser-Job statisch, Playwright-Download mit Wiederholung, `ci_lauf.py` mit `web-app/` bzw. Probe der Release-Prüfung, `veroeffentliche_release.py --probe` nur mit grünem CI-Lauf für genau diesen Inhalt, `--ohne-ci` nur mit Begründung); der Wortliste (E42: jede Stufe mit eigenen Fällen – Kodierungen, NFD, Zeilenenden, Trenner, Kopf, Spalten, „Gans“, Formeln, Längen, Doppelt auch in nicht-lateinischen Schriften –, Grenzen, 200 Zufalls-Byte-Folgen, API prüfen → übernehmen → rückgängig, veraltete Vorschau, gewechselte Kartensprache, gleichzeitige Übernahmen); der Wortlisten-Oberfläche (E43: Texte de/en/es samt dynamischen Schlüsseln und `_touch`, `esc()` in der Vorschau, `accept`-Liste, „Alle übersetzen“ über `alleUebersetzen` + `/api/idee-wort` mit nachgebildetem Dienst – Kontingent nach 3 → 3 gefüllt, Rest leer, eigenes Wort bleibt, Rückgängig danach); des Fixes 2.2 (E44: Rettung `download/app.js` für eine App von vor 2.1 – Weg über den alten Service Worker, Übergabe/Abmelden, Texte de/en/es; Release-ZIP gegen `main` Datei für Datei); der Ideen-Bilder (E45: ein Bild-Knopf → GANS-Werkzeug mit „unverändert“, KI-Bild mit Ziel-Idee – Lauf-Meta, Übernehmen in eine vorhandene/neue Idee, ungültige id, Handy-Zugang –, Feld „Bildidee“ über API, Export/Import und Wortlisten-Fingerabdruck, Texte de/en/es); des GitHub-Auftritts (E50: Community-Dateien für `.github/` – Sicherheitsrichtlinie, Mitmachen, Verhaltenskodex, Issue-Formulare, PR-Vorlage – vorhanden, mit Kurzfassung de/es, Links nur auf das eigene Repository bzw. `web_adresse.txt`, ohne E-Mail-Adressen; `repo_einstellungen.py --probe` mit vollständiger Stufe 1 ohne Netz); der signierten Releases (E51: Ed25519 gegen die Testvektoren 1–3 aus RFC 8032, minisign-Format mit festem Testschlüssel, Ablehnung geänderter Summen/Signaturen/Kommentare, fremder Schlüssel und falscher Versionen, `laden()` nur mit gültiger Signatur, Testschlüssel nur mit 127.0.0.1; im Arbeitsordner `signiere_release.py` samt Sicherung, Signatur-Pflicht in `veroeffentliche_release.py`, „Echtheit prüfen“ auf der Download-Seite – ohne Arbeitsordner bzw. außerhalb von Windows entfallen diese 4); der festen Paketfassungen (E52: Lock-Dateien nur mit `==` und SHA-256 je Rad, Räder für alle Plattformen, Abhängigkeiten vollständig, Starter und Sprachen-Tool rufen pip mit `--require-hashes` und Lock, Fingerabdruck folgt dem Lock, `bau_lock.py --probe` offline – entfällt ohne Arbeitsordner –, echter `pip --dry-run` gegen die Locks und eine falsche Prüfsumme wird abgelehnt – entfällt ohne Internet); ohne geladenes KI-Bildmodell entfallen 9 Prüfungen mit dem echten Modell, ohne Heimnetz die WLAN-Prüfungen, ohne Internet beim ersten Lauf die 13 Prüfungen mit echten Sprachpaketen, ohne `bau_webapp.py` (nur im Arbeitsordner) die 7 Bau-Prüfungen in E31 und (auch ohne `bau_release.py`/`veroeffentliche_release.py`) die 11 in E36, ohne `web-app-quelle\` 1 Prüfung in E34, ohne `ci_lauf.py`/`ci\` (nur im Arbeitsordner) die 5 in E38, die 7 in E39, die 3 in E44 und die 5 in E50).
 
 ### 9.3 KI-Bilder (`ki_bild.py`, optional eingebunden von `gans_ui.py`)
 
@@ -856,12 +871,15 @@ Fensters nach `starter.ermittle_sprache()`: im Programm gewählte → `MGD_SPRAC
 1. Ordner prüfen: beschreibbar? (sonst Hinweis auf Verschieben bzw. „Überwachter Ordnerzugriff“/macOS-Datenschutz), aus
    einem Temp-/ZIP-Ordner gestartet? (dann „bitte entpacken“), genug Platz (≥ 700 MB)?
 2. pip vorbereiten (embeddable: aus dem mitgelieferten Rad).
-3. Pakete installieren: `pip install --only-binary=:all: -r requirements.txt` (nie kompilieren), lesbar gekürzte Ausgabe
-   („↓ numpy 2.5.3 (12,6 MB)“), Lebenszeichen bei langer Stille, eigene pip-Konfiguration (`PIP_CONFIG_FILE`=leer,
-   `PYTHONNOUSERSITE`), damit fremde Einstellungen nicht stören.
+3. Pakete installieren: `pip install --only-binary=:all: --require-hashes -r pakete.lock` (nie kompilieren; seit 2.5
+   feste Fassungen mit der SHA-256 jedes Rads – eine Datei, deren Prüfsumme nicht passt, installiert pip nicht), lesbar
+   gekürzte Ausgabe („↓ numpy 2.5.4 (12,6 MB)“), Lebenszeichen bei langer Stille, eigene pip-Konfiguration
+   (`PIP_CONFIG_FILE`=leer, `PYTHONNOUSERSITE`), damit fremde Einstellungen nicht stören. Ein Ordner
+   `werkzeuge/pakete/` (Rechner ohne Internet) wird zuerst genutzt – die Prüfsummen gelten auch dort.
 4. Pakete prüfen: eigener Prozess lädt Pillow, NumPy, ReportLab, pypdfium2 wirklich (inkl. DLLs). Unter Windows wird bei
    Fehlern jede DLL einzeln geladen und der Fehlercode ausgewertet: 4551/577 = Smart App Control → ältere, weit
-   verbreitete Fassungen („bewährt“, „älter“) probieren; 1260 = Richtlinie; 225 = Virenschutz; sonst einmal neu
+   verbreitete Fassungen („bewährt“ = `pakete-bewaehrt.lock`, „älter“ = `pakete-aelter.lock`, ebenfalls mit Prüfsummen)
+   probieren; 1260 = Richtlinie; 225 = Virenschutz; sonst einmal neu
    installieren. Nur pypdfium2 gesperrt → abschalten (PDFs entstehen trotzdem). Ein nötiger Ersatz-Satz wird gemerkt.
 5. Installierte Tools übernehmen: liegt im Datenordner eine Kopie der Bildverbesserung (`modelle/realesrgan-*.npz`) und
    fehlt sie im Programmordner, wird sie kopiert – **nie ein Download**. Ohne Kopie entfällt der Schritt still (dann
@@ -874,7 +892,7 @@ Fensters nach `starter.ermittle_sprache()`: im Programm gewählte → `MGD_SPRAC
 | Zustand | Reaktion |
 |---|---|
 | kein Stempel | erster Start → alles einrichten (5 Schritte, mit Tools-Übernahme 6) |
-| anderes Python / neue `requirements.txt` | Pakete anpassen |
+| anderes Python / neue Lock-Datei (`pakete*.lock`, z. B. nach einem Update) | Pakete anpassen (genau die Fassungen des Locks) |
 | neuer Programmordner (neue Version entpackt, Ordner kopiert) | liegen im bisherigen Ordner (`programm-ort.txt`) eigene Karten, die hier fehlen: **Frage „Übernehmen? [J/n]“** (ohne Konsole als Ja/Nein-Fenster) → kopiert `karten.csv`, `karten.bak.csv`, `ui_einstellungen.json` (Pfade in den alten Ordner werden umgestellt), `bilder/` (auch `_entfernt/`), `ausgabe/` (samt verbesserten Bildern im Zwischenspeicher und Entwürfen), Gänse-Bild und `assets/_alt/`; was dabei hier ersetzt würde, kommt nach `Programm/_beispiele/`; der bisherige Ordner bleibt unverändert; eine laufende alte Oberfläche wird vorher beendet. Danach nur installierte Tools (aus dem Datenordner), Markierungen, Symbole |
 | Oberfläche dieses Ordners läuft schon (Instanz-Datei + Antwort auf den Startschlüssel) | nur Browser öffnen |
 | Oberfläche läuft, aber ältere Version | höflich beenden (`/api/beenden`), neu starten |
@@ -942,7 +960,7 @@ allen Karten – nicht rückgängig zu machen), `--kein-browser`.
 | Große Anfragen | JSON ≤ 2 MB, Bilder ≤ 40 MB, Socket-Zeitlimit 120 s |
 | Datenverlust | kein Löschen: Bilder → `bilder/_entfernt/`, vorige `karten.csv` → `karten.bak.csv`, Schreiben atomar |
 | Informationsabfluss | Server-Kopfzeile ohne Python-Version; Projekt-ZIP ohne `ui_einstellungen.json`, Verknüpfungen und große Modelle |
-| Paket-Lieferkette | `requirements.txt` mit Unter- und Obergrenzen; nur fertige Räder (`--only-binary=:all:`, nie Kompilieren); Installation nur aus PyPI über HTTPS |
+| Paket-Lieferkette | seit 2.5 feste Fassungen mit SHA-256 je Rad (`pakete.lock`, Ersatz-Sätze, `pakete-sprachen.lock` für uharfbuzz; gebaut aus `requirements.txt` + PyPI für Windows, macOS und Linux je x64/ARM) und `pip --require-hashes` – auch eine neue Fassung auf PyPI oder ein manipulierter Spiegel ändert nichts; nur fertige Räder (`--only-binary=:all:`, nie Kompilieren); Installation nur aus PyPI über HTTPS. `requirements.txt` (Spannen) dient nur Entwicklern und dem CI-Job „neueste Fassungen“ (`MGD_PAKETE_NEUESTE=1`, Frühwarnung) |
 | Manipulierter Python-Download | nur offizielle Quellen (python.org, python-build-standalone auf GitHub) über HTTPS; **SHA-256 fest in den Startdateien**, Prüfung vor dem Entpacken; Windows-Python ist von der PSF signiert |
 | Untergeschobene Programme | Systemprogramme mit vollem Pfad (kein `curl.exe`/`tar.exe` aus dem aktuellen Ordner oder `PATH`); `PYTHONHOME`/`PYTHONPATH`/`PYTHONSTARTUP` werden geleert; Windows-Python läuft isoliert (`._pth`) |
 | Startschlüssel auf der Platte | Instanz-Datei nur für den eigenen Benutzer lesbar (0600), wird beim Beenden gelöscht; verwaiste Dateien werden erkannt und entfernt |
@@ -983,6 +1001,7 @@ neuer Ordner, pip aus dem Rad, beschädigtes NumPy mit automatischer Reparatur, 
 
 ## 14. Annahmen und Grenzen
 
+- Signierte Updates (seit 2.5): die Signaturprüfung schützt erst Updates **ab** 2.5 – das Update von 2.4 auf 2.5 prüft noch nur die Prüfsumme aus demselben Release (2.4 kennt die Signatur nicht). Ed25519 ist in reinem Python nicht zeitkonstant; geprüft wird nur Öffentliches, signiert nur auf Lukas’ Rechner. Wer den Haupt-Schlüssel (DPAPI, Windows-Konto) **und** das GitHub-Konto übernimmt, könnte weiterhin ein Update ausliefern – darum Reserve offline. minisign-Kompatibilität prüft der Frischtest unter Linux mit dem echten `minisign` (beide Richtungen).
 - Die Beispiele sind Adjektive/Adverbien und eine Wendung („arg Hunger“), keine Verben; die Vorlage funktioniert für jede Wortart.
 - „Spanisch“ meint immer das in Mexiko gesprochene Spanisch (Übersetzungsvorschläge bevorzugen mexikanische Varianten). Die Übersetzungen sind Vorschläge zur Prüfung – auch die automatischen:
   Wörterbücher und Übersetzungsdienste kennen den Wortwitz nicht und treffen bei mehrdeutigen Wörtern nicht immer die
@@ -1026,8 +1045,12 @@ neuer Ordner, pip aus dem Rad, beschädigtes NumPy mit automatischer Reparatur, 
 - Karten lernen: FSRS-6 mit den Standardparametern (keine persönliche Optimierung der Gewichte wie in Anki); die
   Intervalle sind deshalb anfangs „durchschnittlich“ statt auf dich zugeschnitten.
 - Sprachpakete: Schriften kommen mit fester Revision und SHA-256, uharfbuzz (nur Hindi/Arabisch) per pip in fester
-  Fassung von PyPI – pip prüft wie bei den übrigen Paketen die Prüfsumme aus dem Index, eine eigene feste Prüfsumme
-  hat das Programm dafür nicht.
+  Fassung mit eigener SHA-256 je Rad (`pakete-sprachen.lock`, seit 2.5).
+- Feste Paketfassungen (seit 2.5): die Lock-Dateien enthalten Räder für Python 3.13 unter Windows x64 (+ ARM, falls
+  vorhanden), macOS Intel/Apple Silicon und Linux x64/ARM mit glibc; andere Umgebungen (z. B. Linux mit musl, ein
+  fremdes Python ≠ 3.13) bekommen keine passende Datei. Neue Fassungen kommen nur mit einer neuen Programmversion
+  (`bau_lock.py --neueste` in der Release-Gruppe, CI auf allen Systemen); der Job „neueste Fassungen“ der
+  Release-Prüfung warnt vorher, wenn neue Fassungen etwas kaputt machen.
 - Update im Programm (seit 2.4): die Prüfsumme stammt vom selben GitHub-Release wie das ZIP – sie schützt vor kaputten
   oder unterwegs veränderten Downloads, ersetzt aber keine Signatur (wie beim Download über die Seite). Dateien, die ein
   neues Release nicht mehr enthält, bleiben im Ordner liegen (nie wird geraten, was eigene Daten sein könnten). Der
@@ -1058,6 +1081,7 @@ Me-Goos-ta-Deutsch/
    ├─ lernen.py                 Karten lernen: FSRS-6, Lernstand, Sitzung, Stapel, Statistik (9.4)
    ├─ verlauf.py                Rückgängig/Wiederholen der eigenen Daten (Schritte, Kopien in ausgabe/.verlauf) (9)
    ├─ aktualisieren.py          Update im Programm: Release laden/prüfen, im selben Ordner ersetzen, neu starten (9)
+   ├─ signatur.py               Signatur der Releases prüfen: Ed25519 (RFC 8032), minisign-Format, vertraute Schlüssel (9)
    ├─ DRITTLIZENZEN.md          Lizenzen der Bestandteile von anderen (inkl. KI-Modelle)
    ├─ uebersetzer.py            Übersetzungsvorschläge (Wiktionary, MyMemory, DeepL) mit Schutzmaßnahmen
    ├─ gans_ui.py                Oberfläche: Logik aller Adressen (verarbeite) + lokaler Server als Hülle
@@ -1075,7 +1099,9 @@ Me-Goos-ta-Deutsch/
    ├─ beispiel-karten.csv       die 10 Beispielkarten (Vorlage für eine fehlende karten.csv)
    ├─ beispiel-bilder/          die Bilder der Beispielkarten (werden mit der Beispielliste nach bilder/ kopiert)
    ├─ karten.csv                eigene Kartenliste (entsteht beim ersten Start); karten.bak.csv = vorige Fassung
-   ├─ requirements.txt          benötigte Python-Pakete
+   ├─ requirements.txt          benötigte Python-Pakete (Spannen, für Entwickler)
+   ├─ pakete.lock               feste Fassungen mit SHA-256 (Erststart); pakete-bewaehrt|-aelter.lock = Ersatz-Sätze
+   │                            (Smart App Control), pakete-sprachen.lock = uharfbuzz (gebaut von bau_lock.py)
    ├─ ui_einstellungen.json     Einstellungen und Sprache der Oberfläche (entsteht automatisch)
    ├─ bilder/                   Vorderseiten-Bilder (entsteht beim ersten Start); _entfernt/ = Papierkorb
    ├─ modelle/                  fsrcnn_x2|x3|x4.npz, Lizenzen, README; realesrgan-*.npz nur mit dem Tool Bildverbesserung

@@ -66,7 +66,7 @@ Tu trabajo está en la carpeta `Programm`: la lista de cartas `karten.csv`, las 
 
 **Lo más fácil: dentro del programa (desde 2.4).** En **Herramientas → «Mantener el programa al día»** (también abajo en el menú, bajo el número de versión: «🔎 Buscar actualizaciones», y en **Ayuda → «Acerca del programa»**) el botón **«🔎 Buscar una versión nueva»** pregunta una vez a GitHub (api.github.com) por la versión más reciente: solo con tu clic, nunca por sí solo, nunca en segundo plano, sin datos sobre ti ni tus cartas, y no se guarda nada. «¡Ganso al día!» significa que ya tienes el más reciente. Si hay un ganso más nuevo:
 
-1. **«⬆️ Actualizar ahora a …»** descarga la versión de GitHub, compara su suma de verificación con el `SHA256SUMS.txt` publicado y revisa el contenido; la tarea muestra el progreso. Todavía no se cambia nada.
+1. **«⬆️ Actualizar ahora a …»** descarga la versión de GitHub, revisa la firma del `SHA256SUMS.txt` publicado (solo versiones auténticas de Me Goos-ta Deutsch: revisadas y firmadas, desde la versión 2.5), compara su suma de verificación y revisa el contenido; la tarea muestra el progreso. Todavía no se cambia nada.
 2. **«🔄 Reiniciar ahora e instalar …»:** el programa se cierra un momento, reemplaza solo los archivos del programa **en la misma carpeta** y vuelve a abrirse solo con el archivo de inicio (que prepara Python y paquetes si hace falta, como en el primer inicio). Sin segunda carpeta, sin espacio doble, el icono del escritorio se queda igual.
 3. Un aviso dice «Actualización lista». Si algo falla al reemplazar, el programa deja todo como estaba y la versión anterior sigue funcionando.
 
@@ -526,6 +526,7 @@ Se probaron cinco modelos libres contra el más sencillo FSRCNN con fotos peque�
 - El modelo de imágenes IA trabaja por completo en tu computadora; las descripciones y las imágenes no salen de ella.
 - Los textos que Excel tomaría como fórmula (que empiezan con = + - @) se rechazan, también al importar. Las imágenes se revisan y se guardan sin metadatos.
 - Los modelos de IA y Python solo se descargan de fuentes oficiales y se verifican con suma de comprobación; los archivos de modelo no pueden ejecutar código.
+- El ganso solo instala una actualización dentro del programa si el `SHA256SUMS.txt` de la versión está firmado con la clave de Me Goos-ta Deutsch y nombra exactamente esa versión (minisign, Ed25519); un paquete ajeno o sin firma se rechaza y no cambia nada. Compruébalo tú: página de descarga → «Comprobar que es auténtico».
 - Nada de esto necesita permisos de administrador, y el Control inteligente de aplicaciones de Windows sigue activado.
 
 ## Solución de problemas
@@ -538,6 +539,7 @@ No te preocupes: casi todo tiene una solución rápida.
 | «El Control inteligente de aplicaciones bloqueó …» | Desbloquea el ZIP o el archivo de inicio: Propiedades → «Desbloquear» → Aceptar |
 | «Windows protegió su PC» | «Más información» → «Ejecutar de todas formas» |
 | La ventana de inicio dice «No hay conexión a internet» | Solo el primer inicio necesita internet: revisa la conexión e inicia de nuevo. Lo ya descargado se reutiliza |
+| La ventana de inicio dice «No se pudieron instalar los paquetes» con «do not match the hashes» | Un archivo llegó incompleto o modificado (p. ej. proxy, red de empresa, descarga interrumpida). Cada archivo de paquete tiene una suma de verificación fija: si no coincide, el programa no lo instala. Vuelve a iniciar; si no ayuda, prueba otra red. Más vale ganso prevenido |
 | No se abre el navegador | Copia la dirección de la ventana de inicio (http://127.0.0.1:…) en el navegador |
 | La página dice «Ábrelo con el icono …» | Inicia con el icono: un marcador no funciona después de reiniciar, la clave de inicio cambia cada vez |
 | «La conexión se tomó un respiro» | La interfaz se cerró: iníciala otra vez con el icono |

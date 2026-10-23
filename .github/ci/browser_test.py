@@ -1034,10 +1034,10 @@ def main(argv):
         sys.path.insert(0, str(Path(__file__).resolve().parent))
         import neuestes_release
         try:
-            r = neuestes_release.laden(Path(tempfile.mkdtemp(prefix="mgd-rel-")), neuestes_release.repo_von(WURZEL))
+            r = neuestes_release.laden(Path(tempfile.mkdtemp(prefix="mgd-rel-")), neuestes_release.repo_von(WURZEL), WURZEL)
         except (OSError, ValueError) as f:
             sys.exit(f"✗ Release nicht geladen: {f}")
-        log(f"Release {r['version']} geladen ({r['name']}, SHA-256 {r['sha256'][:16]}… = SHA256SUMS.txt)")
+        log(f"Release {r['version']} geladen ({r['name']}, SHA-256 {r['sha256'][:16]}… = SHA256SUMS.txt, {r['signatur']})")
         quelle = Path(r["ordner"])
     KANAL["chromium"] = wert("--kanal")                         # lokal: installiertes Chrome/Edge statt Playwright-Chromium
     system = wert("--system", f"browser-{platform.system().lower()}")

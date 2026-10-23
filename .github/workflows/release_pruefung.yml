@@ -1,9 +1,11 @@
 # Me Goos-ta Deutsch – Prüfung des veröffentlichten Releases (seit 2.2; ersetzt am 21.10.2026 den wöchentlichen Lauf).
 # Läuft, sobald etwas für das Release auf main landet (veroeffentliche_release.py pusht main), und von Hand. Wartet, bis
 # das neueste Release-ZIP genau den Inhalt dieses main-Commits hat (gegen SHA256SUMS.txt und Datei für Datei) und die
-# Download-Seite seine Prüfsumme nennt, installiert es dann auf allen Systemen frisch (neueste Paketfassungen – so fallen
-# kaputte Pakete auf, requirements.txt hat nur Spannen) und prüft Download-Seite und Web-App live in WebKit, Firefox und
-# Chromium. Keine Person nötig, keine Secrets, nur Lesen. Kein Zeitplan (wird also nie pausiert).
+# Download-Seite seine Prüfsumme nennt, installiert es dann auf allen Systemen frisch wie ein Nutzer (seit 2.5 feste
+# Fassungen aus pakete.lock mit Prüfsummen) und prüft Download-Seite und Web-App live in WebKit, Firefox und Chromium.
+# Job „neueste“ (Frühwarnung): dasselbe Release mit den neuesten Fassungen innerhalb von requirements.txt – rot heißt:
+# in der nächsten Release-Gruppe nicht einfach `bau_lock.py --neueste` übernehmen. Keine Person nötig, keine Secrets,
+# nur Lesen. Kein Zeitplan (wird also nie pausiert).
 name: Release-Pruefung
 
 on:
@@ -62,9 +64,9 @@ jobs:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.13"
-      - name: desktop-file-validate (nur Linux, zum Prüfen des Menüeintrags)
+      - name: desktop-file-validate + minisign (nur Linux, zum Prüfen des Menüeintrags und der Signatur)
         if: runner.os == 'Linux'
-        run: sudo apt-get install -y -qq --no-install-recommends desktop-file-utils > /dev/null
+        run: sudo apt-get install -y -qq --no-install-recommends desktop-file-utils minisign > /dev/null
       - name: Frischtest mit dem veröffentlichten Release
         run: python .github/ci/frischtest.py --neuestes-release --system ${{ matrix.name }} --ergebnis ergebnis.json
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -93,6 +95,38 @@ jobs:
         if: always()
         with:
           name: ergebnis-debian-slim
+          path: ergebnis.json
+          retention-days: 14
+          if-no-files-found: warn
+
+  neueste:
+    needs: release
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: neueste-windows, os: windows-latest }
+          - { name: neueste-macos, os: macos-15 }
+          - { name: neueste-linux, os: ubuntu-latest }
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.13"
+      - name: desktop-file-validate + minisign (nur Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get install -y -qq --no-install-recommends desktop-file-utils minisign > /dev/null
+      - name: Frischtest mit den neuesten Paketfassungen (MGD_PAKETE_NEUESTE=1, Spannen aus requirements.txt)
+        run: python .github/ci/frischtest.py --neuestes-release --neueste-pakete --system ${{ matrix.name }} --ergebnis ergebnis.json
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: ergebnis-${{ matrix.name }}
           path: ergebnis.json
           retention-days: 14
           if-no-files-found: warn

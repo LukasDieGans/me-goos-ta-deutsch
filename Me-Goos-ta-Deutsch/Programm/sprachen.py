@@ -28,6 +28,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -94,6 +95,8 @@ SCHRIFTEN = {
 }
 
 # pip-Pakete für Schriften mit Formen (Shaping). Größe: Download (Rad für Windows) und Platz nach dem Entpacken.
+# Fassung + SHA-256 jedes Rads stehen in pakete-sprachen.lock (seit 2.5, bau_lock.py) – pip prüft mit --require-hashes.
+PAKETE_LOCK = HIER / "pakete-sprachen.lock"
 PAKETE = {"uharfbuzz": dict(version="0.56.3", lizenz="Apache-2.0 (HarfBuzz: MIT)", groesse=1_553_706, platz=3_445_344,
                             modul="uharfbuzz")}
 
@@ -380,12 +383,19 @@ def _hole(d, ziel, melde, quelle=None, fortschritt=None):
 
 
 def installiere_paket(paket, melde=print):
-    """pip install --target Daten/sprachen/_pakete (nur Binär-Räder, feste Fassung, ohne Abhängigkeiten)."""
+    """pip install --target Daten/sprachen/_pakete (nur Binär-Räder, feste Fassung mit SHA-256 aus pakete-sprachen.lock,
+    ohne Abhängigkeiten)."""
     p = PAKETE[paket]
+    try:
+        lock = PAKETE_LOCK.read_text(encoding="ascii")
+    except (OSError, UnicodeDecodeError):
+        lock = ""
+    if not re.search(rf"^{re.escape(paket)}=={re.escape(p['version'])} \\$", lock, re.M):
+        raise SprachFehler("pip", paket=paket, grund=f"{PAKETE_LOCK.name}: {paket}=={p['version']} ?")
     ziel = pakete_ordner()
     ziel.mkdir(parents=True, exist_ok=True)
     befehl = [sys.executable, "-m", "pip", "install", "--disable-pip-version-check", "--no-input", "--no-deps",
-              "--only-binary=:all:", "--upgrade", "--target", str(ziel), f"{paket}=={p['version']}"]
+              "--only-binary=:all:", "--upgrade", "--require-hashes", "--target", str(ziel), "-r", str(PAKETE_LOCK)]
     r = subprocess.run(befehl, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=600)
     if r.returncode != 0 or not _paket_da(paket):
         grund = (r.stderr or r.stdout or "").strip().splitlines()[-1:] or ["?"]

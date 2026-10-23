@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """Lädt das neueste veröffentlichte Release von Me Goos-ta Deutsch (seit 2.2, für die Release-Prüfung): ZIP und
-SHA256SUMS.txt über die öffentlichen Adressen …/releases/latest/download/… (ohne Anmeldung, ohne API-Grenze), vergleicht
-die Prüfsumme und entpackt mit den Unix-Rechten aus dem ZIP (Startdateien 0755). Nur Standardbibliothek.
+SHA256SUMS.txt über die öffentlichen Adressen …/releases/latest/download/… (ohne Anmeldung, ohne API-Grenze), prüft ab
+2.5 die Signatur SHA256SUMS.txt.minisig (Schlüssel aus Programm/signatur.py des Checkouts, „trusted comment“ = Version;
+2.4 und älter: nur Prüfsumme, mit Hinweis), vergleicht die Prüfsumme und entpackt mit den Unix-Rechten aus dem ZIP
+(Startdateien 0755). Nur Standardbibliothek.
     python neuestes_release.py [--ziel <Ordner>] [--repo <konto/repo>] [--passend <min>]
                                                                         → Zeile „#release {json}“, Exit-Code 0/1
 --passend <min>  (Push auf main) höchstens so lange warten, bis das Release genau den Inhalt des Checkouts hat (jede Datei
@@ -9,6 +11,7 @@ die Prüfsumme und entpackt mit den Unix-Rechten aus dem ZIP (Startdateien 0755)
                  Download-Seite seine Prüfsumme nennt – main wird vor dem Release-Asset und der Seite gepusht.
 Konto/Repository: --repo, sonst GITHUB_REPOSITORY (GitHub Actions), sonst Programm/web_adresse.txt im Checkout."""
 import hashlib
+import importlib.util
 import json
 import os
 import re
@@ -29,6 +32,10 @@ def holen(url, versuche=3):
             with urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "me-goos-ta-deutsch-ci"}),
                                         timeout=300) as r:
                 return r.read()
+        except urllib.error.HTTPError as f:
+            if f.code == 404 or i == versuche - 1:                  # fehlt wirklich – nicht dreimal fragen
+                raise
+            time.sleep(4 * (i + 1))
         except (urllib.error.URLError, OSError):
             if i == versuche - 1:
                 raise
@@ -43,14 +50,48 @@ def repo_von(wurzel, repo=None):
     return f"{m.group(1)}/{m.group(2)}"
 
 
-def laden(ziel, repo):
-    """→ dict(ordner, version, name, sha256, groesse, adresse). Wirft ValueError, wenn die Prüfsumme nicht stimmt."""
+def signatur_modul(wurzel):
+    pfad = Path(wurzel) / "Programm" / "signatur.py"
+    if not pfad.is_file():
+        return None
+    spec = importlib.util.spec_from_file_location("signatur_checkout", pfad)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def signatur_pruefen(basis, summen, version, wurzel):
+    """Ab 2.5 Pflicht: SHA256SUMS.txt.minisig gültig für genau diese Version. → Text fürs Protokoll; sonst ValueError."""
+    ab_25 = tuple(int(x) for x in version.split(".")) >= (2, 5)
+    try:
+        ms = holen(basis + "SHA256SUMS.txt.minisig")
+    except urllib.error.HTTPError as f:
+        if f.code == 404 and not ab_25:
+            return "ohne Signatur (Release vor 2.5 – nur Prüfsumme)"
+        raise ValueError(f"SHA256SUMS.txt.minisig fehlt (HTTP {f.code}) – ab 2.5 ist die Signatur Pflicht") from None
+    mod = signatur_modul(wurzel) if wurzel else None
+    if mod is None:
+        if ab_25:
+            raise ValueError("Programm/signatur.py fehlt im Checkout – Signatur nicht prüfbar")
+        return "Signatur nicht geprüft (Checkout ohne Programm/signatur.py)"
+    try:
+        r = mod.pruefe(summen, ms, None, mod.KOMMENTAR.format(version=version))
+    except ValueError as f:
+        raise ValueError(f"Signatur von SHA256SUMS.txt ungültig ({f})") from None
+    return f"Signatur gültig (Schlüssel {r['id']}, „{r['kommentar']}“)"
+
+
+def laden(ziel, repo, wurzel=None):
+    """→ dict(ordner, version, name, sha256, groesse, adresse, signatur). Wirft ValueError, wenn Signatur (ab 2.5) oder
+    Prüfsumme nicht stimmen."""
     basis = f"https://github.com/{repo}/releases/latest/download/"
-    summen = holen(basis + "SHA256SUMS.txt").decode("utf-8")
+    summen_roh = holen(basis + "SHA256SUMS.txt")
+    summen = summen_roh.decode("utf-8")
     m = ZIP_NAME.search(summen)
     if not m:
         raise ValueError(f"SHA256SUMS.txt ohne Zeile „<sha>  Me-Goos-ta-Deutsch-<Version>.zip“: {summen[:200]!r}")
     sha, name, version = m.groups()
+    sig = signatur_pruefen(basis, summen_roh, version, wurzel)
     daten = holen(basis + name)
     ist = hashlib.sha256(daten).hexdigest()
     if ist != sha:
@@ -70,7 +111,8 @@ def laden(ziel, repo):
     ordner = ziel / "Me-Goos-ta-Deutsch"
     if not (ordner / "Programm" / "gans_lernkarten.py").is_file():
         raise ValueError(f"Kein Release-Ordner im ZIP: {ordner}")
-    return dict(ordner=str(ordner), version=version, name=name, sha256=sha, groesse=len(daten), adresse=basis + name)
+    return dict(ordner=str(ordner), version=version, name=name, sha256=sha, groesse=len(daten), adresse=basis + name,
+                signatur=sig)
 
 
 def abweichungen(zip_pfad, wurzel, ohne=()):
@@ -114,7 +156,7 @@ def passend_laden(ziel, repo, wurzel, minuten):
     while True:
         shutil.rmtree(ziel, ignore_errors=True)
         try:
-            r = laden(ziel, repo)
+            r = laden(ziel, repo, wurzel)
             unterschiede = abweichungen(Path(ziel) / r["name"], wurzel, ohne=[ziel])
             if unterschiede:
                 grund = f"Release {r['version']} ≠ main ({len(unterschiede)}: {', '.join(unterschiede[:3])})"
@@ -140,17 +182,17 @@ def main(argv):
         if passend:
             r = passend_laden(wert("--ziel", "release"), repo_von(wurzel, wert("--repo")), wurzel, float(passend))
         else:
-            r = laden(wert("--ziel", "release"), repo_von(wurzel, wert("--repo")))
+            r = laden(wert("--ziel", "release"), repo_von(wurzel, wert("--repo")), wurzel)
     except (OSError, ValueError, KeyError, AttributeError) as f:
         grund = f"Release nicht geladen: {f}"
         print(f"✗ {grund}", flush=True)
     if r:
         print(f"✓ Release {r['version']} geladen: {r['name']} ({r['groesse'] / 1e6:.1f} MB), SHA-256 {r['sha256'][:16]}… "
-              "= SHA256SUMS.txt", flush=True)
+              f"= SHA256SUMS.txt · {r['signatur']}", flush=True)
         print("#release " + json.dumps(r, ensure_ascii=False), flush=True)
     if wert("--ergebnis"):                                      # wie frischtest.py: ergebnis.json für ci_lauf.py
-        name = (f"Neuestes Release {r['version']} geladen, SHA-256 = SHA256SUMS.txt, entpackt mit Unix-Rechten" if r
-                else "Neuestes Release laden und gegen SHA256SUMS.txt prüfen")
+        name = (f"Neuestes Release {r['version']} geladen, {r['signatur']}, SHA-256 = SHA256SUMS.txt, entpackt mit Unix-Rechten"
+                if r else "Neuestes Release laden, Signatur (ab 2.5) und SHA256SUMS.txt prüfen")
         if passend:
             name += " · Inhalt = main, Download-Seite nennt die Prüfsumme"
         Path(wert("--ergebnis")).write_text(json.dumps(dict(

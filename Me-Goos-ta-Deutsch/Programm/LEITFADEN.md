@@ -66,7 +66,7 @@ Deine Arbeit liegt im Ordner `Programm`: die Kartenliste `karten.csv`, die Bilde
 
 **Am einfachsten: direkt im Programm (seit 2.4).** Unter **Werkzeuge → „Programm aktuell halten“** – auch unten im Menü unter der Versionsnummer („🔎 Nach Updates suchen“) und unter **Hilfe → „Über dieses Programm“** – fragt der Knopf **„🔎 Nach neuer Version suchen“** einmal bei GitHub (api.github.com) nach dem neuesten Release: nur auf deinen Klick, nie von selbst, nie im Hintergrund, ohne Daten über dich oder deine Karten, und nichts wird gespeichert. „Gans aktuell!“ heißt, du hast schon die neueste. Ist eine neuere Gans da:
 
-1. **„⬆️ Jetzt auf … aktualisieren“** lädt das Release von GitHub, vergleicht die Prüfsumme mit der veröffentlichten `SHA256SUMS.txt` und prüft den Inhalt – den Fortschritt zeigt der Auftrag. Geändert wird dabei noch nichts.
+1. **„⬆️ Jetzt auf … aktualisieren“** lädt das Release von GitHub, prüft die Signatur der veröffentlichten `SHA256SUMS.txt` (nur echte Releases von Me Goos-ta Deutsch – geprüft und signiert, ab Version 2.5), vergleicht die Prüfsumme und prüft den Inhalt – den Fortschritt zeigt der Auftrag. Geändert wird dabei noch nichts.
 2. **„🔄 Jetzt neu starten und … übernehmen“:** Das Programm beendet sich kurz, ersetzt **im selben Ordner** nur die Programmdateien und startet über die Startdatei von selbst neu (die richtet bei Bedarf Python und Pakete ein, wie beim ersten Start). Kein zweiter Ordner, kein doppelter Speicherplatz, das Desktop-Symbol bleibt, wie es ist.
 3. Ein Hinweis meldet „Update geklappt“. Geht beim Ersetzen etwas schief, legt das Programm alles zurück und die bisherige Version läuft weiter.
 
@@ -526,6 +526,7 @@ Getestet wurden fünf frei verfügbare Modelle gegen das einfachere FSRCNN, an k
 - Das KI-Bildmodell rechnet vollständig auf deinem Rechner; Beschreibungen und Bilder verlassen ihn nicht.
 - Texte, die in Excel als Formel gelten würden (Anfang = + - @), werden abgelehnt – auch beim Import. Bilder werden geprüft und ohne Metadaten gespeichert.
 - KI-Modelle und Python werden nur von offiziellen Quellen geladen und per Prüfsumme kontrolliert; Modell-Dateien können keinen Code ausführen.
+- Updates im Programm übernimmt die Gans nur, wenn die `SHA256SUMS.txt` des Releases mit dem Schlüssel von Me Goos-ta Deutsch signiert ist und genau diese Version nennt (minisign, Ed25519) – ein fremdes oder unsigniertes Paket wird abgelehnt, nichts ändert sich. Selbst prüfen: Download-Seite → „Echtheit prüfen“.
 - Nichts davon braucht Administratorrechte, und die Intelligente App-Steuerung von Windows bleibt eingeschaltet.
 
 ## Fehlerbehebung
@@ -538,6 +539,7 @@ Keine Panik – für fast alles gibt es eine schnelle Lösung:
 | „Intelligente App-Steuerung hat … blockiert“ | ZIP oder Startdatei freigeben: Eigenschaften → „Zulassen“ → OK |
 | „Der Computer wurde durch Windows geschützt“ | „Weitere Informationen“ → „Trotzdem ausführen“ |
 | Startfenster meldet „Keine Verbindung zum Internet“ | Nur der erste Start braucht Internet: Verbindung prüfen, erneut starten. Schon Geladenes wird weiterverwendet |
+| Startfenster meldet „Die Pakete konnten nicht installiert werden“ mit „do not match the hashes“ | Eine Datei kam unterwegs unvollständig oder verändert an (z. B. Proxy, Firmennetz, abgebrochener Download). Jede Paketdatei hat eine feste Prüfsumme – passt sie nicht, installiert das Programm sie nicht. Einfach noch einmal starten; hilft das nicht, ein anderes Netz probieren. Lieber gans sicher |
 | Browser öffnet sich nicht | die Adresse aus dem Startfenster (http://127.0.0.1:…) in den Browser kopieren |
 | Seite sagt „Bitte über das Desktop-Symbol … öffnen“ | über das Symbol starten – ein Lesezeichen funktioniert nach einem Neustart nicht, der Startschlüssel ist jedes Mal neu |
 | „Die Verbindung ist kurz abgetaucht“ | die Oberfläche wurde beendet – über das Symbol neu starten |

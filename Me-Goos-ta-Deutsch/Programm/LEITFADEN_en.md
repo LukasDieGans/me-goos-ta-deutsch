@@ -66,7 +66,7 @@ Your work lives in the folder `Programm`: the card list `karten.csv`, the images
 
 **Easiest: right inside the program (since 2.4).** Under **Tools → “Keep the program up to date”** – also at the bottom of the menu below the version number (“🔎 Check for updates”) and under **Help → “About this program”** – the **“🔎 Check for a new version”** button asks GitHub (api.github.com) once for the latest release: only when you click, never on its own, never in the background, with no data about you or your cards, and nothing is stored. “Goose up to date!” means you already have the newest one. If a newer goose is out:
 
-1. **“⬆️ Update to … now”** downloads the release from GitHub, compares its checksum with the published `SHA256SUMS.txt` and checks the contents – the task shows the progress. Nothing is changed yet.
+1. **“⬆️ Update to … now”** downloads the release from GitHub, checks the signature of the published `SHA256SUMS.txt` (only genuine Me Goos-ta Deutsch releases – checked and signed, from version 2.5), compares the checksum and checks the contents – the task shows the progress. Nothing is changed yet.
 2. **“🔄 Restart now and install …”:** the program closes briefly, replaces only the program files **in the same folder** and starts again by itself via the start file (which sets up Python and packages if needed, like on the first start). No second folder, no doubled disk space, the desktop icon stays as it is.
 3. A message reports “Update done”. If anything goes wrong while replacing, the program puts everything back and the previous version keeps running.
 
@@ -526,6 +526,7 @@ Five freely available models were tested against the simpler FSRCNN on small, he
 - The AI image model runs entirely on your computer; descriptions and images never leave it.
 - Texts that Excel would treat as a formula (starting with = + - @) are rejected – also on import. Images are checked and saved without metadata.
 - AI models and Python are only downloaded from official sources and verified by checksum; model files can’t run code.
+- The goose installs an update in the program only if the release’s `SHA256SUMS.txt` is signed with the Me Goos-ta Deutsch key and names exactly this version (minisign, Ed25519) – a foreign or unsigned package is refused and nothing changes. Check it yourself: download page → “Check it’s genuine”.
 - None of this needs administrator rights, and Windows Smart App Control stays switched on.
 
 ## Troubleshooting
@@ -538,6 +539,7 @@ Don’t worry – almost everything has a quick fix:
 | “Smart App Control blocked …” | Unblock the ZIP or start file: Properties → “Unblock” → OK |
 | “Windows protected your PC” | “More info” → “Run anyway” |
 | Start window says “No internet connection” | Only the first start needs internet: check the connection and start again. What was already downloaded is reused |
+| Start window says “The packages could not be installed” with “do not match the hashes” | A file arrived incomplete or altered on the way (e.g. proxy, company network, interrupted download). Every package file has a fixed checksum – if it doesn’t match, the program won’t install it. Simply start again; if that doesn’t help, try another network. Better safe than goose-sorry |
 | The browser doesn’t open | Copy the address from the start window (http://127.0.0.1:…) into your browser |
 | The page says “Please open it with the desktop icon …” | Start via the icon – a bookmark doesn’t work after a restart, the start key is new every time |
 | “The connection took a little dip” | The interface was stopped – start it again via the icon |

@@ -60,11 +60,15 @@ VORRAT_MODELLE = ("realesrgan-x4plus", "realesrgan-x2plus")   # Tool „Bildverb
 PFLICHT = {"PIL": "pillow", "numpy": "numpy", "reportlab": "reportlab"}
 WAHL = {"pypdfium2": "pypdfium2"}                    # optional: Vorschaubilder und PNG-Export
 MIN_FREI_MB = 700
+# Feste Paketfassungen (seit 2.5): Lock-Dateien mit der SHA-256 jedes Rads (gebaut von bau_lock.py im Arbeitsordner),
+# pip prüft jede Datei (--require-hashes). requirements.txt (Spannen) bleibt für Entwickler und den CI-Job „neueste
+# Fassungen“ (MGD_PAKETE_NEUESTE=1).
+LOCK = "pakete.lock"
 # Nur Windows: Blockiert „Smart App Control“ eine Datei der neuesten Pakete, werden ältere, seit Langem weit
-# verbreitete Fassungen probiert (Windows kennt deren Dateien eher als „vertrauenswürdig“).
+# verbreitete Fassungen probiert (Windows kennt deren Dateien eher als „vertrauenswürdig“). Spannen in bau_lock.py.
 ERSATZ_SAETZE = [
-    ("bewährt", ["reportlab>=4.0,<5", "pillow>=11.0,<12", "numpy>=2.1,<2.3", "pypdfium2>=4.30,<5"]),
-    ("älter", ["reportlab>=4.0,<4.3", "pillow>=11.0,<11.1", "numpy>=2.1,<2.2", "pypdfium2>=4.30,<5"]),
+    ("bewährt", "pakete-bewaehrt.lock"),       # reportlab 4.x, pillow 11.x, numpy 2.1–2.2, pypdfium2 4.30+
+    ("älter", "pakete-aelter.lock"),           # reportlab 4.0–4.2, pillow 11.0, numpy 2.1, pypdfium2 4.30+
 ]
 SPERR_CODES = {4551: "sac", 577: "sac", 1260: "richtlinie", 225: "virus"}
 SPERR_WORTE = ("4551", "application control", "anwendungssteuerung", "control de aplicaciones",
@@ -680,9 +684,25 @@ def ordner_schluessel(pfad=HIER) -> str:
     return hashlib.sha256((text.lower() if WIN else text).encode("utf-8")).hexdigest()[:12]
 
 
+def pakete_neueste() -> bool:
+    return os.environ.get("MGD_PAKETE_NEUESTE") == "1"
+
+
+def paket_spezifikation(satz=None):
+    """pip-Argumente für die Pakete: Lock-Datei (Standard bzw. Ersatz-Satz) mit --require-hashes; nur im CI-Job
+    „neueste Fassungen“ die Spannen aus requirements.txt."""
+    if pakete_neueste() and satz not in dict(ERSATZ_SAETZE):
+        return ["-r", str(HIER / "requirements.txt")]
+    return ["--require-hashes", "-r", str(HIER / dict(ERSATZ_SAETZE).get(satz, LOCK))]
+
+
 def paket_signatur() -> str:
-    roh = (HIER / "requirements.txt").read_bytes() if (HIER / "requirements.txt").exists() else b""
-    return hashlib.sha256(roh + json.dumps(ERSATZ_SAETZE).encode()).hexdigest()[:16]
+    """Fingerabdruck der Paketfassungen: ändert sich eine Lock-Datei (neue Version), richtet der Starter neu ein."""
+    roh = b"".join(n.encode() + ((HIER / n).read_bytes() if (HIER / n).exists() else b"")
+                   for n in (LOCK, *dict(ERSATZ_SAETZE).values()))
+    if pakete_neueste():
+        roh += b"neueste" + ((HIER / "requirements.txt").read_bytes() if (HIER / "requirements.txt").exists() else b"")
+    return hashlib.sha256(roh).hexdigest()[:16]
 
 
 def pruefe_ort(aus):
@@ -1034,8 +1054,9 @@ def bereite_pip(aus):
 
 def lokale_pakete():
     """Optional: Ordner werkzeuge/pakete mit Rädern (.whl) – für Rechner ohne Internet (z. B. im Klassenzimmer).
-    Füllen auf einem Rechner mit Internet:  pip download -d werkzeuge/pakete -r requirements.txt
-                                             --only-binary=:all: --platform win_amd64 --python-version 3.13"""
+    Füllen auf einem Rechner mit Internet:  pip download -d werkzeuge/pakete --require-hashes -r pakete.lock
+                                             --only-binary=:all: --platform win_amd64 --python-version 3.13
+    (die Prüfsummen der Lock-Datei gelten auch für diesen Ordner)"""
     lokal = HIER / "werkzeuge" / "pakete"
     return lokal if lokal.is_dir() and any(lokal.glob("*.whl")) else None
 
@@ -1155,8 +1176,7 @@ def pakete_einrichten(aus, grund, nr, gesamt):
             aus.unter(T("w_fremd", exe=sys.executable))
         extra = ["--force-reinstall"] if grund == "reparatur" and not alles_da else []
         vorher = (lies_json(STEMPEL) or {}).get("satz")
-        spez = dict(ERSATZ_SAETZE).get(vorher) if WIN else None      # früher nötiger Ersatz-Satz bleibt
-        text = installiere(aus, spez or ["-r", str(HIER / "requirements.txt")], extra)
+        text = installiere(aus, paket_spezifikation(vorher if WIN else None), extra)   # früher nötiger Ersatz-Satz bleibt
         if "Successfully installed" not in text:
             aus.unter(T("schon_da"))
     aus.schritt(nr + 1, gesamt, T("s_test"))
@@ -1165,12 +1185,12 @@ def pakete_einrichten(aus, grund, nr, gesamt):
     if erg.get("fehler") and not nur_wahl_fehlt(erg):
         art, datei = sperr_art(erg)
         if art == "sac" and WIN:
-            for satz, spez in ERSATZ_SAETZE:
+            for satz, _lock in ERSATZ_SAETZE:
                 aus.unter(T("ersatz", datei=datei, satz=satz))
                 betroffen = sorted({PFLICHT.get(b["modul"], WAHL.get(b["modul"], "")) for b in erg["blockiert"]} - {""})
                 if betroffen:
                     pip_lauf(aus, ["uninstall", "-y", *betroffen], anzeigen=False)
-                installiere(aus, spez)
+                installiere(aus, paket_spezifikation(satz))
                 erg = importtest_lauf(aus)
                 if not erg.get("fehler") or nur_wahl_fehlt(erg):
                     break
@@ -1184,7 +1204,7 @@ def pakete_einrichten(aus, grund, nr, gesamt):
         elif not eigenes_python():
             raise Abbruch(T("f_fremd", exe=sys.executable, start=STARTDATEI))
         else:                                           # beschädigt o. Ä.: einmal vollständig neu installieren
-            installiere(aus, ["-r", str(HIER / "requirements.txt")], ["--force-reinstall"])
+            installiere(aus, paket_spezifikation(), ["--force-reinstall"])
             erg = importtest_lauf(aus)
     if erg.get("fehler") and not nur_wahl_fehlt(erg):
         details = "\n".join(f"• {m}: {f}" for m, f in erg["fehler"].items())

@@ -15,12 +15,14 @@ licenses. · Me Goos-ta Deutsch tiene licencia MIT; los componentes de abajo con
 | **FSRCNN**-Gewichte ×2/×3/×4 (Dong, Loy, Tang 2016; Saafke/FSRCNN_Tensorflow), umgewandelt nach NumPy | `modelle/fsrcnn_x*.npz` | Apache-2.0 (`modelle/LICENSE-FSRCNN.txt`) | https://github.com/Saafke/FSRCNN_Tensorflow |
 | **pip** 26.2.1 (mit gebündelten Bibliotheken, u. a. certifi, requests, truststore) | `werkzeuge/pip-26.2.1-py3-none-any.whl` | MIT (Lizenzen der gebündelten Teile liegen im Rad bei) | https://pypi.org/project/pip/ |
 | **FSRS-6** – Standardparameter und Formeln des Lernplaners nach **py-fsrs** 6.3 (Open Spaced Repetition), in `lernen.py` selbst in Python nachgebaut (kein fremder Code im Download) | `lernen.py` | MIT, Copyright (c) 2022 Open Spaced Repetition | https://github.com/open-spaced-repetition/py-fsrs |
+| **Ed25519** (RFC 8032, Abschnitt 5.1; nach dem Python-Beispiel in Abschnitt 6 nachgebaut) und das Signaturformat von **minisign** (nur das Dateiformat, kein Code übernommen) – Prüfung signierter Releases | `signatur.py` | RFC 8032: Simplified BSD License, Copyright (c) 2017 IETF Trust and the persons identified as the document authors · minisign-Format: ISC | https://www.rfc-editor.org/rfc/rfc8032 · https://jedisct1.github.io/minisign/ |
 
 ## Beim ersten Start geladen · Downloaded on first start
 
 Diese Teile lädt das Startprogramm von den offiziellen Quellen (Python mit eigener SHA-256-Prüfsumme, die Pakete über
-pip von pypi.org, das jede Datei ebenfalls per Prüfsumme kontrolliert). Sie liegen danach im Benutzerordner (nicht im
-Programmordner).
+pip von pypi.org in genau festgelegten Fassungen – seit 2.5 steht die SHA-256 jeder Datei in `pakete.lock`, pip prüft sie
+mit `--require-hashes`). Sie liegen danach im Benutzerordner (nicht im Programmordner). Fassungen: `pakete.lock`
+(Ersatz-Sätze für Smart App Control: `pakete-bewaehrt.lock`, `pakete-aelter.lock`).
 
 | Bestandteil | Wofür | Lizenz | Quelle |
 | --- | --- | --- | --- |
@@ -30,6 +32,8 @@ Programmordner).
 | **NumPy** | Rechnen (KI-Vergrößerung) | BSD-3-Clause (Teile 0BSD, MIT, Zlib, CC0) | https://numpy.org |
 | **ReportLab** | PDFs erzeugen | BSD-3-Clause | https://www.reportlab.com |
 | **pypdfium2** mit **PDFium** | Vorschaubilder, PNG-Export | Apache-2.0 / BSD-3-Clause (PDFium: BSD-3-Clause; Lizenzen der Bauteile im Paket) | https://github.com/pypdfium2-team/pypdfium2 |
+| **charset-normalizer** (Abhängigkeit von ReportLab ab 4.4) | Zeichensatz erkennen | MIT | https://github.com/jawah/charset_normalizer |
+| **chardet** ≥ 7 (Abhängigkeit von ReportLab bis 4.2, nur Ersatz-Satz „älter“ unter Windows) | Zeichensatz erkennen | 0BSD (ältere Fassungen 5.x waren LGPL – darum fest ab 7) | https://github.com/chardet/chardet |
 
 ## Nur auf Wunsch geladen: Bildverbesserung · Downloaded only on request: image enhancement
 
@@ -74,7 +78,7 @@ eigene Schrift (Poppins hat die Zeichen). Entfernen löscht das Paket wieder.
 | **Noto Sans** Regular + Bold (Google) | Russisch | SIL Open Font License 1.1 (`OFL.txt` im Paket) | https://github.com/notofonts/notofonts.github.io |
 | **IBM Plex Sans JP / KR / Arabic** Regular + Bold (IBM) | Japanisch, Koreanisch, Arabisch | SIL Open Font License 1.1 (`OFL.txt` im Paket) | https://github.com/google/fonts |
 | **IBM Plex Sans SC** Regular + Bold (IBM) | Chinesisch (vereinfacht) | SIL Open Font License 1.1 (`OFL.txt` im Paket) | https://github.com/IBM/plex |
-| **uharfbuzz** 0.56.3 mit **HarfBuzz** (per pip nach `sprachen/_pakete`) | Formen der Schrift für Hindi und Arabisch im Druck | Apache-2.0 (HarfBuzz: MIT „Old MIT“) | https://pypi.org/project/uharfbuzz/ |
+| **uharfbuzz** 0.56.3 mit **HarfBuzz** (per pip nach `sprachen/_pakete`, SHA-256 aus `pakete-sprachen.lock`) | Formen der Schrift für Hindi und Arabisch im Druck | Apache-2.0 (HarfBuzz: MIT „Old MIT“) | https://pypi.org/project/uharfbuzz/ |
 
 Im Druck werden die Schriften als Teilmenge in die PDFs eingebettet (von der OFL ausdrücklich erlaubt); die PDFs selbst
 stehen nicht unter der OFL. ReportLab zeichnet die von uharfbuzz geformten Glyphen (`ShapedStr`) – kein weiterer Code.

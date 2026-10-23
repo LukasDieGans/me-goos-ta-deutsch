@@ -3329,7 +3329,7 @@ def test_web_app(p, tmp):
            e.get("weichen") == [True, True, 403, True, False, True, [], ["uharfbuzz"]], str(e.get("weichen")))
     pruefe("Real-ESRGAN in der App aus dem eigenen Ordner (Größe + SHA-256), fehlendes Modell = „nur am Rechner“, Fälschung abgelehnt",
            e.get("modell") == ["realesrgan-x4plus.npz", True, True, True], str(e.get("modell")))
-    bau = HIER.parent.parent / "bau_webapp.py"
+    bau = HIER.parent.parent / "werkstatt" / "bau_webapp.py"
     if not bau.is_file():
         print("  (bau_webapp.py liegt nur im Arbeitsordner – Bau-Prüfungen entfallen)")
         return
@@ -3493,7 +3493,7 @@ def test_installationsdateien():
                       and "Warning" not in t and "QR" in t for t in texte.values()))
     pruefe("Drei Sprachen (de/en/es, Standard Englisch ohne Skript), Schritte mit Skizzen, Mindestversionen, Gerätenamen",
            sprachen_ok and inhalt)
-    bau = HIER.parent.parent / "bau_release.py"
+    bau = HIER.parent.parent / "werkstatt" / "bau_release.py"
     rel = bau.read_text(encoding="utf-8") if bau.is_file() else ""
     seite = (HIER / "ui" / "index.html").read_text(encoding="utf-8")
     lies = (oben / "LIES MICH ZUERST.html").read_text(encoding="utf-8")
@@ -3932,7 +3932,7 @@ def test_download_seite(tmp):
            and all(lies.count(f'href="{dl}#{l}"') == 1 for l in ("de", "en", "es"))
            and 'return a ? a + "download/#" + S.sprache : "";' in seite and seite.count("${esc(downloadAdresse())}") == 2
            and all(seite.count(k + ":") == 3 for k in ("u_download", "u_download_text", "app_rechner")))
-    bau, rel_bau, rel_skript = arbeit / "bau_webapp.py", arbeit / "bau_release.py", arbeit / "veroeffentliche_release.py"
+    bau, rel_bau, rel_skript = arbeit / "werkstatt" / "bau_webapp.py", arbeit / "werkstatt" / "bau_release.py", arbeit / "werkstatt" / "veroeffentliche_release.py"
     if not all(x.is_file() for x in (bau, rel_bau, rel_skript, arbeit / "web-app-quelle" / "sw.js")):
         print("  (bau_webapp.py, bau_release.py und veroeffentliche_release.py liegen nur im Arbeitsordner – Bau-Prüfungen entfallen)")
         return
@@ -4011,8 +4011,9 @@ def test_download_seite(tmp):
     pr = lauf(rel_skript, ordner, zip_pfad, "--probe", "--ohne-ci", OHNE_CI)
     m = re.search(r"^#plan (.*)$", pr.stdout, re.M)
     plan = json.loads(m.group(1)) if m else {}
-    pruefe("veroeffentliche_release.py --probe: Tag v<Version>, Assets ZIP + SHA256SUMS.txt (Format sha256sum), main, Latest, Adressen, Notizen EN/DE/ES",
-           pr.returncode == 0 and plan.get("tag") == f"v{version}" and plan.get("assets") == [zip_pfad.name, "SHA256SUMS.txt"]
+    pruefe("veroeffentliche_release.py --probe: Tag v<Version>, Assets ZIP + SHA256SUMS.txt (Format sha256sum) + .minisig, main, Latest, Adressen, Notizen EN/DE/ES",
+           pr.returncode == 0 and plan.get("tag") == f"v{version}"
+           and plan.get("assets") == [zip_pfad.name, "SHA256SUMS.txt", "SHA256SUMS.txt.minisig"]
            and plan.get("summen") == f"{zsha}  {zip_pfad.name}\n" and plan.get("branch") == "main" and plan.get("latest") is True
            and plan.get("download") == asset and plan.get("seite") == dl and plan.get("titel") == f"Me Goos-ta Deutsch {version}"
            and set(plan.get("ausfuehrbar", [])) == {"Me Goos-ta Deutsch - Mac.command", "Me Goos-ta Deutsch - Linux.sh"}
@@ -4078,9 +4079,9 @@ def test_ci(tmp):
     import hashlib
     import importlib.util
     arbeit = HIER.parent.parent
-    ci_lauf, frisch = arbeit / "ci_lauf.py", arbeit / "ci" / "github" / "ci" / "frischtest.py"
-    wf, rel_bau = arbeit / "ci" / "github" / "workflows" / "tests.yml", arbeit / "bau_release.py"
-    if not all(x.is_file() for x in (ci_lauf, frisch, wf, rel_bau, arbeit / "veroeffentliche_webapp.py")):
+    ci_lauf, frisch = arbeit / "werkstatt" / "ci_lauf.py", arbeit / ".github" / "ci" / "frischtest.py"
+    wf, rel_bau = arbeit / ".github" / "workflows" / "tests.yml", arbeit / "werkstatt" / "bau_release.py"
+    if not all(x.is_file() for x in (ci_lauf, frisch, wf, rel_bau, arbeit / "werkstatt" / "veroeffentliche_webapp.py")):
         print("  (ci_lauf.py und ci/ liegen nur im Arbeitsordner – CI-Prüfungen entfallen)")
         return
     env = dict(os.environ, PYTHONIOENCODING="utf-8", GH_TOKEN="", HTTPS_PROXY="http://127.0.0.1:9",
@@ -4134,8 +4135,8 @@ def test_ci(tmp):
            and re.search(r"^on:\n  push:\n    branches: \[ci\]\n  workflow_dispatch:\n\n", y, re.M) and "schedule" not in y
            and len(jobs) >= 2 and len(zeiten) == len(jobs) and all(0 < z <= 45 for z in zeiten)
            and "fail-fast: false" in y and "secrets." not in y and y.count("persist-credentials: false") == len(jobs)
-           and all(s in y for s in ("windows-latest", "windows-11-arm", "macos-14", "macos-15-intel", "ubuntu-latest",
-                                    "ubuntu-24.04-arm", "debian:stable-slim")), f"{uses} {jobs} {zeiten}")
+           and all(s in y for s in ("windows-latest", "windows-11-arm", "os: macos-15 }", "macos-15-intel", "ubuntu-latest",
+                                    "ubuntu-24.04-arm", "debian:stable-slim")) and "os: macos-14" not in y, f"{uses} {jobs} {zeiten}")
     version = re.search(r'^VERSION = "([\d.]+)', (HIER / "gans_lernkarten.py").read_text(encoding="utf-8"), re.M)[1]
     zip_pfad = tmp / "e36-release" / f"Me-Goos-ta-Deutsch-{version}.zip"
     if not zip_pfad.is_file():
@@ -4159,11 +4160,11 @@ def test_ci_browser(tmp):
     print("\n[E39] Browser-Test, Release-Prüfung, Release-Schranke (CI)")
     import importlib.util
     arbeit = HIER.parent.parent
-    ci = arbeit / "ci" / "github"
+    ci = arbeit / ".github"
     bt, nr, woche, wf = ci / "ci" / "browser_test.py", ci / "ci" / "neuestes_release.py", ci / "workflows" / "release_pruefung.yml", \
         ci / "workflows" / "tests.yml"
-    ci_lauf, vr, rel_bau = arbeit / "ci_lauf.py", arbeit / "veroeffentliche_release.py", arbeit / "bau_release.py"
-    if not all(x.is_file() for x in (bt, nr, woche, wf, ci_lauf, vr, rel_bau, arbeit / "bau_webapp.py")):
+    ci_lauf, vr, rel_bau = arbeit / "werkstatt" / "ci_lauf.py", arbeit / "werkstatt" / "veroeffentliche_release.py", arbeit / "werkstatt" / "bau_release.py"
+    if not all(x.is_file() for x in (bt, nr, woche, wf, ci_lauf, vr, rel_bau, arbeit / "werkstatt" / "bau_webapp.py")):
         print("  (ci_lauf.py, ci/ und die Release-Skripte liegen nur im Arbeitsordner – Prüfungen entfallen)")
         return
     env = dict(os.environ, PYTHONIOENCODING="utf-8", PYTHONDONTWRITEBYTECODE="1", GH_TOKEN="",
@@ -4207,7 +4208,8 @@ def test_ci_browser(tmp):
     zeiten = [int(z) for z in re.findall(r"^\s+timeout-minutes:\s*(\d+)", y, re.M)]
     pruefe("release_pruefung.yml: nach jedem Push auf main + workflow_dispatch (kein Zeitplan, kein pull_request), nur Lesen, "
            "Actions per SHA, Prüfsummen-Schritt wartet auf main auf das passende Release (--passend), Frischtest mit dem "
-           "veröffentlichten Release auf 7 Systemen, Browser live, Playwright-Download mit Wiederholung",
+           "veröffentlichten Release auf 7 Systemen, Job „neueste“ (Spannen statt Lock) auf 3 Systemen, Browser live, "
+           "Playwright-Download mit Wiederholung",
            re.search(r'^on:\n  push:\n    branches: \[main\]\n  workflow_dispatch:\n\n', y, re.M)
            and "schedule" not in y and "cron" not in y and "pull_request" not in y and y.count("push:") == 1
            and "${{ github.ref == 'refs/heads/main' && '--passend 40' || '' }}" in y
@@ -4215,11 +4217,12 @@ def test_ci_browser(tmp):
            and re.search(r"^permissions:\n  contents: read\n", y, re.M)
            and "write" not in y and "secrets." not in y and uses and all(re.fullmatch(r"actions/[a-z-]+@[0-9a-f]{40}", u) for u in uses)
            and re.search(r"name: Prüfsumme[^\n]*SHA256SUMS[^\n]*\n\s+run: python \.github/ci/neuestes_release\.py", y)
-           and y.count("frischtest.py --neuestes-release") == 2 and "browser_test.py --live --neuestes-release" in y
-           and all(s in y for s in ("windows-latest", "windows-11-arm", "macos-14", "macos-15-intel", "ubuntu-latest",
-                                    "ubuntu-24.04-arm", "debian:stable-slim"))
-           and len(jobs) == 4 and len(zeiten) == len(jobs) and all(0 < z <= 45 for z in zeiten)
-           and y.count("persist-credentials: false") == len(jobs) and y.count("needs: release") == 3, f"{jobs} {zeiten} {uses[:2]}")
+           and y.count("frischtest.py --neuestes-release") == 3 and "browser_test.py --live --neuestes-release" in y
+           and y.count("--neuestes-release --neueste-pakete") == 1 and y.count("name: neueste-") == 3
+           and all(s in y for s in ("windows-latest", "windows-11-arm", "os: macos-15 }", "macos-15-intel", "ubuntu-latest",
+                                    "ubuntu-24.04-arm", "debian:stable-slim")) and "os: macos-14" not in y
+           and len(jobs) == 5 and "neueste" in jobs and len(zeiten) == len(jobs) and all(0 < z <= 45 for z in zeiten)
+           and y.count("persist-credentials: false") == len(jobs) and y.count("needs: release") == 4, f"{jobs} {zeiten} {uses[:2]}")
     # 3) tests.yml: Browser-Job
     t2 = wf.read_text(encoding="utf-8")
     job = t2.split("\n  browser:\n", 1)[1] if "\n  browser:\n" in t2 else ""
@@ -5146,7 +5149,7 @@ def test_fix_download_release(tmp):
     import importlib.util
     from urllib.parse import urljoin
     oben, arbeit = HIER.parent, HIER.parent.parent
-    bau, sw_q, nr = arbeit / "bau_webapp.py", arbeit / "web-app-quelle" / "sw.js", arbeit / "ci" / "github" / "ci" / "neuestes_release.py"
+    bau, sw_q, nr = arbeit / "werkstatt" / "bau_webapp.py", arbeit / "web-app-quelle" / "sw.js", arbeit / ".github" / "ci" / "neuestes_release.py"
     if not all(x.is_file() for x in (bau, sw_q, nr)):
         print("  (bau_webapp.py, web-app-quelle/ und ci/ liegen nur im Arbeitsordner – Prüfungen entfallen)")
         return
@@ -5568,10 +5571,16 @@ class H(http.server.BaseHTTPRequestHandler):
 srv = http.server.ThreadingHTTPServer(("127.0.0.1", 0), H)
 threading.Thread(target=srv.serve_forever, daemon=True).start()
 quelle = f"http://127.0.0.1:{srv.server_address[1]}/dl"
+import signatur                                   # seit 2.5: SHA256SUMS.txt signiert – hier mit einem Testschlüssel
+SEED, SID = bytes(range(32)), bytes(range(8))
+os.environ["MGD_UPDATE_QUELLE"] = quelle
+os.environ["MGD_UPDATE_TESTSCHLUESSEL"] = signatur.schluessel_text(SID, signatur.ed25519_oeffentlich(SEED))
 def anbieten(version, z, summe=None):
     DATEIEN[f"/dl/v{version}/Me-Goos-ta-Deutsch-{version}.zip"] = z
     s = summe or hashlib.sha256(z).hexdigest()
     DATEIEN[f"/dl/v{version}/SHA256SUMS.txt"] = f"{s}  Me-Goos-ta-Deutsch-{version}.zip\n".encode()
+    DATEIEN[f"/dl/v{version}/SHA256SUMS.txt.minisig"] = signatur.signiere(SEED, SID, DATEIEN[f"/dl/v{version}/SHA256SUMS.txt"],
+                                                                           f"me-goos-ta-deutsch v{version}")
 daten = tmp / "daten"
 anbieten("9.9", release("9.9"))
 meldungen = []
@@ -5716,11 +5725,11 @@ def test_update(p, tmp):
     baum = ast.parse((HIER / "aktualisieren.py").read_text(encoding="utf-8"))
     oben = {(n.names[0].name if isinstance(n, ast.Import) else n.module).split(".")[0] for n in baum.body
             if isinstance(n, (ast.Import, ast.ImportFrom))}
-    bau = HIER.parent.parent / "bau_webapp.py"                      # nur im Arbeitsordner: die App braucht das Modul nicht
+    bau = HIER.parent.parent / "werkstatt" / "bau_webapp.py"                      # nur im Arbeitsordner: die App braucht das Modul nicht
     pruefe("aktualisieren.py: oben nur Standardbibliothek (anwenden läuft ohne Pakete), kein api.github.com; nicht in der Web-App",
            oben <= {"__future__", "argparse", "hashlib", "json", "os", "re", "shutil", "subprocess", "sys", "time", "urllib", "zipfile", "pathlib"}
            and "api.github.com" not in (HIER / "aktualisieren.py").read_text(encoding="utf-8")
-           and (not bau.is_file() or '"aktualisieren.py"}' in bau.read_text(encoding="utf-8")), oben)
+           and (not bau.is_file() or '"aktualisieren.py", "signatur.py"}' in bau.read_text(encoding="utf-8")), oben)
     pruefe("Oberfläche: „Nach neuer Version suchen“ in Werkzeuge, Über und Fußzeile (nur am Rechner); „Jetzt aktualisieren“ nur, wenn möglich",
            seite.count("data-nv-knopf") >= 3 and 'id="update-bereich"' in seite and "data-nv-fuss" in seite
            and "${!AM_HANDY && !AM_APP ? `<br><button type=\"button\"" in seite and "u.moeglich ? `<p class=\"knopfzeile\"><button class=\"knopf haupt\"" in seite
@@ -5772,6 +5781,548 @@ def test_oberflaeche_24():
     pruefe("Neue Texte (Update, Rückgängig, Gans ergänzen) in de/en/es", not fehlt, fehlt[:8])
 
 
+def test_github_auftritt(tmp):
+    """E50 (2.5): Community-Dateien für GitHub (`ci/github/` → `.github/`): SECURITY, CONTRIBUTING, CODE_OF_CONDUCT, Issue-
+    Formulare, PR-Vorlage vorhanden und nicht leer, mit deutscher und spanischer Kurzfassung; Links nur auf dieses Repo bzw.
+    web_adresse.txt (Namensnennung des Contributor Covenant ausgenommen); keine E-Mail-Adressen, nirgends „Warning“;
+    repo_einstellungen.py --probe liefert Stufe 1 vollständig ohne Netz. Ohne die Dateien des Arbeitsordners entfallen alle 5."""
+    print("\n[E50] GitHub: Community-Dateien und Repo-Einstellungen")
+    arbeit = HIER.parent.parent
+    ci = arbeit / ".github"
+    skript = arbeit / "werkstatt" / "repo_einstellungen.py"
+    md = {n: ci / n for n in ("SECURITY.md", "CONTRIBUTING.md", "CODE_OF_CONDUCT.md", "PULL_REQUEST_TEMPLATE.md")}
+    formulare = {n: ci / "ISSUE_TEMPLATE" / n for n in ("bug_report.yml", "feature_request.yml", "config.yml")}
+    if not (ci / "workflows").is_dir() or not skript.is_file():
+        print("  (ci/ und repo_einstellungen.py liegen nur im Arbeitsordner – Prüfungen entfallen)")
+        return
+    texte = {n: (p.read_text(encoding="utf-8") if p.is_file() else "") for n, p in {**md, **formulare}.items()}
+    leer = [n for n, t in texte.items() if len(t.strip()) < 200]
+    ohne_kurz = [n for n in ("SECURITY.md", "CONTRIBUTING.md", "CODE_OF_CONDUCT.md")
+                 if "**Deutsch (kurz):**" not in texte[n] or "**Español (breve):**" not in texte[n]]
+    pruefe("Community-Dateien vorhanden und nicht leer (SECURITY, CONTRIBUTING, CODE_OF_CONDUCT, PR-Vorlage, 3 Issue-Dateien), "
+           "Kurzfassung de/es", not leer and not ohne_kurz, f"{leer} {ohne_kurz}")
+    adresse = (HIER / "web_adresse.txt").read_text(encoding="utf-8").strip().splitlines()[0].strip()
+    m = re.match(r"^https://([a-z0-9-]+)\.github\.io/([A-Za-z0-9._-]+)/$", adresse)
+    konto, repo = m.group(1), m.group(2)
+    fremd = []
+    for n, t in texte.items():
+        for url in re.findall(r"https?://[^\s)>\]\"'`]+", t):
+            eigen = (url.lower().startswith(f"https://github.com/{konto}/{repo}/".lower()) or url.startswith(adresse))
+            nennung = n == "CODE_OF_CONDUCT.md" and re.match(r"https://(www\.contributor-covenant\.org|creativecommons\.org)/", url)
+            if not (eigen or nennung):
+                fremd.append(f"{n}: {url}")
+    sicherheit = texte["SECURITY.md"] + texte["config.yml"]
+    pruefe("Links nur auf dieses Repository bzw. web_adresse.txt; Meldeweg „Report a vulnerability“ (security/advisories/new)",
+           not fremd and f"github.com/{konto}/{repo}/security/advisories/new".lower() in sicherheit.lower()
+           and "Report a vulnerability" in texte["SECURITY.md"], fremd[:5])
+    mails = [f"{n}: {x}" for n, t in texte.items() for x in re.findall(r"[\w.+-]+@[\w-]+\.[\w.-]+", t)]
+    warn = [n for n, t in texte.items() if re.search(r"(?i)\bwarn(ing|ung)\b", t)]
+    pruefe("Keine E-Mail-Adressen und nirgends „Warning/Warnung“ in den Community-Dateien", not mails and not warn, f"{mails[:3]} {warn}")
+    form_fehler = []
+    for n in ("bug_report.yml", "feature_request.yml"):
+        t = texte[n]
+        if not (re.search(r"^name: \S", t, re.M) and re.search(r"^description: \S", t, re.M) and re.search(r"^body:\n", t, re.M)
+                and len(re.findall(r"^  - type: (markdown|input|textarea|dropdown|checkboxes)$", t, re.M)) >= 3
+                and re.search(r"^    validations:\n      required: true$", t, re.M) and "\t" not in t and "\r" not in t):
+            form_fehler.append(n)
+    c = texte["config.yml"]
+    if not (re.search(r"^blank_issues_enabled: false$", c, re.M) and c.count("  - name: ") == 3 and c.count("    url: ") == 3
+            and c.count("    about: ") == 3):
+        form_fehler.append("config.yml")
+    pruefe("Issue-Formulare mit name, description, body (≥ 3 Felder, Pflichtfelder); config.yml: leere Issues aus, 3 Links",
+           not form_fehler, form_fehler)
+    env = dict(os.environ, PYTHONIOENCODING="utf-8", PYTHONDONTWRITEBYTECODE="1", GH_TOKEN="",
+               HTTPS_PROXY="http://127.0.0.1:9", HTTP_PROXY="http://127.0.0.1:9")     # kein Netz
+    vorher = sorted((p.name, p.stat().st_mtime) for p in arbeit.iterdir())
+    r1 = subprocess.run([sys.executable, str(skript), "--probe"], env=env, cwd=str(tmp), capture_output=True, text=True,
+                        encoding="utf-8", errors="replace", timeout=120)
+    r2 = subprocess.run([sys.executable, str(skript), "--probe", "--stufe", "2"], env=env, cwd=str(tmp), capture_output=True,
+                        text=True, encoding="utf-8", errors="replace", timeout=120)
+    nachher = sorted((p.name, p.stat().st_mtime) for p in arbeit.iterdir())
+    mp = re.search(r"^#plan (.*)$", r1.stdout, re.M)
+    plan = json.loads(mp.group(1)) if mp else {}
+    schritte = {s["id"]: s["soll"] for s in plan.get("schritte", [])}
+    regel = schritte.get("ruleset") or {}
+    pruefe("repo_einstellungen.py --probe: Stufe 1 vollständig (Topics, Sicherheitsmeldungen, Dependabot, Secret Scanning, CodeQL, "
+           "Ruleset main + gh-pages ohne ci und ohne Umgehung, Probe aus), ohne Netz, schreibt nichts; Stufe 2 noch leer → sauberes Ende",
+           r1.returncode == 0 and plan.get("konto") == konto and plan.get("stufe") == 1
+           and set(schritte) == {"topics", "wiki_discussions", "private_meldungen", "dependabot_warnungen", "secret_scanning",
+                                 "codeql", "ruleset", "probe_aus"}
+           and {"german", "flashcards", "spaced-repetition", "anki", "pwa", "python", "offline"} <= set(schritte.get("topics", []))
+           and len(schritte.get("topics", [])) <= 20 and all(re.fullmatch(r"[a-z0-9][a-z0-9-]{0,49}", t) for t in schritte.get("topics", []))
+           and sorted(regel.get("include", [])) == ["refs/heads/gh-pages", "refs/heads/main"] and regel.get("umgehung") == []
+           and sorted(regel.get("regeln", [])) == ["deletion", "non_fast_forward"]
+           and r2.returncode != 0 and "Traceback" not in r2.stderr and "#plan" not in r2.stdout and vorher == nachher,
+           (r1.stdout + r1.stderr + r2.stderr)[-400:])
+
+
+E51_SEED_TEXT = b"mgd-e51-testschluessel"                     # fester Testschlüssel – nie für echte Releases
+E51_PUB = "RWRNR0RURVNUMVWdV7pIrbUszVhp4/CfwIKp9n8kJklndqMXDIeh10vE"
+E51_MINISIG = ("untrusted comment: signature from E51 test key\nRURNR0RURVNUMUREQIK5g/61YToRyu4lf6616jFNlvM4vwDdDoWyeJVbdQKUnGRnGp+gYZtH+04H+"
+               "enwqrq4NGPOgci7Af88xAg=\ntrusted comment: me-goos-ta-deutsch v9.9\n02apr68183z/JONsDjllgwWDkN0M2tL9Lu1H8pTyxSI/0xpZvkZllGmtUFrQ"
+               "Lgaij8tz3wo69OmWsCBJqYZYAQ==\n")
+
+
+def test_signatur(tmp):
+    """E51 (2.5): Signierte Releases und Updates – Ed25519 nach RFC 8032 (Testvektoren 1–3), minisign-Format mit festem
+    Testschlüssel, Ablehnung von geänderten Summen/Signaturen/Kommentaren, fremdem Schlüssel, falscher Version; laden()
+    nur mit gültiger Signatur (Testschlüssel nur mit 127.0.0.1); signiere_release.py, veroeffentliche_release.py
+    (Signatur Pflicht, vor jedem Netz) und „Echtheit prüfen“ auf der Download-Seite (ohne Arbeitsordner entfallen 4)."""
+    print("\n[E51] Signierte Releases und Updates")
+    import base64
+    import hashlib
+    import http.server
+    import threading
+    import signatur as sg
+    vektoren = [("9d61b19deffd5a60ba844af492ec2cc44449c5697b326919703bac031cae7f60",
+                 "d75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a", "",
+                 "e5564300c360ac729086e2cc806e828a84877f1eb8e5d974d873e065224901555fb8821590a33bacc61e39701cf9b46bd25bf5f0595bbe24655141438e7a100b"),
+                ("4ccd089b28ff96da9db6c346ec114e0f5b8a319f35aba624da8cf6ed4fb8a6fb",
+                 "3d4017c3e843895a92b70aa74d1b7ebc9c982ccf2ec4968cc0cd55f12af4660c", "72",
+                 "92a009a9f0d4cab8720e820b5f642540a2b27b5416503f8fb3762223ebdb69da085ac1e43e15996e458f3613d0f11d8c387b2eaeb4302aeeb00d291612bb0c00"),
+                ("c5aa8df43f9f837bedb7442f31dcb7b166d38535076f094b85ce3a2e0b4458f7",
+                 "fc51cd8e6218a1a38da47ed00230f0580816ed13ba3303ac5deb911548908025", "af82",
+                 "6291d657deec24024827e69c3abe01a30ce548a284743a445e3680d7db5ac3ac18ff9b538d16f290ae67f760984dc6594a7c15e9716ed28dc027beceea1ec40a")]
+    t0 = time.time()
+    rfc = [(sg.ed25519_oeffentlich(bytes.fromhex(sk)).hex() == pk, sg.ed25519_signiere(bytes.fromhex(sk), bytes.fromhex(m)).hex() == s,
+            sg.ed25519_pruefe(bytes.fromhex(pk), bytes.fromhex(m), bytes.fromhex(s)),
+            not sg.ed25519_pruefe(bytes.fromhex(pk), bytes.fromhex(m) + b"!", bytes.fromhex(s))) for sk, pk, m, s in vektoren]
+    pruefe("Ed25519 = RFC 8032 Testvektoren 1–3 (öffentlicher Schlüssel, Signatur, Prüfung; veränderte Nachricht abgelehnt)",
+           all(all(r) for r in rfc), rfc)
+    seed, sid = hashlib.sha256(E51_SEED_TEXT).digest(), b"MGDTEST1"
+    summen = b"0" * 64 + b"  Me-Goos-ta-Deutsch-9.9.zip\n"
+    test_k = [("test", *sg.schluessel_lesen(E51_PUB))]
+    fest = E51_MINISIG.encode("utf-8")
+    ok_fest = sg.pruefe(summen, fest, test_k, "me-goos-ta-deutsch v9.9")
+    pruefe("minisign-Format: fester Testschlüssel (.pub „RW…“, ID) und feste .minisig (ED + trusted comment) gültig, Signieren deterministisch",
+           sg.signiere(seed, sid, summen, "me-goos-ta-deutsch v9.9", "signature from E51 test key") == fest
+           and sg.schluessel_text(sid, sg.ed25519_oeffentlich(seed)) == E51_PUB and ok_fest["id"] == sg.schluessel_id(sid)
+           and sg.pub_datei(sid, sg.ed25519_oeffentlich(seed)).startswith(f"untrusted comment: minisign public key {sg.schluessel_id(sid)}\n"),
+           ok_fest)
+
+    def grund(daten, ms, k=test_k, kommentar="me-goos-ta-deutsch v9.9"):
+        try:
+            sg.pruefe(daten, ms, k, kommentar)
+            return ""
+        except sg.SignaturFehler as f:
+            return str(f) or "?"
+    z = fest.decode("utf-8").split("\n")
+    sig_roh = bytearray(base64.b64decode(z[1]))
+    sig_roh[20] ^= 1
+    anders_sig = "\n".join([z[0], base64.b64encode(bytes(sig_roh)).decode(), *z[2:]]).encode()
+    anders_kom = "\n".join([z[0], z[1], "trusted comment: me-goos-ta-deutsch v9.99", *z[3:]]).encode()
+    fremd = [("fremd", b"MGDTEST2", sg.ed25519_oeffentlich(hashlib.sha256(b"fremd").digest()))]
+    roh = sg.signiere(seed, sid, summen, "me-goos-ta-deutsch v9.9").replace(b"RUR", b"RWR", 1)       # „Ed“ ohne Vorhash
+    s_ed = sg.ed25519_signiere(seed, summen)                    # älteres minisign: „Ed“ ohne Vorhash
+    legacy = (f"untrusted comment: alt\n{base64.b64encode(b'Ed' + sid + s_ed).decode()}\ntrusted comment: x\n"
+              f"{base64.b64encode(sg.ed25519_signiere(seed, s_ed + b'x')).decode()}\n").encode()
+    abgelehnt = {"Summen geändert": grund(summen.replace(b"0", b"1", 1), fest), "Signatur geändert": grund(summen, anders_sig),
+                 "Kommentar geändert": grund(summen, anders_kom), "fremder Schlüssel": grund(summen, fest, fremd),
+                 "falsche Version": grund(summen, fest, kommentar="me-goos-ta-deutsch v9.8"), "leer": grund(summen, b""),
+                 "kein minisign": grund(summen, b"hallo\n"), "Algorithmus Ed mit ED-Signatur": grund(summen, roh)}
+    pruefe("Abgelehnt: geänderte Summen, Signatur, trusted comment; fremder Schlüssel; falsche Version; leer/kaputt; falscher "
+           "Algorithmus (älteres „Ed“ ohne Vorhash gültig)",
+           all(abgelehnt.values()) and abgelehnt["fremder Schlüssel"] == "fremder_schluessel"
+           and abgelehnt["falsche Version"] == "falscher_kommentar" and abgelehnt["Kommentar geändert"] == "kommentar_ungueltig"
+           and grund(summen, legacy, kommentar="x") == "", abgelehnt)
+    v = sg.vertraut()
+    quelltext = (HIER / "signatur.py").read_text(encoding="utf-8")
+    import ast
+    oben = {(n.names[0].name if isinstance(n, ast.Import) else n.module).split(".")[0] for n in ast.parse(quelltext).body
+            if isinstance(n, (ast.Import, ast.ImportFrom))}
+    pruefe("Vertraute Schlüssel: Haupt + Reserve (verschiedene IDs, echte Schlüssel), trusted comment „me-goos-ta-deutsch v<V>“, "
+           "nur Standardbibliothek, kein privater Schlüssel im Quelltext",
+           [k[0] for k in v] == ["haupt", "reserve"] and v[0][1] != v[1][1] and all(len(k[2]) == 32 for k in v)
+           and sg.KOMMENTAR.format(version="2.5") == "me-goos-ta-deutsch v2.5" and oben <= {"__future__", "base64", "hashlib"}
+           and "secret key" not in quelltext.lower() and not re.search(r"[0-9a-fA-F]{64}", quelltext), (v, oben))
+    # --- laden(): nur mit gültiger Signatur ---
+    import aktualisieren as ak
+    dateien = {}
+
+    class H(http.server.BaseHTTPRequestHandler):
+        def log_message(self, *a):
+            pass
+
+        def do_GET(self):
+            d = dateien.get(self.path)
+            self.send_response(200 if d is not None else 404)
+            self.send_header("Content-Length", str(len(d or b"")))
+            self.end_headers()
+            self.wfile.write(d or b"")
+    srv = http.server.ThreadingHTTPServer(("127.0.0.1", 0), H)
+    threading.Thread(target=srv.serve_forever, daemon=True).start()
+    quelle = f"http://127.0.0.1:{srv.server_address[1]}/dl"
+    import io
+    import zipfile
+
+    def release(v_, signatur="eigen"):
+        b = io.BytesIO()
+        with zipfile.ZipFile(b, "w") as zz:
+            for n, d in {"Programm/starter.py": b"#", "Programm/gans_ui.py": b"#", "Me Goos-ta Deutsch - Windows.cmd": b"@echo off\r\n",
+                         "Programm/gans_lernkarten.py": f'VERSION = "{v_} (01.01.2030)"\n'.encode(),
+                         "Me Goos-ta Deutsch - Mac.command": b"#!/bin/bash\n", "Me Goos-ta Deutsch - Linux.sh": b"#!/bin/sh\n"}.items():
+                zz.writestr("Me-Goos-ta-Deutsch/" + n, d)
+        zd = b.getvalue()
+        s_ = f"{hashlib.sha256(zd).hexdigest()}  Me-Goos-ta-Deutsch-{v_}.zip\n".encode()
+        dateien[f"/dl/v{v_}/Me-Goos-ta-Deutsch-{v_}.zip"] = zd
+        dateien[f"/dl/v{v_}/SHA256SUMS.txt"] = s_
+        if signatur == "eigen":
+            dateien[f"/dl/v{v_}/SHA256SUMS.txt.minisig"] = sg.signiere(seed, sid, s_, f"me-goos-ta-deutsch v{v_}")
+        elif signatur == "fremd":
+            dateien[f"/dl/v{v_}/SHA256SUMS.txt.minisig"] = sg.signiere(hashlib.sha256(b"fremd").digest(), b"MGDTEST2", s_,
+                                                                       f"me-goos-ta-deutsch v{v_}")
+        elif signatur == "alt":                                 # gültig signiert, aber für eine andere Version
+            dateien[f"/dl/v{v_}/SHA256SUMS.txt.minisig"] = sg.signiere(seed, sid, s_, "me-goos-ta-deutsch v8.0")
+    for v_, art in (("9.1", "eigen"), ("9.2", "keine"), ("9.3", "fremd"), ("9.4", "alt")):
+        release(v_, art)
+    alt_env = {k: os.environ.get(k) for k in ("MGD_UPDATE_QUELLE", "MGD_UPDATE_TESTSCHLUESSEL", "MGD_SPRACHE")}
+
+    def laden(v_, mit_quelle=True):
+        os.environ["MGD_UPDATE_TESTSCHLUESSEL"] = E51_PUB
+        os.environ["MGD_SPRACHE"] = "de"
+        if mit_quelle:
+            os.environ["MGD_UPDATE_QUELLE"] = quelle
+        else:
+            os.environ.pop("MGD_UPDATE_QUELLE", None)
+        try:
+            ak.laden(v_, quelle, tmp / f"e51-daten-{v_}-{mit_quelle}", melde=lambda t: None)
+            return ""
+        except ak.UpdateFehler as f:
+            return str(f) or "?"
+    try:
+        f_ok = laden("9.1")
+        f_ohne, f_fremd, f_alt = laden("9.2"), laden("9.3"), laden("9.4")
+        f_test_ohne = laden("9.1", mit_quelle=False)
+        f_aelter = laden("1.0")
+        env_p = dict(os.environ, PYTHONIOENCODING="utf-8", MGD_UPDATE_QUELLE=quelle, MGD_UPDATE_TESTSCHLUESSEL=E51_PUB,
+                     MGD_SPRACHE="de")
+        als_prozess = subprocess.run([sys.executable, "-u", str(HIER / "aktualisieren.py"), "--laden", "9.1", "--quelle", quelle,
+                                      "--daten", str(tmp / "e51-prozess")], cwd=str(tmp), env=env_p, capture_output=True, text=True,
+                                     encoding="utf-8", errors="replace", timeout=120)
+    finally:
+        for k, w in alt_env.items():
+            if w is None:
+                os.environ.pop(k, None)
+            else:
+                os.environ[k] = w
+        srv.shutdown()
+    pruefe("laden(): gültig signiert → bereit; ohne .minisig, fremder Schlüssel, Signatur einer anderen Version → abgelehnt (Achtung …)",
+           f_ok == "" and (ak.bereit(tmp / "e51-daten-9.1-True") or {}).get("version") == "9.1" and "SHA256SUMS.txt.minisig" in f_ohne
+           and "fremder_schluessel" in f_fremd and "falscher_kommentar" in f_alt
+           and all(x.startswith("Achtung") for x in (f_ohne, f_fremd, f_alt)) and not (tmp / "e51-daten-9.3-True" / "update" / "neu").exists(),
+           (f_ok, f_ohne, f_fremd, f_alt))
+    pruefe("Testschlüssel gilt nur mit MGD_UPDATE_QUELLE=http://127.0.0.1:… (sonst nur die echten Schlüssel); nur neuere Version als diese",
+           "fremder_schluessel" in f_test_ohne and "nicht neuer" in f_aelter
+           and len(ak.schluessel_fuer("https://github.com/x/y/releases/download")) == 2, (f_test_ohne, f_aelter))
+    pruefe("aktualisieren.py --laden als eigener Prozess (wie aus der Oberfläche; eingebettetes Python mit ._pth) findet signatur.py",
+           als_prozess.returncode == 0 and "Signatur in Ordnung" in als_prozess.stdout
+           and (ak.bereit(tmp / "e51-prozess") or {}).get("version") == "9.1", (als_prozess.stdout + als_prozess.stderr)[-400:])
+    # --- Werkzeuge im Arbeitsordner ---
+    arbeit = HIER.parent.parent
+    sr_pfad, vr_pfad, bau = arbeit / "werkstatt" / "signiere_release.py", arbeit / "werkstatt" / "veroeffentliche_release.py", arbeit / "werkstatt" / "bau_webapp.py"
+    if not all(x.is_file() for x in (sr_pfad, vr_pfad, bau)) or os.name != "nt":
+        print("  (signiere_release.py, veroeffentliche_release.py, bau_webapp.py liegen nur im Arbeitsordner; DPAPI nur unter Windows – 4 Prüfungen entfallen)")
+        print(f"  E51 Kern {time.time() - t0:.1f} s")
+        return
+    env = dict(os.environ, PYTHONIOENCODING="utf-8", GH_TOKEN="", HTTPS_PROXY="http://127.0.0.1:9", HTTP_PROXY="http://127.0.0.1:9")
+
+    def lauf(*args):
+        return subprocess.run([sys.executable, *map(str, args)], env=env, cwd=str(tmp), capture_output=True, text=True,
+                              encoding="utf-8", errors="replace", timeout=600)
+    ko = tmp / "e51-schluessel"
+    datei = tmp / "e51-SHA256SUMS.txt"
+    datei.write_bytes(summen)
+    n1 = lauf(sr_pfad, "--neu", "--ordner", ko)
+    n2 = lauf(sr_pfad, "--neu", "--ordner", ko)
+    s1 = lauf(sr_pfad, "--signiere", datei, "--version", "9.9", "--ordner", ko)
+    p1 = lauf(sr_pfad, "--pruefe", datei, "--version", "9.9", "--ordner", ko)
+    p2 = lauf(sr_pfad, "--pruefe", datei, "--version", "9.9")
+    p3 = lauf(sr_pfad, "--pruefe", datei, "--version", "9.8", "--ordner", ko)
+    innen = lauf(sr_pfad, "--status", "--ordner", arbeit / "e51-nie")
+    ms = Path(str(datei) + ".minisig")
+    pub = (ko / "haupt.pub").read_text(encoding="utf-8") if (ko / "haupt.pub").is_file() else ""
+    pruefe("signiere_release.py (Testordner): --neu legt Haupt + Reserve an (DPAPI + .pub, nie überschreiben), --signiere → .minisig, "
+           "--pruefe gültig mit eigenem .pub, ohne (nicht vertraut) und falsche Version → Abbruch; nie im Arbeitsordner",
+           n1.returncode == 0 and n2.returncode != 0 and s1.returncode == 0 and ms.is_file() and p1.returncode == 0
+           and p2.returncode != 0 and "fremder_schluessel" in p2.stderr and p3.returncode != 0 and innen.returncode != 0
+           and not (arbeit / "e51-nie").exists() and sorted(x.name for x in ko.iterdir()) == ["haupt.dpapi", "haupt.pub", "reserve.dpapi", "reserve.pub"]
+           and sg.pruefe(summen, ms.read_bytes(), [("t", *sg.schluessel_lesen(pub))], "me-goos-ta-deutsch v9.9")
+           and len(n1.stdout) < 2000,
+           (n1.stdout + n1.stderr + n2.stderr + s1.stderr + p2.stderr + innen.stderr)[-500:])
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("signiere_release_e51", sr_pfad)
+    srm = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(srm)
+    srm.sicherung(ko, tmp / "e51-usb", "ein-langes-test-passwort", ops=1048576, mem=16777216)
+    usb = tmp / "e51-usb" / "me-goos-ta-deutsch-reserve.key"
+    zurueck = srm.schluessel_entschluesseln(usb.read_text(encoding="utf-8"), "ein-langes-test-passwort") if usb.is_file() else None
+    try:
+        srm.schluessel_entschluesseln(usb.read_text(encoding="utf-8"), "falsch-falsch-falsch")
+        falsch = False
+    except SystemExit:
+        falsch = True
+    ms_r, sid_r = srm.signieren(summen, "9.9", reserve_datei=usb, passwort="ein-langes-test-passwort")
+    pruefe("Sicherung: minisign-verschlüsselt (scrypt), Gegenprobe, Reserve danach vom Rechner entfernt; falsches Passwort → Abbruch; "
+           "Signieren mit der Reserve aus der Sicherung",
+           zurueck is not None and not (ko / "reserve.dpapi").exists() and (ko / "reserve.pub").is_file() and falsch
+           and usb.read_text(encoding="utf-8").startswith("untrusted comment: minisign encrypted secret key\n")
+           and base64.b64decode(usb.read_text(encoding="utf-8").splitlines()[1])[:6] == b"EdScB2"
+           and srm.pruefen(summen, ms_r, "9.9", ko)["name"].startswith("reserve"), (sid_r, falsch))
+    # --- veroeffentliche_release.py: Signatur Pflicht, vor jedem Netz ---
+    rel = tmp / "e36-release"
+    ordner = rel / "Me-Goos-ta-Deutsch"
+    zips = sorted(rel.glob("Me-Goos-ta-Deutsch-*.zip"))
+    if not ordner.is_dir() or not zips:
+        pruefe("E51: Release-Ordner aus E36 vorhanden", False, str(rel))
+        return
+    grund_ci = "E51 prüft nur die Signatur-Schranke"
+    v1 = lauf(vr_pfad, ordner, zips[0], "--ohne-ci", grund_ci, "--signatur-ordner", tmp / "e51-leer")
+    v2 = lauf(vr_pfad, ordner, zips[0], "--ohne-ci", grund_ci, "--signatur-ordner", ko)
+    v3 = lauf(vr_pfad, ordner, zips[0], "--probe", "--ohne-ci", grund_ci, "--signatur-ordner", ko)
+    mp = re.search(r"^#plan (.*)$", v3.stdout, re.M)
+    plan = json.loads(mp.group(1)) if mp else {}
+    pruefe("veroeffentliche_release.py: ohne Schlüssel bzw. mit nicht vertrautem Schlüssel Abbruch vor jedem Netz (nichts neben die ZIP); "
+           "--probe nennt Schlüssel + „nicht vertraut“; Notizen mit minisign-Befehl und Haupt-Schlüssel",
+           v1.returncode != 0 and "Haupt-Schlüssel" in v1.stderr and v2.returncode != 0 and "nicht vertraut" in v2.stderr
+           and "Konto " not in v1.stdout + v2.stdout and not (rel / "SHA256SUMS.txt.minisig").exists()
+           and v3.returncode == 0 and plan.get("signatur", {}).get("vertraut") is False
+           and plan.get("signatur", {}).get("schluessel") == sg.schluessel_id(sg.schluessel_lesen(pub)[0])
+           and f"minisign -Vm SHA256SUMS.txt -P {sg.SCHLUESSEL[0][1]}" in v3.stdout,
+           (v1.stderr + v2.stderr + v3.stderr)[-500:])
+    # --- Download-Seite: „Echtheit prüfen“ nur bei signiertem Release ---
+    srel = tmp / "e51-rel"
+    srel.mkdir()
+    zp = srel / zips[0].name
+    shutil.copyfile(zips[0], zp)
+    (srel / "SHA256SUMS.txt").write_text(f"{hashlib.sha256(zp.read_bytes()).hexdigest()}  {zp.name}\n", encoding="utf-8")
+    (srel / "SHA256SUMS.txt.minisig").write_bytes(fest)
+    b = lauf(bau, HIER.parent, tmp / "e51-web", "--ohne-pyodide", "--ohne-modelle", "--release-zip", zp)
+    html = (tmp / "e51-web" / "web-app" / "download" / "index.html").read_text(encoding="utf-8") if b.returncode == 0 else ""
+    befehl = f"<code>minisign -Vm SHA256SUMS.txt -P {sg.SCHLUESSEL[0][1]}</code>"
+    pruefe("Download-Seite: „Echtheit prüfen“ (de/en/es) mit minisign-Befehl, Schlüssel-ID und Link auf .minisig nur bei signiertem Release",
+           all(f'<details id="{l}-echtheit">' in html for l in ("de", "en", "es")) and html.count(befehl) == 3
+           and html.count("SHA256SUMS.txt.minisig</a>") == 3 and html.count(sg.schluessel_id(sg.vertraut()[0][1])) == 3,
+           (b.stdout + b.stderr)[-400:])
+    print(f"  E51 {time.time() - t0:.1f} s")
+
+
+E52_LOCKS = {"pakete.lock": "alle", "pakete-bewaehrt.lock": "win", "pakete-aelter.lock": "win", "pakete-sprachen.lock": "alle"}
+E52_PLATTFORMEN = {"win_amd64": r"win_amd64", "macos_x86_64": r"macosx_\d+_\d+_(x86_64|universal2)",
+                   "macos_arm64": r"macosx_\d+_\d+_(arm64|universal2)", "linux_x86_64": r"manylinux[\w]*?_x86_64",
+                   "linux_aarch64": r"manylinux[\w]*?_aarch64"}
+
+
+def _e52_name(s):
+    return re.sub(r"[-_.]+", "-", s).lower()
+
+
+def _e52_lock(text):
+    """[(name, operator, version, [hashes], [dateien])] einer Lock-Datei im Format von bau_lock.py."""
+    eintraege, dateien, zeilen, i = [], [], text.splitlines(), 0
+    while i < len(zeilen):
+        z = zeilen[i]
+        if z.startswith("#   "):
+            dateien.append(z[4:].strip())
+        m = re.match(r"^([A-Za-z0-9][A-Za-z0-9._-]*)\s*(==|===|>=|<=|~=|!=|<|>)?\s*([^\s;\\]*)", z) \
+            if z.strip() and not z.startswith(("#", " ")) else None
+        if m:
+            hashes, i = [], i + 1
+            while i < len(zeilen) and zeilen[i].startswith("    --hash="):
+                hashes.append(zeilen[i].split("=", 1)[1].rstrip(" \\"))
+                i += 1
+            eintraege.append((m.group(1), m.group(2), m.group(3), hashes, dateien))
+            dateien = []
+            continue
+        i += 1
+    return eintraege
+
+
+def test_paket_fassungen(tmp):
+    """E52 (2.5): Feste Paketfassungen mit Prüfsummen – Lock-Dateien vollständig (==, SHA-256, Räder je Plattform,
+    Abhängigkeiten), Starter und Sprachen-Tool rufen pip mit --require-hashes und Lock, Fingerabdruck folgt dem Lock,
+    bau_lock.py --probe (entfällt ohne Arbeitsordner), echter pip-Lauf gegen die Locks (entfällt ohne Internet)."""
+    print("\n[E52] Feste Paketfassungen mit Prüfsummen")
+    import importlib.metadata as md
+    import sprachen as sp
+    import starter
+    t0 = time.time()
+    locks = {n: (HIER / n).read_text(encoding="ascii") if (HIER / n).is_file() else "" for n in E52_LOCKS}
+    befund = []
+    for n, art in E52_LOCKS.items():
+        eintraege = _e52_lock(locks[n])
+        if not eintraege or not locks[n].isascii():
+            befund.append(f"{n}: leer/fehlt")
+        pflicht = ["win_amd64"] if art == "win" else list(E52_PLATTFORMEN)
+        for name, op, version, hashes, dateien in eintraege:
+            if op != "==" or not re.fullmatch(r"\d+(\.\d+)*", version):
+                befund.append(f"{n}: {name} ohne ==")
+            if not hashes or len(hashes) != len(dateien) or len(set(hashes)) != len(hashes) \
+                    or not all(re.fullmatch(r"sha256:[0-9a-f]{64}", h) for h in hashes):
+                befund.append(f"{n}: {name} Prüfsummen")
+            if not all(d.endswith(".whl") and re.search(r"-(cp313-cp313|cp3\d+-abi3|py3-none)-", d) for d in dateien):
+                befund.append(f"{n}: {name} Rad passt nicht zu Python 3.13")
+            for p in pflicht:
+                if not any(d.endswith("-any.whl") or any(re.fullmatch(E52_PLATTFORMEN[p], t) for t in d[:-4].split("-")[-1].split("."))
+                           for d in dateien):
+                    befund.append(f"{n}: {name} ohne Rad für {p}")
+    pruefe("Lock-Dateien (Standard, 2 Ersatz-Sätze, Sprachen): nur ==, je Rad sha256 mit 64 Hex-Zeichen, Räder für Python 3.13; "
+           "Standard + Sprachen für Windows x64, macOS Intel/Apple Silicon, Linux x64/ARM, Ersatz-Sätze für Windows x64",
+           not befund, befund[:6])
+    # --- vollständig: requirements.txt + Abhängigkeiten der installierten (gleichen) Fassungen ---
+    try:
+        from pip._vendor.packaging.requirements import Requirement
+    except ImportError:                                       # Python ohne pip: nur die Oberpakete
+        Requirement = None
+    haupt = {_e52_name(e[0]): e[2] for e in _e52_lock(locks["pakete.lock"])}
+    oben = [_e52_name(re.split(r"[<>=!~;\s]", z.strip())[0]) for z in (HIER / "requirements.txt").read_text(encoding="utf-8").splitlines()
+            if z.strip() and not z.startswith("#")]
+    fehlt, geprueft = [n for n in oben if n not in haupt], []
+    for n, v in haupt.items():
+        try:
+            d = md.distribution(n)
+        except md.PackageNotFoundError:
+            continue
+        if d.version != v or Requirement is None:
+            continue
+        geprueft.append(n)
+        for r in d.requires or []:
+            req = Requirement(r)
+            if (req.marker is None or req.marker.evaluate({"extra": ""})) and _e52_name(req.name) not in haupt:
+                fehlt.append(f"{n} → {req.name}")
+    sprach = {_e52_name(e[0]): e[2] for e in _e52_lock(locks["pakete-sprachen.lock"])}
+    pruefe(f"pakete.lock vollständig: alle Pakete aus requirements.txt + jede Abhängigkeit (geprüft an {len(geprueft)} installierten "
+           "gleichen Fassungen); pakete-sprachen.lock = uharfbuzz in der Fassung von sprachen.PAKETE",
+           not fehlt and len(oben) >= 4 and sprach.get("uharfbuzz") == sp.PAKETE["uharfbuzz"]["version"], (fehlt, geprueft, sprach))
+    # --- Starter: pip mit --require-hashes und Lock (Ersatz-Satz, lokaler Ordner, MGD_PAKETE_NEUESTE nur Spannen) ---
+    alt_env = os.environ.pop("MGD_PAKETE_NEUESTE", None)
+    aufrufe = []
+    alt_pip, alt_lokal = starter.pip_lauf, starter.lokale_pakete
+    try:
+        starter.pip_lauf = lambda aus, args, anzeigen=True: (aufrufe.append(list(args)), (0, "Successfully installed x"))[1]
+        spez_std, spez_b = starter.paket_spezifikation(), starter.paket_spezifikation("bewährt")
+        starter.installiere(None, starter.paket_spezifikation())
+        starter.lokale_pakete = lambda: tmp
+        starter.installiere(None, starter.paket_spezifikation("älter"))
+        os.environ["MGD_PAKETE_NEUESTE"] = "1"
+        spez_neu, spez_neu_b = starter.paket_spezifikation(), starter.paket_spezifikation("bewährt")
+    finally:
+        starter.pip_lauf, starter.lokale_pakete = alt_pip, alt_lokal
+        os.environ.pop("MGD_PAKETE_NEUESTE", None)
+        if alt_env is not None:
+            os.environ["MGD_PAKETE_NEUESTE"] = alt_env
+    hs = str(starter.HIER)
+    pruefe("Starter: pip install --only-binary=:all: --require-hashes -r pakete.lock (Ersatz-Sätze mit eigener Lock-Datei, auch aus "
+           "werkzeuge/pakete); nur MGD_PAKETE_NEUESTE=1 nimmt die Spannen aus requirements.txt",
+           spez_std == ["--require-hashes", "-r", str(Path(hs) / "pakete.lock")]
+           and spez_b == ["--require-hashes", "-r", str(Path(hs) / "pakete-bewaehrt.lock")]
+           and len(aufrufe) == 2 and "--only-binary=:all:" in aufrufe[0] and aufrufe[0][-3:] == spez_std
+           and "--no-index" in aufrufe[1] and aufrufe[1][-3:] == ["--require-hashes", "-r", str(Path(hs) / "pakete-aelter.lock")]
+           and spez_neu == ["-r", str(Path(hs) / "requirements.txt")] and spez_neu_b == spez_b
+           and dict(starter.ERSATZ_SAETZE) == {"bewährt": "pakete-bewaehrt.lock", "älter": "pakete-aelter.lock"},
+           (spez_std, aufrufe, spez_neu))
+    # --- Fingerabdruck folgt den Lock-Dateien ---
+    kopie = tmp / "e52-hier"
+    kopie.mkdir()
+    for n in (*E52_LOCKS, "requirements.txt"):
+        if (HIER / n).is_file():
+            shutil.copy2(HIER / n, kopie / n)
+    alt_hier = starter.HIER                                   # starter kann aus der Testkopie stammen (ohne Locks)
+    try:
+        starter.HIER = HIER
+        echt = starter.paket_signatur()
+        starter.HIER = kopie
+        s1 = starter.paket_signatur()
+        (kopie / "pakete-aelter.lock").write_text(locks["pakete-aelter.lock"] + "# geaendert\n", encoding="ascii")
+        s2 = starter.paket_signatur()
+        (kopie / "requirements.txt").write_text("numpy>=1,<9\n", encoding="utf-8")
+        s3 = starter.paket_signatur()
+        os.environ["MGD_PAKETE_NEUESTE"] = "1"
+        s4 = starter.paket_signatur()
+    finally:
+        starter.HIER = alt_hier
+        os.environ.pop("MGD_PAKETE_NEUESTE", None)
+        if alt_env is not None:
+            os.environ["MGD_PAKETE_NEUESTE"] = alt_env
+    pruefe("Fingerabdruck der Pakete = Lock-Dateien (gleich in jedem Ordner, neue Lock-Datei → Einrichtung „pakete“; "
+           "requirements.txt zählt nur im Job „neueste“)", echt == s1 and s2 != s1 and s3 == s2 and s4 != s3, (echt, s1, s2, s3, s4))
+    # --- Sprachen-Tool: uharfbuzz mit Hash ---
+    befehle = []
+
+    class _R:
+        returncode, stdout, stderr = 0, "", ""
+    alt_run, alt_daten, alt_lock = sp.subprocess.run, os.environ.get("MGD_DATEN"), sp.PAKETE_LOCK
+    echt_lock = HIER / "pakete-sprachen.lock"                 # sprachen kann aus der Testkopie stammen (ohne Locks)
+    os.environ["MGD_DATEN"] = str(tmp / "e52-daten")
+    fehler = []
+    try:
+        sp.subprocess.run = lambda befehl, **kw: (befehle.append([str(b) for b in befehl]), _R())[1]
+        for lock in (echt_lock, tmp / "e52-fehlt.lock"):
+            sp.PAKETE_LOCK = lock
+            try:
+                sp.installiere_paket("uharfbuzz")
+            except sp.SprachFehler as e:
+                fehler.append(str(e))
+    finally:
+        sp.subprocess.run, sp.PAKETE_LOCK = alt_run, alt_lock
+        if alt_daten is None:
+            os.environ.pop("MGD_DATEN", None)
+        else:
+            os.environ["MGD_DATEN"] = alt_daten
+    b = befehle[0] if befehle else []
+    pruefe("Sprachen-Tool: uharfbuzz per pip --require-hashes -r pakete-sprachen.lock (--no-deps, --target, nur Räder); "
+           "fehlt der Eintrag im Lock → Fehler vor jedem pip-Aufruf",
+           len(befehle) == 1 and all(x in b for x in ("--require-hashes", "--no-deps", "--only-binary=:all:", "--target"))
+           and b[-2:] == ["-r", str(echt_lock)] and not any(x.startswith("uharfbuzz==") for x in b) and len(fehler) == 2,
+           (befehle, fehler))
+    # --- bau_lock.py --probe (Arbeitsordner) + Release enthält die Locks ---
+    arbeit = HIER.parent.parent
+    bl = arbeit / "werkstatt" / "bau_lock.py"
+    env = dict(os.environ, PYTHONIOENCODING="utf-8", PIP_CONFIG_FILE=os.devnull)
+    env.pop("MGD_PAKETE_NEUESTE", None)
+
+    def lauf(*args, t=600):
+        return subprocess.run([sys.executable, *map(str, args)], env=env, cwd=str(tmp), capture_output=True, text=True,
+                              encoding="utf-8", errors="replace", timeout=t)
+    if bl.is_file() and (arbeit / "werkstatt" / "bau_lock_antworten.json").is_file():
+        p1 = lauf(bl, HIER, "--probe")
+        mp = re.search(r"^#plan (.*)$", p1.stdout, re.M)
+        plan = json.loads(mp.group(1)) if mp else {}
+        falsch = tmp / "e52-prog"
+        shutil.copytree(kopie, falsch)
+        (falsch / "requirements.txt").write_bytes((HIER / "requirements.txt").read_bytes())
+        (falsch / "pakete.lock").write_text(re.sub(r"sha256:[0-9a-f]{4}", "sha256:0000", locks["pakete.lock"], count=1), encoding="ascii")
+        p2 = lauf(bl, falsch, "--probe")
+        rel = tmp / "e36-release" / "Me-Goos-ta-Deutsch" / "Programm"
+        im_release = all((rel / n).is_file() for n in E52_LOCKS) if rel.is_dir() else None
+        pruefe("bau_lock.py --probe (offline, gespeicherte PyPI-Antworten): baut alle Locks gleich nach; geänderte Prüfsumme → Abweichung; "
+               "Release-Ordner (bau_release.py) enthält alle Lock-Dateien",
+               p1.returncode == 0 and p1.stdout.count("✓ ") == len(E52_LOCKS) and "✗" not in p1.stdout
+               and plan.get("locks", {}).get("pakete.lock") == haupt and p2.returncode == 1 and "✗ pakete.lock" in p2.stdout
+               and im_release is not False, (p1.stdout + p1.stderr)[-400:] + (p2.stdout + p2.stderr)[-200:])
+    else:
+        print("  (bau_lock.py + bau_lock_antworten.json liegen nur im Arbeitsordner – 1 Prüfung entfällt)")
+    # --- echter pip-Lauf: Locks installierbar, falsche Prüfsumme wird abgelehnt ---
+    pip = [sys.executable, "-m", "pip", "install", "--dry-run", "--ignore-installed", "--disable-pip-version-check",
+           "--no-input", "--require-hashes", "--only-binary=:all:", "-q"]
+    namen = ["pakete.lock", "pakete-sprachen.lock"] + (["pakete-bewaehrt.lock", "pakete-aelter.lock"] if os.name == "nt" else [])
+    laeufe = {n: subprocess.run(pip + (["--no-deps"] if n == "pakete-sprachen.lock" else []) + ["-r", str(HIER / n)], env=env,
+                                capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=900) for n in namen}
+    rl = next(e for e in _e52_lock(locks["pakete.lock"]) if e[0] == "reportlab")
+    (tmp / "e52-falsch.lock").write_text(f"reportlab=={rl[2]} \\\n    --hash=sha256:{'0' * 64}\n", encoding="ascii")
+    falsch_lauf = subprocess.run(pip + ["--no-deps", "-r", str(tmp / "e52-falsch.lock")], env=env, capture_output=True, text=True,
+                                 encoding="utf-8", errors="replace", timeout=600)
+    alles = " ".join(r.stdout + r.stderr for r in [*laeufe.values(), falsch_lauf]).lower()
+    if any(w in alles for w in ("newconnectionerror", "failed to establish", "getaddrinfo", "temporary failure in name resolution",
+                                "max retries exceeded", "proxyerror", "network is unreachable")):
+        print("  (E52: kein Internet – der echte pip-Lauf entfällt)")
+    else:
+        pruefe(f"Echter pip-Lauf (--dry-run --require-hashes) gegen {', '.join(namen)}: installierbar; falsche Prüfsumme → abgelehnt",
+               all(r.returncode == 0 for r in laeufe.values()) and falsch_lauf.returncode != 0
+               and "do not match the hashes" in (falsch_lauf.stdout + falsch_lauf.stderr).lower(),
+               {n: (r.returncode, (r.stderr or r.stdout)[-200:]) for n, r in laeufe.items()} | {"falsch": falsch_lauf.stderr[-200:]})
+    print(f"  E52 {time.time() - t0:.1f} s")
+
+
 def main():
     global ECHTES_KI_BILD, ECHT_DA
     t0 = time.time()
@@ -5790,6 +6341,7 @@ def main():
         shutil.copy2(HIER / "lernen.py", p / "lernen.py")
         shutil.copy2(HIER / "verlauf.py", p / "verlauf.py")
         shutil.copy2(HIER / "aktualisieren.py", p / "aktualisieren.py")
+        shutil.copy2(HIER / "signatur.py", p / "signatur.py")
         shutil.copy2(HIER.parent / "Me Goos-ta Deutsch - Linux.sh", p.parent / "Me Goos-ta Deutsch - Linux.sh")
         daten = Path(tmp) / "daten"
         daten.mkdir()
@@ -5835,6 +6387,9 @@ def main():
         test_rueckgaengig(p, Path(tmp))
         test_update(p, Path(tmp))
         test_oberflaeche_24()
+        test_github_auftritt(Path(tmp))
+        test_signatur(Path(tmp))
+        test_paket_fassungen(Path(tmp))
     ok =sum(1 for e in tg.ergebnisse if e[1])
     print(f"\n{ok} von {len(tg.ergebnisse)} Prüfungen bestanden ({time.time() - t0:.0f} s).")
     if ok == len(tg.ergebnisse):
