@@ -32,8 +32,8 @@ ERLAUBT = SIGNATUR / "git_allowed_signers"
 PROJEKT = "Me-Goos-ta-Deutsch"
 AUSFUEHRBAR = (f"{PROJEKT}/Me Goos-ta Deutsch - Mac.command", f"{PROJEKT}/Me Goos-ta Deutsch - Linux.sh")
 MAX_GROESSE = 20 * 1024 * 1024
-NOTIZEN = ("UEBERGABE.md", "FORTSETZUNG.md", "ARBEITSSTAND.md", "UMSETZUNGSPLAN.md", "HANDY_PLAN.md", "KI_BILD_RECHERCHE.md",
-           "START_NEUES_PROJEKT.md", "PROMPT_NEUER_CHAT.txt")
+NOTIZEN = ("UEBERGABE.md", "FORTSETZUNG.md", "ARBEITSSTAND.md", "UMSETZUNGSPLAN.md", "ABLAEUFE.md", "ARCHIV.md",
+           "STIMMEN_ANALYSE.md", "PROMPT_NEUER_CHAT.txt")
 # Beispiele, die nie ins Repo dürfen (Nutzerdaten wie aktualisieren.NUTZER, Archive, Proben, Ergebnisse)
 NIE = NOTIZEN + tuple(f"{PROJEKT}/Programm/{n}" for n in (
     "karten.csv", "karten.bak.csv", "ui_einstellungen.json", "ideen.json", "lernstand.json", "lernstand.bak.json",
