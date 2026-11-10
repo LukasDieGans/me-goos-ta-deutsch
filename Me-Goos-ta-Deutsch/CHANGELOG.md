@@ -6,6 +6,18 @@ version such as 2.5.1). Updating always keeps your cards, images, ideas, setting
 
 ## [Unreleased]
 
+### Added
+- Learning: new switch “🔊 Pronunciation in both languages” in the learning settings (off by default). When it is on, the
+  word in the card language gets its own 🔊 too, so you can also learn Spanish or another card language with German as
+  your starting point. Next to the switch you see which offline voices your system has, with a link to the new guide
+  section “Installing voices” (Windows, macOS, Linux, Android, iPhone).
+- The study page (`.html`) has the same switch (“🔊 Both languages”, off by default, remembered by the page).
+
+### Changed
+- With the switch off (the default), learning only offers the German 🔊; until 2.5.1 the 🔊 for the card language was
+  always shown. Switch it on to get it back.
+- Spanish voices: a voice from Mexico (es-MX) is preferred, then Latin America, the USA and Spain.
+
 ## [2.5.1] – 2026-11-10
 
 ### Security

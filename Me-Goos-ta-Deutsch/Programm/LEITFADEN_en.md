@@ -442,16 +442,34 @@ With the **“🎓 Learn cards”** tool you practise your cards right inside th
 | Today | how many reviews and new cards are waiting, “Let’s go” |
 | Decks | “All active cards” and your own decks – by language, note, search text, only new/due/problem cards or by ticking; ✎ edit, 🗑 delete |
 | Statistics | goose march (days in a row), learned today, due in the next 7 days, card progress (new · learning · young · mature), retention |
-| Settings | new cards and reviews per day, desired retention (80–95 %, default 90 %), direction (picture → word, word → picture, both), learning language, start of the learning day (default 4 am) |
+| Settings | new cards and reviews per day, desired retention (80–95 %, default 90 %), direction (picture → word, word → picture, both), learning language, start of the learning day (default 4 am), switch **“🔊 Pronunciation in both languages”** (off by default) showing which voices your system has |
 | Back up progress | export (JSON file), import (for each card the newer state wins), reset everything |
 
-**While learning:** space = show answer, keys **1–4** = rate, **Ctrl+Z** = undo, **Esc** = finish. On a phone you tap the card; the rating buttons sit at the bottom in thumb reach, swiping right means “Good”, left “Again” (↶ takes it back). You can stop at any time – every rating is saved immediately, even if you close the program. If your system has a voice for the language, 🔊 reads the word aloud. After “Show answer” there is also a 🔊 next to the German text: it reads the German aloud exactly as it appears on the picture – in both directions, but only after revealing (otherwise it would give the answer away). It only uses a voice of your system that works without the internet (German from Germany first, then Austria, then Switzerland); without one there is no button. On Windows you can add a German voice in Settings under “Time & language → Language”.
+**While learning:** space = show answer, keys **1–4** = rate, **Ctrl+Z** = undo, **Esc** = finish. On a phone you tap the card; the rating buttons sit at the bottom in thumb reach, swiping right means “Good”, left “Again” (↶ takes it back). You can stop at any time – every rating is saved immediately, even if you close the program. If **“🔊 Pronunciation in both languages”** is switched on in the settings, the {{Spanish}} word gets a 🔊 too (picture → word: after revealing, word → picture: right on the front) – provided your system has a voice for it. The switch is off by default, then there is only the German 🔊. After “Show answer” there is also a 🔊 next to the German text: it reads the German aloud exactly as it appears on the picture – in both directions, but only after revealing (otherwise it would give the answer away). It only uses a voice of your system that works without the internet (German from Germany first, then Austria, then Switzerland); without one there is no button. On Windows you can add a German voice in Settings under “Time & language → Language”.
 
 **In “My cards”** each card shows its progress (new, learning, young, mature; the hover says how often it was learned and when the next review is). Above the list you filter by due, new, mature or problem cards. With **“☑ Select”** you tick cards and **“Learn now”** or put them into a deck.
 
 **Changed a card?** If you change the German text, the word or the picture of a card you are already learning, it starts over when learning – the editor tells you beforehand, and a short message follows. A changed note keeps the progress.
 
 **Tips:** A little every day beats a lot now and then. Be honest when rating – “Again” is not a mistake, it is exactly what makes the scheduler smart. Cards you keep forgetting become **problem cards**: a clearer picture or a note (e.g. a memory hook) often helps more than yet another review.
+
+### Learning another language when you speak German
+
+You already speak German and want to learn the card language? Goose-y easy: in **Learn → Settings** switch on **“🔊 Pronunciation in both languages”** and save, then pick the **direction** you like – **word → picture** shows you the word first and lets you hear it right away, **picture → word** asks for the word and says it after revealing, **both** mixes the two. Next to the switch you see whether your system has a voice for both languages (✓ with the voice’s name); if one is missing, the link takes you straight to the next section.
+
+### Installing voices
+
+Words are only read aloud with voices your system brings along and that work without the internet. For Spanish the program first picks a voice from Mexico (es-MX), then Latin America (es-419), the USA, Spain and finally any other Spanish one; for German first Germany, then Austria and Switzerland. After installing, reload the browser or the program window once.
+
+| System | How to add a voice |
+| --- | --- |
+| Windows | Settings → Time & language → Language & region → Add a language (e.g. “Español (México)”) – keep **Text-to-speech** ticked; or Settings → Accessibility → Narrator → Add voices |
+| macOS | System Settings → Accessibility → Spoken Content → System voice → Manage voices → pick the language and download |
+| Linux | depends on the browser: Firefox and Chromium usually use **speech-dispatcher** with **espeak-ng** (package manager, e.g. `speech-dispatcher espeak-ng`); then restart the browser |
+| Android | Settings → System → Languages → Text-to-speech output → gear of Speech Services by Google → Install voice data |
+| iPhone/iPad | Settings → Accessibility → Spoken Content → Voices → pick the language and download a voice |
+
+If the program still says “no local voice yet”, your browser only offers that voice online – the program deliberately doesn’t use it, for your privacy.
 
 ## Studying digitally
 
@@ -460,7 +478,7 @@ Fancy studying on the go? Choose **“Digital flashcards”** in Generate – th
 | Format | How to study with it |
 | --- | --- |
 | Anki package (`.apkg`) | open it in Anki on your computer (Windows, Mac, Linux) – or send it to your phone by mail, cloud or cable and import it in AnkiDroid (Android) or AnkiMobile (iPhone/iPad) |
-| Study page (`.html`) | a single file that runs offline in the browser on your computer. Flip, “Got it” or “Again”; after flipping, 🔊 reads the German text aloud (only with an offline voice of your system, otherwise no button); your progress stays saved in that browser. On phones it only partly works (on the iPhone it usually won’t start from the Files app) – there, better use the Anki package or the screen PDF |
+| Study page (`.html`) | a single file that runs offline in the browser on your computer. Flip, “Got it” or “Again”; after flipping, 🔊 reads the German text aloud (only with an offline voice of your system, otherwise no button); the **“🔊 Both languages”** button (off by default, the page remembers it) adds a second 🔊 for the word; your progress stays saved in that browser. On phones it only partly works (on the iPhone it usually won’t start from the Files app) – there, better use the Anki package or the screen PDF |
 | Screen PDF | flip through in any PDF app: front, back, next card |
 | Tables (CSV) | for Quizlet, Brainscape, Mochi & co. – choose “Tables for other apps” in fine-tuning |
 

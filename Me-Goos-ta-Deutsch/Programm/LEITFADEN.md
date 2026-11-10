@@ -442,16 +442,34 @@ Mit dem Tool **„🎓 Karten lernen“** übst du deine Karten direkt im Progra
 | Heute | wie viele Wiederholungen und neue Karten anstehen, „Los geht’s“ |
 | Stapel | „Alle aktiven Karten“ und eigene Stapel – nach Sprache, Notiz, Suchtext, nur neue/fällige/Problemkarten oder per Häkchen; ✎ ändern, 🗑 löschen |
 | Statistik | Gänsemarsch (Tage in Folge), heute gelernt, fällig in den nächsten 7 Tagen, Lernstand der Karten (neu · lernt · jung · sicher), Behaltensquote |
-| Einstellungen | neue Karten und Wiederholungen pro Tag, gewünschte Behaltensquote (80–95 %, Standard 90 %), Richtung (Bild → Wort, Wort → Bild, beide), Lernsprache, Beginn des Lerntags (Standard 4 Uhr) |
+| Einstellungen | neue Karten und Wiederholungen pro Tag, gewünschte Behaltensquote (80–95 %, Standard 90 %), Richtung (Bild → Wort, Wort → Bild, beide), Lernsprache, Beginn des Lerntags (Standard 4 Uhr), Schalter **„🔊 Aussprache in beiden Sprachen“** (Standard aus) mit Anzeige, welche Stimmen dein System hat |
 | Lernstand sichern | exportieren (JSON-Datei), importieren (je Karte gilt der neuere Stand), alles zurücksetzen |
 
-**Beim Lernen:** Leertaste = Antwort zeigen, Tasten **1–4** = bewerten, **Strg+Z** = rückgängig, **Esc** = beenden. Am Handy tippst du die Karte an; die Bewertungsknöpfe liegen unten im Daumenbereich, Wischen nach rechts heißt „Gut“, nach links „Nochmal“ (↶ nimmt es zurück). Du kannst jederzeit aufhören – jede Bewertung ist sofort gespeichert, auch wenn du das Programm schließt. Hat dein System eine Stimme für die Sprache, liest 🔊 das Wort vor. Nach „Antwort zeigen“ steht auch neben dem deutschen Text ein 🔊: Es liest das Deutsche so vor, wie es auf dem Bild steht – in beiden Richtungen, aber erst nach dem Aufdecken (sonst wäre die Antwort verraten). Vorgelesen wird nur mit einer Stimme deines Systems, die ohne Internet arbeitet (zuerst Deutsch aus Deutschland, dann Österreich, dann Schweiz); fehlt sie, gibt es keinen Knopf. Unter Windows lässt sich eine deutsche Stimme in den Einstellungen unter „Zeit und Sprache → Sprache“ hinzufügen.
+**Beim Lernen:** Leertaste = Antwort zeigen, Tasten **1–4** = bewerten, **Strg+Z** = rückgängig, **Esc** = beenden. Am Handy tippst du die Karte an; die Bewertungsknöpfe liegen unten im Daumenbereich, Wischen nach rechts heißt „Gut“, nach links „Nochmal“ (↶ nimmt es zurück). Du kannst jederzeit aufhören – jede Bewertung ist sofort gespeichert, auch wenn du das Programm schließt. Ist in den Einstellungen **„🔊 Aussprache in beiden Sprachen“** eingeschaltet, steht auch beim Wort auf {{Spanisch}} ein 🔊 (bei Bild → Wort nach dem Aufdecken, bei Wort → Bild gleich vorn) – vorausgesetzt, dein System hat eine Stimme dafür. Standardmäßig ist der Schalter aus, dann gibt es nur das deutsche 🔊. Nach „Antwort zeigen“ steht auch neben dem deutschen Text ein 🔊: Es liest das Deutsche so vor, wie es auf dem Bild steht – in beiden Richtungen, aber erst nach dem Aufdecken (sonst wäre die Antwort verraten). Vorgelesen wird nur mit einer Stimme deines Systems, die ohne Internet arbeitet (zuerst Deutsch aus Deutschland, dann Österreich, dann Schweiz); fehlt sie, gibt es keinen Knopf. Unter Windows lässt sich eine deutsche Stimme in den Einstellungen unter „Zeit und Sprache → Sprache“ hinzufügen.
 
 **In „Meine Karten“** zeigt jede Karte ihren Lernstand (neu, lernt, jung, sicher; im Hover: wie oft gelernt und wann die nächste Wiederholung ist). Darüber filterst du nach fällig, neu, sicher oder Problemkarten. Mit **„☑ Auswählen“** kreuzt du Karten an und lernst sie **„Jetzt“** oder legst sie in einen Stapel.
 
 **Karte geändert?** Änderst du Deutsch-Text, Wort oder Bild einer Karte, die du schon lernst, beginnt sie beim Lernen von vorn – der Editor sagt das vorher, danach kommt eine kurze Meldung. Eine geänderte Notiz behält den Lernstand.
 
 **Tipps:** Lieber jeden Tag ein bisschen als selten viel. Sei beim Bewerten ehrlich – „Nochmal“ ist kein Fehler, sondern genau das, was den Planer schlau macht. Karten, die du immer wieder vergisst, werden zu **Problemkarten**: ein deutlicheres Bild oder eine Notiz (z. B. eine Eselsbrücke) hilft oft mehr als noch eine Wiederholung.
+
+### Mit Deutschkenntnissen eine andere Sprache lernen
+
+Du sprichst schon Deutsch und willst die Kartensprache lernen? Ganz (gans!) einfach: In **Lernen → Einstellungen** **„🔊 Aussprache in beiden Sprachen“** einschalten und speichern, dann die **Richtung** nach Wunsch wählen – **Wort → Bild** zeigt dir zuerst das Wort und lässt es dich gleich anhören, **Bild → Wort** fragt das Wort ab und spricht es nach dem Aufdecken vor, **beide** mischt die zwei. Neben dem Schalter siehst du, ob dein System für beide Sprachen eine Stimme hat (✓ mit Namen der Stimme); fehlt eine, führt dich der Link direkt zum nächsten Abschnitt.
+
+### Stimmen installieren
+
+Vorgelesen wird nur mit Stimmen, die dein System selbst mitbringt und die ohne Internet arbeiten. Für Spanisch nimmt das Programm zuerst eine Stimme aus Mexiko (es-MX), dann Lateinamerika (es-419), USA, Spanien und zuletzt jede andere spanische; für Deutsch zuerst Deutschland, dann Österreich und die Schweiz. Nach dem Installieren den Browser bzw. das Programmfenster einmal neu laden.
+
+| System | So kommt eine Stimme dazu |
+| --- | --- |
+| Windows | Einstellungen → Zeit und Sprache → Sprache und Region → Sprache hinzufügen (z. B. „Español (México)“) – dabei **Sprachausgabe** angehakt lassen; oder Einstellungen → Barrierefreiheit → Sprachausgabe → Stimmen hinzufügen |
+| macOS | Systemeinstellungen → Bedienungshilfen → Gesprochene Inhalte → Systemstimme → Stimmen verwalten → Sprache wählen und laden |
+| Linux | je nach Browser: Firefox und Chromium nutzen meist **speech-dispatcher** mit **espeak-ng** (Paketverwaltung, z. B. `speech-dispatcher espeak-ng`); danach den Browser neu starten |
+| Android | Einstellungen → System → Sprachen → Sprachausgabe (bzw. „Text-in-Sprache“) → Zahnrad der Sprachausgabe von Google → Sprachdaten installieren |
+| iPhone/iPad | Einstellungen → Bedienungshilfen → Gesprochene Inhalte → Stimmen → Sprache wählen und eine Stimme laden |
+
+Zeigt das Programm danach immer noch „noch keine lokale Stimme“, bietet dein Browser die Stimme nur online an – das Programm nutzt sie aus Datenschutzgründen bewusst nicht.
 
 ## Digital lernen
 
@@ -460,7 +478,7 @@ Lust, auch unterwegs zu lernen? Wähle in Erzeugen **„Digitale Lernkarten“**
 | Format | So lernst du damit |
 | --- | --- |
 | Anki-Paket (`.apkg`) | in Anki am Rechner öffnen (Windows, Mac, Linux) – oder per Mail, Cloud oder Kabel aufs Handy und in AnkiDroid (Android) bzw. AnkiMobile (iPhone/iPad) importieren |
-| Lernseite (`.html`) | eine einzige Datei, läuft offline im Browser am Rechner. Umdrehen, „Gewusst“ oder „Nochmal“; nach dem Umdrehen liest 🔊 den deutschen Text vor (nur mit einer Offline-Stimme deines Systems, sonst kein Knopf); dein Lernstand bleibt in diesem Browser gespeichert. Am Handy klappt sie nur eingeschränkt (am iPhone startet sie aus der Dateien-App meist nicht) – dort lieber das Anki-Paket oder das Bildschirm-PDF |
+| Lernseite (`.html`) | eine einzige Datei, läuft offline im Browser am Rechner. Umdrehen, „Gewusst“ oder „Nochmal“; nach dem Umdrehen liest 🔊 den deutschen Text vor (nur mit einer Offline-Stimme deines Systems, sonst kein Knopf); mit dem Knopf **„🔊 Beide Sprachen“** (Standard aus, die Seite merkt ihn sich) kommt ein zweites 🔊 für das Wort dazu; dein Lernstand bleibt in diesem Browser gespeichert. Am Handy klappt sie nur eingeschränkt (am iPhone startet sie aus der Dateien-App meist nicht) – dort lieber das Anki-Paket oder das Bildschirm-PDF |
 | Bildschirm-PDF | in jeder PDF-App durchblättern: Vorderseite, Rückseite, nächste Karte |
 | Tabellen (CSV) | für Quizlet, Brainscape, Mochi & Co. – im Feinschliff „Tabellen für andere Apps“ wählen |
 

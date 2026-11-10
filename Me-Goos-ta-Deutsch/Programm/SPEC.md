@@ -841,7 +841,16 @@ Gut/Einfach mit orschau_text, Tasten 1–4, Strg+Z, Esc = beenden, Fortschritts
 Richtungen, nie vorher) zusätzlich 🔊 neben dem deutschen Text (`data-ln="vorlesen-de"`, liest `de` mit einer lokalen
 Stimme de-DE → de-AT → de-CH → andere de; ohne Stimme kein Knopf; gemeinsamer Weg `vorlesen(text, stimme)`, Beenden ruft
 `cancel`). Keine neue Taste; die Lernseite liest nach dem Umdrehen ebenso Deutsch (Stimme beim Laden + `voiceschanged`),
-das Anki-Paket bleibt ohne `{{tts}}`. Touch: Bewertungsleiste klebt unten,
+das Anki-Paket bleibt ohne `{{tts}}`. **Aussprache in beiden Sprachen (seit 2.6, E59):** Lern-Einstellung
+`aussprache_beide` (Standard `false`, nur echtes bool – sonst bleibt der alte Wert; ältere `lernstand.json`/Importe ohne
+Feld = aus; je Projekt, reist im Export mit, Import behält die eigenen Einstellungen). Schalter in den Einstellungen
+(`data-le="aussprache_beide"`, Hover `h_ln_aussprache_beide`) mit Stimmen-Status je Sprache (`lernStimmenHTML()`, auch bei
+`voiceschanged`: „✓ Sprache: Stimme“ bzw. „noch keine lokale Stimme“ + Link `data-ln="stimmen-hilfe"` → Leitfaden-Abschnitt
+„Stimmen installieren“ per `S.hilfeZiel`). Der 🔊 der Kartensprache (`data-ln="vorlesen"`) erscheint nur mit Schalter
+(`lernBeide()`), aus = nur 🔊 Deutsch (bis 2.5.1 war der Knopf immer da). Stimmenwahl `STIMME_VORZUG`: de-DE → de-AT → de-CH,
+Spanisch es-MX → es-419 → es-US → es-ES, dann jede andere lokale Stimme der Sprache. Lernseite: Knopf „🔊 Beide Sprachen“
+(`aria-pressed`, Standard aus, gemerkt in `localStorage` `<Schlüssel>-beide`), zweiter 🔊 `#sprechen-zs` für das Wort mit
+`D.rs_lang` (Bild → Wort nach dem Umdrehen, Wort → Bild schon vorn), gleiche Sprachregeln. Touch: Bewertungsleiste klebt unten,
 Wischen rechts = Gut, links = Nochmal (nur Touch, Rückgängig über ↶). „Meine Karten“: Lernstand-Marke je Karte (Ring neu ·
 lernt · jung · sicher, Hover „n× gelernt, nächste Wiederholung …“), Filter alle/fällig/neu/sicher/Problemkarten, „☑ Auswählen“
 → „Jetzt lernen“ (Stapel `00000000` „Aktuelle Auswahl“) bzw. „Zum Stapel …“ (neu oder zu vorhandenem). Editor zeigt vor dem

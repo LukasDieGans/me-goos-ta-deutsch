@@ -53,7 +53,8 @@ VORAUS_MIN = 20                                      # Lernschritte so viel frü
 RICHTUNGEN = {"vorwaerts": ("v",), "rueckwaerts": ("r",), "beide": ("v", "r")}
 NUR = ("", "neu", "faellig", "problem")
 STANDARD = dict(neu_pro_tag=20, wdh_pro_tag=200, behaltensquote=0.9, tageswechsel=4, lernschritte=[1, 10],
-                neulernschritte=[10], richtung="vorwaerts", sprache="", hoechstintervall=36500)
+                neulernschritte=[10], richtung="vorwaerts", sprache="", hoechstintervall=36500,
+                aussprache_beide=False)                  # 🔊 auch für die Kartensprache (sonst nur Deutsch), seit 2.6
 
 
 class LernFehler(Exception):
@@ -295,6 +296,10 @@ def einstellungen_pruefen(werte, alt=None):
         e["sprache"] = _sprachcode(w["sprache"])
     if "hoechstintervall" in w:
         e["hoechstintervall"] = _zahl(w["hoechstintervall"], 1, 36500, e["hoechstintervall"])
+    if isinstance(w.get("aussprache_beide"), bool):          # nur echtes true/false; sonst bleibt der alte Wert
+        e["aussprache_beide"] = w["aussprache_beide"]
+    if not isinstance(e["aussprache_beide"], bool):
+        e["aussprache_beide"] = False
     return {k: e[k] for k in STANDARD}
 
 

@@ -902,6 +902,8 @@ button.sprach-chip[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--schnabel);
 .lern-zustaende .st-jung { background: var(--wasser); } .lern-zustaende .st-sicher { background: var(--gut); }
 .lern-einst { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr)); gap: 14px 18px; }
 .lern-einst .breit { grid-column: 1 / -1; }
+.lern-stimmen { margin: 6px 0 0; padding-left: 20px; }
+#doku h2, #doku h3 { scroll-margin-top: 84px; }               /* Sprung zu einem Abschnitt: nicht unter der klebenden Kopfzeile */
 .f input[type=range] { min-height: 32px; padding: 0; border: 0; accent-color: var(--nacht); background: transparent; }
 .lern-frage-reset { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 10px; padding: 10px 12px;
   border-radius: var(--radius); background: var(--fehler-flaeche); }
@@ -2890,6 +2892,10 @@ Object.assign(TXT.de, {
   ln_beenden: "Beenden", h_ln_beenden: "Lernen beenden – jede Bewertung ist schon gespeichert",
   h_ln_vorlesen: "Vorlesen (Stimme deines Systems, offline)",
   h_ln_vorlesen_de: "Deutsch vorlesen (Stimme deines Systems, offline) – so klingt die Gans auf Deutsch",
+  ln_aussprache_beide: "🔊 Aussprache in beiden Sprachen",
+  h_ln_aussprache_beide: "An: 🔊 auch für das Wort auf {zs} – so lernst du mit Deutschkenntnissen ganz (gans!) bequem {zs}. Aus: nur 🔊 Deutsch nach dem Aufdecken.",
+  ln_stimme_ok: (s, n) => `✓ ${s}: ${n}`, ln_stimme_de: "Deutsch", ln_stimmen_hilfe: "Stimmen installieren",
+  ln_stimme_fehlt: s => `${s}: noch keine lokale Stimme – die Gans zeigt dir gern, wie du eine dazuholst`,
   ln_zaehler: (n, l, w) => `${n} neu · ${l} lernen · ${w} wiederholen`,
   ln_tasten: "Tastatur: Leertaste = Antwort zeigen · 1–4 = bewerten · Strg+Z = rückgängig · Esc = beenden",
   ln_tasten_touch: "Karte antippen = Antwort zeigen · nach rechts wischen = Gut, nach links = Nochmal (↶ nimmt es zurück)",
@@ -2953,6 +2959,10 @@ Object.assign(TXT.en, {
   ln_beenden: "Finish", h_ln_beenden: "Stop learning – every rating is already saved",
   h_ln_vorlesen: "Read aloud (your system’s voice, offline)",
   h_ln_vorlesen_de: "Read the German aloud (your system’s voice, offline) – hear how the goose sounds in German",
+  ln_aussprache_beide: "🔊 Pronunciation in both languages",
+  h_ln_aussprache_beide: "On: 🔊 for the {zs} word too – perfect for learning {zs} when you already speak German. Off: only 🔊 German after revealing. Goose-tastic either way!",
+  ln_stimme_ok: (s, n) => `✓ ${s}: ${n}`, ln_stimme_de: "German", ln_stimmen_hilfe: "Installing voices",
+  ln_stimme_fehlt: s => `${s}: no local voice yet – the goose happily shows you how to add one`,
   ln_zaehler: (n, l, w) => `${n} new · ${l} learning · ${w} to review`,
   ln_tasten: "Keyboard: space = show answer · 1–4 = rate · Ctrl+Z = undo · Esc = finish",
   ln_tasten_touch: "Tap the card = show answer · swipe right = Good, left = Again (↶ takes it back)",
@@ -3016,6 +3026,10 @@ Object.assign(TXT.es, {
   ln_beenden: "Terminar", h_ln_beenden: "Terminar de aprender; cada calificación ya está guardada",
   h_ln_vorlesen: "Leer en voz alta (voz de tu sistema, sin internet)",
   h_ln_vorlesen_de: "Leer el alemán en voz alta (voz de tu sistema, sin internet): así suena el ganso en alemán",
+  ln_aussprache_beide: "🔊 Pronunciación en ambos idiomas",
+  h_ln_aussprache_beide: "Activado: 🔊 también para la palabra en {zs}, ideal para aprender {zs} si ya sabes alemán. Desactivado: solo 🔊 en alemán al voltear. ¡El ganso te acompaña de las dos formas!",
+  ln_stimme_ok: (s, n) => `✓ ${s}: ${n}`, ln_stimme_de: "Alemán", ln_stimmen_hilfe: "Instalar voces",
+  ln_stimme_fehlt: s => `${s}: todavía no hay voz local; el ganso te muestra con gusto cómo agregar una`,
   ln_zaehler: (n, l, w) => `${n} nuevas · ${l} aprendiendo · ${w} por repasar`,
   ln_tasten: "Teclado: espacio = mostrar respuesta · 1–4 = calificar · Ctrl+Z = deshacer · Esc = terminar",
   ln_tasten_touch: "Toca la carta = mostrar respuesta · desliza a la derecha = Bien, a la izquierda = Otra vez (↶ lo deshace)",
@@ -5246,7 +5260,11 @@ async function ladeHilfe() {
   $("#hilfe-abbrechen").addEventListener("click", () => ctrl.abort());
   try {
     const d = await api(url("/api/hilfe", { doc: S.doc }), { timeout: 20000, signal: ctrl.signal });
-    if (hilfeAnfrage === ctrl) $("#doku").innerHTML = d.html;
+    if (hilfeAnfrage === ctrl) {
+      $("#doku").innerHTML = d.html;
+      const ziel = S.hilfeZiel; S.hilfeZiel = null;            // z. B. „Stimmen installieren“ aus dem Lernen
+      const h = ziel && $$("#doku h2, #doku h3").find(x => x.textContent.includes(ziel)); if (h) h.scrollIntoView({ block: "start" });
+    }
   } catch (e) {
     if (hilfeAnfrage !== ctrl) return;                 // inzwischen anderer Reiter gewählt → alte Antwort verwerfen
     $("#doku").innerHTML = `<p>${esc(e.message)}</p><div class="knopfzeile"><button class="knopf" type="button" id="hilfe-nochmal">${esc(t("hilfe_nochmal"))}</button></div>`;
@@ -7115,6 +7133,8 @@ function lernEinstHTML() {
     <label class="f"><span>${esc(t("ln_wechsel"))}</span>${wahl("tageswechsel", Array.from({ length: 24 }, (_, h) => [h, String(h).padStart(2, "0") + ":00"]), e.tageswechsel)}</label>
     <label class="f breit"><span>${esc(t("ln_quote_ziel"))}: <b data-le-wert>${q} %</b></span><input type="range" min="80" max="95" step="1" data-le="behaltensquote" value="${q}">
       <span class="klein">${esc(t("ln_quote_erkl"))}</span></label>
+    <div class="breit lern-aussprache"><label class="schalter" title="${esc(t("h_ln_aussprache_beide"))}"><input type="checkbox" data-le="aussprache_beide"${e.aussprache_beide ? " checked" : ""}><span class="spur"></span><span>${esc(t("ln_aussprache_beide"))}</span></label>
+      <div data-ln-stimmen>${lernStimmenHTML()}</div></div>
     <div class="knopfzeile breit"><button class="knopf haupt" type="submit">${esc(t("ln_speichern"))}</button></div></form>`;
 }
 function lernUebersichtHTML() {
@@ -7149,20 +7169,33 @@ function lernUebersichtHTML() {
 
 /* ----- Lernsitzung ----- */
 const lernRest = n => n && n.zaehler ? n.zaehler.neu + n.zaehler.lernen + n.zaehler.wiederholen : 0;
+const STIMME_VORZUG = { de: ["de-de", "de-at", "de-ch"], es: ["es-mx", "es-419", "es-us", "es-es"] };   // Spanisch = wie in Mexiko
 function lernStimme(code) {                                 // Vorlesen nur mit einer Stimme des Systems (offline) für die Sprache
   if (!window.speechSynthesis || !speechSynthesis.getVoices) return null;
   const ziel = code === "no" ? ["nb", "no", "nn"] : [code];
   const lang = v => String(v.lang || "").toLowerCase().replace("_", "-");
-  if (code === "de") for (const r of ["de-de", "de-at", "de-ch"]) {   // Deutsch: de-DE → de-AT → de-CH → andere de
+  for (const r of STIMME_VORZUG[code] || []) {               // de: de-DE → de-AT → de-CH; es: es-MX → es-419 → es-US → es-ES; dann andere
     const v = speechSynthesis.getVoices().find(x => x.localService !== false && lang(x) === r); if (v) return v;
   }
   return speechSynthesis.getVoices().find(v => v.localService !== false && ziel.includes(lang(v).split("-")[0])) || null;
+}
+const lernBeide = () => !!(LERN && LERN.einstellungen && LERN.einstellungen.aussprache_beide === true);   // Schalter „beide Sprachen“
+function lernStimmenHTML() {                                 // je Sprache: ✓ Stimme oder Hinweis + Link zum Leitfaden
+  const zs = (LERN && LERN.sprache) || ZS.code;
+  const zeile = (code, name) => { const v = lernStimme(code);
+    return v ? `<li>${esc(t("ln_stimme_ok", name, v.name))}</li>`
+      : `<li>${esc(t("ln_stimme_fehlt", name))} <a href="#hilfe" data-ln="stimmen-hilfe">${esc(t("ln_stimmen_hilfe"))}</a></li>`; };
+  return `<ul class="lern-stimmen klein">${zeile(zs, zsName(zs))}${zeile("de", t("ln_stimme_de"))}</ul>`;
 }
 function vorlesen(text, stimme) {                            // gemeinsamer Weg für jedes 🔊 (vorher Laufendes abbrechen)
   if (!stimme || !text || !window.speechSynthesis) return;
   speechSynthesis.cancel(); const s = new SpeechSynthesisUtterance(text); s.voice = stimme; s.lang = stimme.lang; speechSynthesis.speak(s);
 }
-if (window.speechSynthesis && speechSynthesis.addEventListener) speechSynthesis.addEventListener("voiceschanged", () => { if (LS && LS.n.karte && ansicht() === "lernen") zeichneSitzung(); });
+if (window.speechSynthesis && speechSynthesis.addEventListener) speechSynthesis.addEventListener("voiceschanged", () => {
+  if (ansicht() !== "lernen") return;
+  if (LS && LS.n.karte) zeichneSitzung();
+  else { const st = $("[data-ln-stimmen]"); if (st && LERN) st.innerHTML = lernStimmenHTML(); }
+});
 async function lernStart(stapel) {
   try {
     const n = await api(url("/api/lernen-karte", { stapel }));
@@ -7173,7 +7206,7 @@ async function lernStart(stapel) {
 function lernKarteHTML(k) {
   const kk = S.karten.find(x => x.bild === k.bild) || { bild: k.bild, fit: "contain" };
   const bild = `<img class="lern-bild" alt="${esc(k.de || k.bild)}" data-seite="vorn" data-bild="${esc(k.bild)}" src="${vorschauUrl(kk, "vorn")}">`;
-  const stimme = lernStimme(k.sprache) ? `<button type="button" class="knopf klein" data-ln="vorlesen" title="${esc(t("h_ln_vorlesen"))}" aria-label="${esc(t("h_ln_vorlesen"))}">🔊</button>` : "";
+  const stimme = lernBeide() && lernStimme(k.sprache) ? `<button type="button" class="knopf klein" data-ln="vorlesen" title="${esc(t("h_ln_vorlesen"))}" aria-label="${esc(t("h_ln_vorlesen"))}">🔊</button>` : "";
   const kopf = `<div class="lern-kopf-chip">${sprachChip(k.sprache, { aktuell: false })}${stimme}</div>`;
   const wort = `<div class="lern-wort" ${zsAttr(k.sprache)}>${esc(k.wort)}</div>`;
   const vorn = k.richtung === "r" ? `<p class="lern-frage">${esc(t("ln_frage_r"))}</p>${kopf}${wort}` : `<p class="lern-frage">${esc(t("ln_frage_v", zsName(k.sprache)))}</p>${bild}`;
@@ -7252,10 +7285,11 @@ $("#lern-inhalt").addEventListener("click", async e => {
   if (a === "rueck") return lernRueck();
   if (a === "beenden") return lernBeenden();
   if (a === "bearbeiten") return oeffneEditor(b.dataset.bild);
-  if (a === "vorlesen" && LS && LS.n.karte) {
+  if (a === "vorlesen" && LS && LS.n.karte && lernBeide()) {
     const k = LS.n.karte; vorlesen(k.wort, lernStimme(k.sprache)); return;
   }
   if (a === "vorlesen-de" && LS && LS.n.karte && LS.gezeigt) { vorlesen(LS.n.karte.de, lernStimme("de")); return; }
+  if (a === "stimmen-hilfe") { e.preventDefault(); S.doc = "leitfaden"; S.hilfeZiel = t("ln_stimmen_hilfe"); location.hash = "hilfe"; return; }
   if (a === "problemkarten") { S.lernFilter = "problem"; S.lernAuswahl = null; location.hash = "#karten"; return; }
   if (a === "stapel-neu") return lernStapelDialog();
   if (a === "stapel-bearbeiten") return lernStapelDialog(b.dataset.stapel);
@@ -7290,7 +7324,7 @@ $("#lern-inhalt").addEventListener("submit", async e => {
   if (!e.target.matches('[data-ln-form="einst"]')) return;
   e.preventDefault();
   const werte = {};
-  $$("[data-le]", e.target).forEach(i => { werte[i.dataset.le] = i.dataset.le === "richtung" || i.dataset.le === "sprache" ? i.value : +i.value; });
+  $$("[data-le]", e.target).forEach(i => { werte[i.dataset.le] = i.type === "checkbox" ? i.checked : i.dataset.le === "richtung" || i.dataset.le === "sprache" ? i.value : +i.value; });
   try { LERN = await api("/api/lernen-einstellungen", { methode: "POST", daten: { werte } }); toast(t("ln_gespeichert")); lernZahl(); zeichneLernen(); ladeKartenSpaeter(); }
   catch (err) { fehlerToast(err); }
 });

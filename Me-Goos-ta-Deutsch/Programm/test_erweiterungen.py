@@ -4309,8 +4309,8 @@ def test_aussprache(tmp):
     k = ui.index('$("#lern-inhalt").addEventListener("click"')
     klick = ui[k:ui.index("\n});\n", k)]
     pruefe("Stimme für Deutsch: nur lokal (localService), Reihenfolge de-DE → de-AT → de-CH → andere de",
-           stimme.count("localService !== false") == 2 and '["de-de", "de-at", "de-ch"]' in stimme
-           and 'ziel.includes(lang(v).split("-")[0])' in stimme, stimme[:200])
+           stimme.count("localService !== false") == 2 and 'de: ["de-de", "de-at", "de-ch"]' in ui    # seit 2.6 (E59) in STIMME_VORZUG
+           and "for (const r of STIMME_VORZUG[code] || [])" in stimme and 'ziel.includes(lang(v).split("-")[0])' in stimme, stimme[:200])
     pruefe("🔊 Deutsch nur nach dem Aufdecken (beide Richtungen), nur mit Stimme, mit aria-label; Text bleibt lang=\"de\"",
            karte.count('data-ln="vorlesen-de"') == 1 and 'LS.gezeigt && k.de && lernStimme("de") ?' in karte
            and 'aria-label="${esc(t("h_ln_vorlesen_de"))}"' in karte and '<span lang="de">${esc(k.de)}</span>' in karte
@@ -7094,6 +7094,82 @@ def test_github_meldungen(tmp):
     print(f"  E58 {time.time() - t0:.1f} s")
 
 
+def test_aussprache_beide(tmp):
+    """E59 (2.6): Aussprache in beiden Sprachen beim Lernen – Schalter `aussprache_beide` (Standard aus, nur echtes bool,
+    ältere Lernstände/Importe ohne Feld = aus), 🔊 der Kartensprache nur mit Schalter, Spanisch bevorzugt es-MX, Stimmen-Status
+    mit Link zum Leitfaden, Texte in drei Sprachen, Lernseite mit eigenem Schalter. Klicks prüft browser_test.py (B1)."""
+    print("\n[E59] Aussprache in beiden Sprachen")
+    import lernen as ln
+    import lernkarten_digital as ld
+    e = ln.einstellungen_pruefen({})
+    an = ln.einstellungen_pruefen({"aussprache_beide": True})
+    falsch = [ln.einstellungen_pruefen({"aussprache_beide": x})["aussprache_beide"] for x in ("true", 1, "1", None, [True])]
+    bleibt = ln.einstellungen_pruefen({"aussprache_beide": "nein"}, an)["aussprache_beide"]
+    aus = ln.einstellungen_pruefen({"aussprache_beide": False}, an)["aussprache_beide"]
+    pruefe("Lernen: Standard aus, nur echtes true/false wird übernommen (sonst bleibt der alte Wert), Feld in STANDARD",
+           ln.STANDARD.get("aussprache_beide") is False and e["aussprache_beide"] is False and an["aussprache_beide"] is True
+           and falsch == [False] * 5 and bleibt is True and aus is False, (e, falsch, bleibt, aus))
+    alt = ln.vereinheitlichen({"art": ln.ART, "version": 1, "einstellungen": {"neu_pro_tag": 7}})["einstellungen"]
+    kaputt = ln.vereinheitlichen({"art": ln.ART, "einstellungen": {"aussprache_beide": "ja"}})["einstellungen"]
+    ordner = Path(tmp) / "e59"
+    ordner.mkdir()
+    st = ln.Lernstand(ordner)
+    st.einstellungen_setzen({"aussprache_beide": True})
+    gespeichert = json.loads((ordner / ln.DATEI).read_text(encoding="utf-8"))["einstellungen"].get("aussprache_beide")
+    st.importieren({"art": ln.ART, "version": 1, "einstellungen": {"neu_pro_tag": 3}, "karten": {}, "protokoll": [], "stapel": []})
+    nach_import = ln.Lernstand(ordner).laden()["einstellungen"]["aussprache_beide"]
+    export = st.export()
+    pruefe("Älterer Lernstand ohne Feld = aus, Unsinn = aus; gespeichert in lernstand.json, reist im Export mit, Import ohne Feld "
+           "ändert die eigene Einstellung nicht",
+           alt["aussprache_beide"] is False and alt["neu_pro_tag"] == 7 and kaputt["aussprache_beide"] is False
+           and gespeichert is True and nach_import is True
+           and export["einstellungen"]["aussprache_beide"] is True, (alt, kaputt, gespeichert, nach_import))
+    ui = (HIER / "ui" / "index.html").read_text(encoding="utf-8")
+    i = ui.index("function lernEinstHTML()")
+    einst = ui[i:ui.index("\n}\n", i)]
+    j = ui.index("function lernKarteHTML(k)")
+    karte = ui[j:ui.index("\n}\n", j)]
+    k = ui.index('$("#lern-inhalt").addEventListener("click"')
+    klick = ui[k:ui.index("\n});\n", k)]
+    s = ui.index('$("#lern-inhalt").addEventListener("submit"')
+    senden = ui[s:ui.index("\n});\n", s)]
+    pruefe("Einstellungen: Schalter (Checkbox data-le, checked aus dem Lernstand, Hover), Senden schickt echtes true/false",
+           'data-le="aussprache_beide"${e.aussprache_beide ? " checked" : ""}' in einst and 'title="${esc(t("h_ln_aussprache_beide"))}"' in einst
+           and 'class="schalter"' in einst and 'i.type === "checkbox" ? i.checked :' in senden)
+    pruefe("🔊 der Kartensprache nur mit Schalter (Knopf und Klick), Deutsch unverändert; lernBeide() verlangt === true",
+           "const stimme = lernBeide() && lernStimme(k.sprache) ?" in karte and 'LS.gezeigt && k.de && lernStimme("de") ?' in karte
+           and 'if (a === "vorlesen" && LS && LS.n.karte && lernBeide()) {' in klick
+           and "LERN.einstellungen.aussprache_beide === true" in ui and "vorlesen(k.wort, lernStimme(k.sprache))" in klick)
+    pruefe("Spanisch = wie in Mexiko: es-MX → es-419 → es-US → es-ES → andere es (Seite und Lernseite), nur lokale Stimmen",
+           'es: ["es-mx", "es-419", "es-us", "es-es"]' in ui and 'es: ["es-mx", "es-419", "es-us", "es-es"]' in ld.LERNSEITE
+           and "localService !== false" in ld.LERNSEITE.split("function stimmeFuer", 1)[1].split("\n}", 1)[0])
+    pruefe("Stimmen-Status neben dem Schalter (auch bei voiceschanged), ohne Stimme Link zum Leitfaden-Abschnitt (Sprung per S.hilfeZiel)",
+           "<div data-ln-stimmen>${lernStimmenHTML()}</div>" in einst and 'st.innerHTML = lernStimmenHTML()' in ui
+           and 'data-ln="stimmen-hilfe"' in ui and 'if (a === "stimmen-hilfe") { e.preventDefault(); S.doc = "leitfaden"; S.hilfeZiel = t("ln_stimmen_hilfe");' in klick
+           and "const ziel = S.hilfeZiel; S.hilfeZiel = null;" in ui)
+    hilfen = re.findall(r'ln_stimmen_hilfe: "([^"]+)"', ui)            # Reihenfolge der Blöcke in TXT: de, en, es
+    texte = {sp: (h, (HIER / datei).read_text(encoding="utf-8"))
+             for sp, h, datei in zip(("de", "en", "es"), hilfen, ("LEITFADEN.md", "LEITFADEN_en.md", "LEITFADEN_es.md"))}
+    pruefe("Texte: sechs neue Schlüssel je Sprache genau einmal, Hover über {zs}, Gans-Wortwitz; Leitfäden haben den Abschnitt "
+           "„Stimmen installieren“ (Windows, macOS, Linux, Android, iPhone) und das Rezept",
+           all(ui.count(f"  {x}:") + ui.count(f", {x}:") == 3 for x in ("ln_aussprache_beide", "h_ln_aussprache_beide", "ln_stimme_ok",
+                                                                         "ln_stimme_de", "ln_stimmen_hilfe", "ln_stimme_fehlt"))
+           and ui.count("h_ln_aussprache_beide: \"") == 3 and all("{zs}" in m for m in re.findall(r'h_ln_aussprache_beide: "([^"]+)"', ui))
+           and all(re.search(r"^#+ .*" + re.escape(h), md, re.M) and all(w in md for w in ("Windows", "macOS", "Linux", "Android", "iPhone"))
+                   for h, md in texte.values())
+           and "aussprache_beide" not in (HIER / "test_gans_lernkarten.py").read_text(encoding="utf-8"), {s: v[0] for s, v in texte.items()})
+    ls = ld.LERNSEITE
+    fr = ld.lernseite_texte("de", "fr")
+    pruefe("Lernseite: Schalter „Beide Sprachen“ (aria-pressed, Standard aus, gemerkt), zweiter 🔊 mit D.rs_lang, Wort → Bild schon vorn, "
+           "Texte de/en/es, andere Kartensprache im Text",
+           '<button id="beide" aria-pressed="false"></button>' in ls and 'localStorage.getItem(SCHLUESSEL + "-beide") === "1"' in ls
+           and 'let beide = false;' in ls and 'stimmeFuer(D.rs_lang || "es")' in ls
+           and '$("sprechen-zs").hidden = !(beide && stimmeZs && aktuell && (rueckwaerts || umgedreht()));' in ls
+           and "sage(aktuell.es, stimmeZs)" in ls and '$("sprechen").hidden = !(stimme && aktuell && umgedreht());' in ls
+           and all(all(ld.LERNSEITE_TEXTE[s].get(x) for x in ("beide", "beide_titel", "vorlesen_zs")) for s in ("de", "en", "es"))
+           and "Französisch" in fr["vorlesen_zs"] and "Französisch" in fr["beide_titel"], fr.get("vorlesen_zs"))
+
+
 def main():
     global ECHTES_KI_BILD, ECHT_DA
     t0 = time.time()
@@ -7167,6 +7243,7 @@ def main():
         test_auftritt(Path(tmp))
         test_sichere_fassungen(Path(tmp))
         test_github_meldungen(Path(tmp))
+        test_aussprache_beide(Path(tmp))
     ok =sum(1 for e in tg.ergebnisse if e[1])
     print(f"\n{ok} von {len(tg.ergebnisse)} Prüfungen bestanden ({time.time() - t0:.0f} s).")
     if ok == len(tg.ergebnisse):

@@ -584,6 +584,51 @@ def b1_aussprache(s, u):
            "(de-DE), Beenden bricht ab", keine == 0 and online == 0 and vorher == 0 and g.get("text") == gesagt[1]
            and g.get("lang") == "de-DE" and g.get("stimme") == "de" and gesagt[2] >= 1 and ende > gesagt[2],
            f"ohne {keine} · online {online} · vor dem Aufdecken {vorher} · gesagt {gesagt} · cancel danach {ende}", t0=t0)
+    b1_aussprache_beide(s, u)
+
+
+def b1_aussprache_beide(s, u):
+    """Schalter „🔊 Aussprache in beiden Sprachen“ (seit 2.6): aus = kein 🔊 der Kartensprache (auch mit Stimme), Schalter über
+    die Einstellungen an → Knopf da, Klick liest das Wort (Spanisch: es-MX vor es-ES); ohne Stimmen zeigt der Status zwei
+    Links zum Leitfaden; danach wieder aus."""
+    t0 = time.time()
+    mit = [{"lang": "es-ES", "localService": True, "name": "es"}, {"lang": "es-MX", "localService": True, "name": "mx"},
+           {"lang": "de-DE", "localService": True, "name": "de"}]
+    zs_knopf = "() => document.querySelectorAll(\"#lern-inhalt [data-ln='vorlesen']\").length"
+    einst = "#lern-inhalt [data-le='aussprache_beide']"
+    schalter = "#lern-inhalt .lern-aussprache label.schalter"
+    speichern = "#lern-inhalt form[data-ln-form='einst'] button[type='submit']"
+    s.warte(f"() => !!document.querySelector(\"{einst}\")")
+    s.page.click("#lern-inhalt [data-ln='lernen']")
+    s.page.click("#lern-inhalt [data-ln='zeigen']")
+    s.js(STIMMEN_JS, mit)
+    aus = s.js(zs_knopf)
+    s.page.click("#lern-inhalt [data-ln='beenden']")
+    s.warte(f"() => !!document.querySelector(\"{einst}\")")
+    s.page.click(schalter)                                     # das Häkchen selbst ist versteckt (Schalter-Optik)
+    s.warte(f"() => document.querySelector(\"{einst}\").checked")
+    s.page.click(speichern)
+    s.warte("() => LERN && LERN.einstellungen.aussprache_beide === true && !!document.querySelector(\"[data-ln-stimmen]\")")
+    links = s.js("() => { speechSynthesis.getVoices = () => []; const st = document.querySelector('[data-ln-stimmen]');"
+                 " st.innerHTML = lernStimmenHTML(); return st.querySelectorAll(\"[data-ln='stimmen-hilfe']\").length; }")
+    s.page.click("#lern-inhalt [data-ln='lernen']")
+    s.page.click("#lern-inhalt [data-ln='zeigen']")
+    s.js(STIMMEN_JS, mit)
+    an = s.js(zs_knopf)
+    s.page.click("#lern-inhalt [data-ln='vorlesen']")
+    gesagt = s.js("() => [__sp.gesagt.slice(-1)[0], LS.n.karte.wort, LS.n.karte.sprache]")
+    s.page.click("#lern-inhalt [data-ln='beenden']")
+    s.warte(f"() => !!document.querySelector(\"{einst}\")")
+    s.page.click(schalter)
+    s.warte(f"() => !document.querySelector(\"{einst}\").checked")
+    s.page.click(speichern)
+    s.warte("() => LERN && LERN.einstellungen.aussprache_beide === false")
+    g = gesagt[0] or {}
+    stimme_ok = g.get("stimme") == "mx" if gesagt[2] == "es" else bool(g.get("stimme"))
+    pruefe(f"[{s.kurz}] B1 Aussprache beider Sprachen: aus = kein 🔊 der Kartensprache, an (über die Einstellungen) = 🔊 liest "
+           "das Wort (es-MX bevorzugt), ohne Stimmen 2 Links zum Leitfaden, wieder aus",
+           aus == 0 and an == 1 and g.get("text") == gesagt[1] and stimme_ok and links == 2,
+           f"aus {aus} · an {an} · gesagt {gesagt} · Links {links}", t0=t0)
 
 
 def b1_neue_version(s, u):

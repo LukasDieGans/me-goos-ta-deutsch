@@ -442,16 +442,34 @@ Con la herramienta **«🎓 Aprender cartas»** practicas tus cartas dentro del 
 | Hoy | cuántos repasos y cartas nuevas esperan, «¡Vamos!» |
 | Mazos | «Todas las cartas activas» y mazos propios: por idioma, nota, texto de búsqueda, solo nuevas/pendientes/difíciles o marcando cartas; ✎ editar, 🗑 borrar |
 | Estadísticas | marcha de gansos (días seguidos), aprendido hoy, pendientes en los próximos 7 días, progreso de las cartas (nueva · aprendiendo · joven · segura), retención |
-| Ajustes | cartas nuevas y repasos por día, retención deseada (80–95 %, normal 90 %), dirección (imagen → palabra, palabra → imagen, ambas), idioma de aprendizaje, inicio del día de aprendizaje (normal 4 a. m.) |
+| Ajustes | cartas nuevas y repasos por día, retención deseada (80–95 %, normal 90 %), dirección (imagen → palabra, palabra → imagen, ambas), idioma de aprendizaje, inicio del día de aprendizaje (normal 4 a. m.), interruptor **«🔊 Pronunciación en ambos idiomas»** (desactivado de forma predeterminada) que muestra qué voces tiene tu sistema |
 | Respaldar progreso | exportar (archivo JSON), importar (en cada carta gana el estado más reciente), reiniciar todo |
 
-**Al aprender:** espacio = mostrar respuesta, teclas **1–4** = calificar, **Ctrl+Z** = deshacer, **Esc** = terminar. En el celular tocas la carta; los botones para calificar quedan abajo, al alcance del pulgar; deslizar a la derecha significa «Bien», a la izquierda «Otra vez» (↶ lo deshace). Puedes parar cuando quieras: cada calificación se guarda al instante, aunque cierres el programa. Si tu sistema tiene una voz para el idioma, 🔊 lee la palabra en voz alta. Después de «Mostrar respuesta» también hay un 🔊 junto al texto en alemán: lee el alemán tal como aparece en la imagen, en ambas direcciones, pero solo después de destapar la carta (si no, revelaría la respuesta). Solo usa una voz de tu sistema que funcione sin internet (primero alemán de Alemania, luego de Austria y después de Suiza); sin ella no aparece el botón. En Windows puedes agregar una voz alemana en Configuración, en «Hora e idioma → Idioma».
+**Al aprender:** espacio = mostrar respuesta, teclas **1–4** = calificar, **Ctrl+Z** = deshacer, **Esc** = terminar. En el celular tocas la carta; los botones para calificar quedan abajo, al alcance del pulgar; deslizar a la derecha significa «Bien», a la izquierda «Otra vez» (↶ lo deshace). Puedes parar cuando quieras: cada calificación se guarda al instante, aunque cierres el programa. Si en los ajustes activas **«🔊 Pronunciación en ambos idiomas»**, la palabra en {{español}} también tiene un 🔊 (imagen → palabra: al destapar; palabra → imagen: desde el frente), siempre que tu sistema tenga una voz para ella. De forma predeterminada el interruptor está desactivado y solo hay el 🔊 en alemán. Después de «Mostrar respuesta» también hay un 🔊 junto al texto en alemán: lee el alemán tal como aparece en la imagen, en ambas direcciones, pero solo después de destapar la carta (si no, revelaría la respuesta). Solo usa una voz de tu sistema que funcione sin internet (primero alemán de Alemania, luego de Austria y después de Suiza); sin ella no aparece el botón. En Windows puedes agregar una voz alemana en Configuración, en «Hora e idioma → Idioma».
 
 **En «Mis cartas»** cada carta muestra su progreso (nueva, aprendiendo, joven, segura; al pasar el mouse: cuántas veces se aprendió y cuándo es el siguiente repaso). Arriba de la lista filtras por pendientes, nuevas, seguras o difíciles. Con **«☑ Seleccionar»** marcas cartas y las aprendes **«ahora»** o las pones en un mazo.
 
 **¿Cambiaste una carta?** Si cambias el texto en alemán, la palabra o la imagen de una carta que ya estás aprendiendo, empieza de nuevo al aprender; el editor te lo dice antes y después aparece un aviso corto. Una nota cambiada conserva el progreso.
 
 **Consejos:** mejor un poco cada día que mucho de vez en cuando. Califica con honestidad: «Otra vez» no es un error, es justo lo que hace listo al planificador. Las cartas que olvidas una y otra vez se vuelven **cartas difíciles**: una imagen más clara o una nota (p. ej. un truco para recordar) suele ayudar más que otro repaso.
+
+### Aprender otro idioma sabiendo alemán
+
+¿Ya hablas alemán y quieres aprender el idioma de las cartas? ¡Pan comido para un ganso! En **Aprender → Ajustes** activa **«🔊 Pronunciación en ambos idiomas»** y guarda; luego elige la **dirección** que quieras: **palabra → imagen** te muestra primero la palabra y te deja oírla enseguida, **imagen → palabra** te pregunta la palabra y la pronuncia al destapar, **ambas** mezcla las dos. Junto al interruptor ves si tu sistema tiene una voz para los dos idiomas (✓ con el nombre de la voz); si falta una, el enlace te lleva directo a la siguiente sección.
+
+### Instalar voces
+
+Solo se lee en voz alta con voces que trae tu sistema y que funcionan sin internet. Para español, el programa elige primero una voz de México (es-MX), luego de Latinoamérica (es-419), EE. UU., España y al final cualquier otra en español; para alemán, primero Alemania, luego Austria y Suiza. Después de instalar, recarga una vez el navegador o la ventana del programa.
+
+| Sistema | Cómo agregar una voz |
+| --- | --- |
+| Windows | Configuración → Hora e idioma → Idioma y región → Agregar un idioma (p. ej. «Español (México)»), dejando marcada **Texto a voz**; o Configuración → Accesibilidad → Narrador → Agregar voces |
+| macOS | Configuración del Sistema → Accesibilidad → Contenido leído → Voz del sistema → Gestionar voces → elige el idioma y descarga |
+| Linux | depende del navegador: Firefox y Chromium suelen usar **speech-dispatcher** con **espeak-ng** (gestor de paquetes, p. ej. `speech-dispatcher espeak-ng`); después reinicia el navegador |
+| Android | Configuración → Sistema → Idiomas → Salida de texto a voz → engrane de Servicios de voz de Google → Instalar datos de voz |
+| iPhone/iPad | Configuración → Accesibilidad → Contenido leído → Voces → elige el idioma y descarga una voz |
+
+Si el programa sigue diciendo «todavía no hay voz local», tu navegador solo ofrece esa voz en línea; el programa no la usa a propósito, para cuidar tu privacidad.
 
 ## Estudiar en digital
 
@@ -460,7 +478,7 @@ Con la herramienta **«🎓 Aprender cartas»** practicas tus cartas dentro del 
 | Formato | Cómo estudiar con él |
 | --- | --- |
 | Paquete de Anki (`.apkg`) | ábrelo en Anki en tu computadora (Windows, Mac, Linux), o mándalo al celular por correo, nube o cable e impórtalo en AnkiDroid (Android) o AnkiMobile (iPhone/iPad) |
-| Página de estudio (`.html`) | un solo archivo que funciona sin conexión en el navegador de la computadora. Voltear, «¡La sé!» u «Otra vez»; después de voltear, 🔊 lee el texto en alemán (solo con una voz sin conexión de tu sistema; si no, no hay botón); tu progreso se guarda en ese navegador. En el celular funciona solo a medias (en el iPhone casi nunca arranca desde la app Archivos); ahí mejor usa el paquete de Anki o el PDF de pantalla |
+| Página de estudio (`.html`) | un solo archivo que funciona sin conexión en el navegador de la computadora. Voltear, «¡La sé!» u «Otra vez»; después de voltear, 🔊 lee el texto en alemán (solo con una voz sin conexión de tu sistema; si no, no hay botón); con el botón **«🔊 Ambos idiomas»** (desactivado de forma predeterminada, la página lo recuerda) aparece un segundo 🔊 para la palabra; tu progreso se guarda en ese navegador. En el celular funciona solo a medias (en el iPhone casi nunca arranca desde la app Archivos); ahí mejor usa el paquete de Anki o el PDF de pantalla |
 | PDF de pantalla | hojéalo en cualquier app de PDF: anverso, reverso, siguiente carta |
 | Tablas (CSV) | para Quizlet, Brainscape, Mochi y más; elige «Tablas para otras apps» en los ajustes finos |
 

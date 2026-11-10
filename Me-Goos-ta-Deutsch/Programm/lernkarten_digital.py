@@ -229,15 +229,21 @@ LERNSEITE_TEXTE = {
     "de": dict(titel="Lernkarten", umdrehen="Tippen zum Umdrehen", gewusst="Gewusst ✓", nochmal="Nochmal ↺",
                richtung1="Bild → Spanisch", richtung2="Spanisch → Bild", mischen="Mischen", neu="Von vorn",
                fertig="Alles gewusst – großartig! 🎉", stand="{g} von {n} sitzen schon – weiter so!", vorlesen="Deutsch vorlesen",
-               neu_frage="Lernstand zurücksetzen?", tipp="Leertaste = umdrehen · → gewusst · ← nochmal"),
+               neu_frage="Lernstand zurücksetzen?", tipp="Leertaste = umdrehen · → gewusst · ← nochmal",
+               beide="🔊 Beide Sprachen", beide_titel="Aussprache auch für das Wort auf Spanisch (an/aus) – ganz nach Gans-Geschmack",
+               vorlesen_zs="Spanisch vorlesen"),
     "en": dict(titel="Flashcards", umdrehen="Tap to flip", gewusst="Got it ✓", nochmal="Again ↺",
                richtung1="Picture → Spanish", richtung2="Spanish → picture", mischen="Shuffle", neu="Start over",
                fertig="You know them all – brilliant! 🎉", stand="{g} of {n} mastered – keep it up!", vorlesen="Read the German aloud",
-               neu_frage="Reset your progress?", tipp="Space = flip · → got it · ← again"),
+               neu_frage="Reset your progress?", tipp="Space = flip · → got it · ← again",
+               beide="🔊 Both languages", beide_titel="Pronunciation for the Spanish word too (on/off) – just as the goose likes it",
+               vorlesen_zs="Read the Spanish aloud"),
     "es": dict(titel="Tarjetas", umdrehen="Toca para voltear", gewusst="¡La sé! ✓", nochmal="Otra vez ↺",
                richtung1="Imagen → español", richtung2="Español → imagen", mischen="Mezclar", neu="Empezar de nuevo",
                fertig="¡Las sabes todas, increíble! 🎉", stand="{g} de {n} dominadas. ¡Sigue así!", vorlesen="Leer el alemán en voz alta",
-               neu_frage="¿Reiniciar tu progreso?", tipp="Espacio = voltear · → la sé · ← otra vez"),
+               neu_frage="¿Reiniciar tu progreso?", tipp="Espacio = voltear · → la sé · ← otra vez",
+               beide="🔊 Ambos idiomas", beide_titel="Pronunciación también para la palabra en español (sí/no), al gusto del ganso",
+               vorlesen_zs="Leer el español en voz alta"),
 }
 
 LERNSEITE = r"""<!doctype html>
@@ -254,6 +260,7 @@ h1 { font-size: 18px; margin: 4px 0; }
 .leiste { display: flex; gap: 6px; flex-wrap: wrap; }
 button { font: inherit; border: 1px solid #C9DCEB; background: #fff; color: var(--nacht); border-radius: 10px; padding: 8px 12px; cursor: pointer; }
 button:focus-visible { outline: 3px solid var(--schnabel); outline-offset: 2px; }
+button[aria-pressed="true"] { background: var(--schnabel); border-color: var(--schnabel); color: var(--nacht); }
 .stand { width: min(720px, 100%); margin: 8px 0; font-size: 14px; color: var(--nacht2); }
 .balken { height: 8px; background: #fff; border-radius: 4px; overflow: hidden; margin-top: 4px; }
 .balken span { display: block; height: 100%; background: var(--gut); width: 0; transition: width .3s; }
@@ -280,10 +287,10 @@ button:focus-visible { outline: 3px solid var(--schnabel); outline-offset: 2px; 
   .stand, .alt, .de, .tipp { color: #BFD3EA; } }
 @media (prefers-reduced-motion: reduce) { .innen { transition: none; } }
 </style></head><body>
-<header><h1 id="titel"></h1><div class="leiste"><button id="richtung"></button><button id="mischen"></button><button id="neu"></button></div></header>
+<header><h1 id="titel"></h1><div class="leiste"><button id="richtung"></button><button id="beide" aria-pressed="false"></button><button id="mischen"></button><button id="neu"></button></div></header>
 <div class="stand"><span id="standtext"></span><div class="balken"><span id="balken"></span></div></div>
 <div id="buehne"></div>
-<div class="knoepfe" id="knoepfe"><button id="nochmal"></button><button id="sprechen" title=""></button><button id="gewusst" class="gut"></button></div>
+<div class="knoepfe" id="knoepfe"><button id="nochmal"></button><button id="sprechen-zs" title=""></button><button id="sprechen" title=""></button><button id="gewusst" class="gut"></button></div>
 <p class="tipp" id="tipp"></p>
 <script type="application/json" id="daten">__DATEN__</script>
 <script>
@@ -291,6 +298,7 @@ button:focus-visible { outline: 3px solid var(--schnabel); outline-offset: 2px; 
 const D = JSON.parse(document.getElementById("daten").textContent), T = D.texte, $ = s => document.getElementById(s);
 const SCHLUESSEL = "mgd-lernstand-" + D.deck_id;
 let stand = {}; try { stand = JSON.parse(localStorage.getItem(SCHLUESSEL) || "{}"); } catch (e) { stand = {}; }
+let beide = false; try { beide = localStorage.getItem(SCHLUESSEL + "-beide") === "1"; } catch (e) { beide = false; }   // Standard aus
 let rueckwaerts = false, reihe = [], aktuell = null;
 const kasten = id => stand[id] || 1;
 function speichern() { try { localStorage.setItem(SCHLUESSEL, JSON.stringify(stand)); } catch (e) { /* privat */ } }
@@ -334,25 +342,41 @@ function weiter(gewusst) {
   reihe.shift(); if (!gewusst) reihe.splice(Math.min(3, reihe.length), 0, aktuell);
   zeige();
 }
-// Deutsch vorlesen: nur mit einer Stimme des Systems (offline, localService), nur nach dem Umdrehen; ohne Stimme kein Knopf
-function deStimme() {
+// Vorlesen: nur mit einer Stimme des Systems (offline, localService); ohne Stimme kein Knopf. Deutsch nur nach dem Umdrehen;
+// die Kartensprache nur mit dem Schalter „Beide Sprachen“ (Bild → Wort: nach dem Umdrehen, Wort → Bild: schon vorn)
+const VORZUG = { de: ["de-de", "de-at", "de-ch"], es: ["es-mx", "es-419", "es-us", "es-es"] };
+function stimmeFuer(code) {
   if (!window.speechSynthesis || !speechSynthesis.getVoices) return null;
-  const l = v => String(v.lang || "").toLowerCase().replace("_", "-");
-  const st = speechSynthesis.getVoices().filter(v => v.localService !== false && l(v).split("-")[0] === "de");
-  for (const r of ["de-de", "de-at", "de-ch"]) { const v = st.find(x => l(x) === r); if (v) return v; }
+  const l = v => String(v.lang || "").toLowerCase().replace("_", "-"), ziel = code === "no" ? ["nb", "no", "nn"] : [code];
+  const st = speechSynthesis.getVoices().filter(v => v.localService !== false && ziel.includes(l(v).split("-")[0]));
+  for (const r of VORZUG[code] || []) { const v = st.find(x => l(x) === r); if (v) return v; }
   return st[0] || null;
 }
-let stimme = deStimme();
+function deStimme() { return stimmeFuer("de"); }
+let stimme = deStimme(), stimmeZs = stimmeFuer(D.rs_lang || "es");
 function umgedreht() { const k = document.querySelector(".karte"); return !!(k && k.classList.contains("um")); }
-function knopfStimme() { $("sprechen").hidden = !(stimme && aktuell && umgedreht()); }
+function knopfStimme() {
+  $("sprechen").hidden = !(stimme && aktuell && umgedreht());
+  $("sprechen-zs").hidden = !(beide && stimmeZs && aktuell && (rueckwaerts || umgedreht()));
+}
+function sage(text, st) { const u = new SpeechSynthesisUtterance(text); u.voice = st; u.lang = st.lang; speechSynthesis.cancel(); speechSynthesis.speak(u); }
 function sprich() {
   if (!aktuell || !stimme || !umgedreht()) return;
-  const u = new SpeechSynthesisUtterance(aktuell.de); u.voice = stimme; u.lang = stimme.lang; speechSynthesis.cancel(); speechSynthesis.speak(u);
+  sage(aktuell.de, stimme);
 }
-if (window.speechSynthesis && speechSynthesis.addEventListener) speechSynthesis.addEventListener("voiceschanged", () => { stimme = deStimme(); knopfStimme(); });
+function sprichZs() {
+  if (!aktuell || !beide || !stimmeZs || !(rueckwaerts || umgedreht())) return;
+  sage(aktuell.es, stimmeZs);
+}
+function zeigeBeide() { $("beide").setAttribute("aria-pressed", String(beide)); knopfStimme(); }
+if (window.speechSynthesis && speechSynthesis.addEventListener) speechSynthesis.addEventListener("voiceschanged", () => { stimme = deStimme(); stimmeZs = stimmeFuer(D.rs_lang || "es"); knopfStimme(); });
 text($("titel"), D.titel); document.title = D.titel;
 text($("nochmal"), T.nochmal); text($("gewusst"), T.gewusst); text($("sprechen"), "🔊"); $("sprechen").title = T.vorlesen;
 $("sprechen").setAttribute("aria-label", T.vorlesen); $("sprechen").hidden = true;
+text($("sprechen-zs"), "🔊"); $("sprechen-zs").title = T.vorlesen_zs; $("sprechen-zs").setAttribute("aria-label", T.vorlesen_zs);
+$("sprechen-zs").lang = D.rs_lang || "es"; $("sprechen-zs").hidden = true; $("sprechen-zs").onclick = sprichZs;
+text($("beide"), T.beide); $("beide").title = T.beide_titel;
+$("beide").onclick = () => { beide = !beide; try { localStorage.setItem(SCHLUESSEL + "-beide", beide ? "1" : "0"); } catch (e) { /* privat */ } zeigeBeide(); };
 text($("richtung"), T.richtung1); text($("mischen"), T.mischen); text($("neu"), T.neu); text($("tipp"), T.tipp);
 $("gewusst").onclick = () => weiter(true); $("nochmal").onclick = () => weiter(false); $("sprechen").onclick = sprich;
 $("mischen").onclick = () => { neueReihe(); zeige(); };
@@ -362,7 +386,7 @@ document.addEventListener("keydown", e => {
   if (e.key === " ") { e.preventDefault(); const k = document.querySelector(".karte"); if (k) { k.classList.toggle("um"); knopfStimme(); } }
   if (e.key === "ArrowRight") weiter(true); if (e.key === "ArrowLeft") weiter(false);
 });
-neueReihe(); zeige();
+neueReihe(); zeige(); zeigeBeide();
 </script></body></html>
 """
 
@@ -374,7 +398,7 @@ def lernseite_texte(sprache: str, code: str = "es") -> dict:
         ui = sprache if sprache in LERNSEITE_TEXTE else "en"
         name = sprach_info(code)["namen"][ui]
         alt = {"de": "Spanisch", "en": "Spanish", "es": "español"}[ui]
-        for schluessel in ("richtung1", "richtung2"):
+        for schluessel in ("richtung1", "richtung2", "beide_titel", "vorlesen_zs"):
             t = texte[schluessel].replace(alt, name).replace(alt.capitalize(), name[:1].upper() + name[1:])
             texte[schluessel] = t
     return texte
