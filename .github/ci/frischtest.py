@@ -758,7 +758,7 @@ class Frischtest:
                 pl = {}
             pruefe("macOS: App in ~/Applications, plutil -lint ok, Name + Version stimmen",
                    r is not None and r.returncode == 0 and pl.get("CFBundleName") == "Me Goos-ta Deutsch"
-                   and str(pl.get("CFBundleShortVersionString")) == self.version.split(".")[0] + "." + self.version.split(".")[1],
+                   and str(pl.get("CFBundleShortVersionString")) == self.version,
                    f"{(r.stdout + r.stderr).strip()[:200] if r else 'Info.plist fehlt'} · {pl.get('CFBundleShortVersionString')}")
             r = subprocess.run(["xattr", "-lr", str(self.o2 / "Programm")], capture_output=True, text=True, timeout=120)
             pruefe("macOS: Quarantäne von den Programmdateien entfernt", "com.apple.quarantine" not in r.stdout,
