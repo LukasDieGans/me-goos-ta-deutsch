@@ -1,0 +1,42 @@
+name: Feature idea
+description: Suggest a new feature or an improvement – every good idea gets a honk of approval.
+title: "[Idea] "
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for sharing your idea! 🪿 You may write in English, German or Spanish.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What would you like to do?
+      description: Describe the situation or the problem the idea solves.
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: Your idea
+      description: How could it work? Sketches or examples are welcome.
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Cards and images
+        - Printing
+        - Learning (spaced repetition)
+        - Languages and translation
+        - Phone app
+        - Installation and updates
+        - Something else
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives (optional)
+      description: Other ways you have tried or considered.

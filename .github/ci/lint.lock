@@ -1,0 +1,6 @@
+# Lint im CI (seit 2.5 G05): ruff in fester Fassung mit SHA-256 je Rad (pip --require-hashes --only-binary=:all:).
+# ruff-0.16.10-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (Job lint auf ubuntu-latest)
+# ruff-0.16.10-py3-none-win_amd64.whl (lokal zur Fehlersuche)
+ruff==0.16.10 \
+    --hash=sha256:f33f43a864a8483eebd160e713336c8bab02c934feaff0a33cf5ccb41546d09a \
+    --hash=sha256:97f2015c92aa97105b0eab19eb5d224884399281cfc5da86a92db4ab5e7fb2ca

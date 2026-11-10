@@ -1,0 +1,12 @@
+# Lint (seit 2.5 G05, Job lint in .github/workflows/tests.yml): nur harte Fehler – Syntaxfehler, ungültige Vergleiche,
+# Anweisungen am falschen Ort, undefinierte Namen. Kein Formatter, keine Stilregeln.
+target-version = "py310"
+line-length = 130
+extend-exclude = ["web-app"]
+
+[lint]
+select = ["E9", "F63", "F7", "F82"]
+
+[lint.per-file-ignores]
+# Referenz-Testreihe, wird nie geändert
+"Me-Goos-ta-Deutsch/Programm/test_gans_lernkarten.py" = ["E9", "F63", "F7", "F82"]
