@@ -27,16 +27,15 @@ program counts.
 **Already have it?** From version 2.4 on, **Tools → “Keep the program up to date”** finds a new version and installs it
 in the same folder – no second folder, your cards stay.
 
-## New in 2.5
+## New in 2.5.1
 
-**Signed releases** – every release’s `SHA256SUMS.txt` carries the project’s minisign/Ed25519 signature (key ID
-`6885AC6ACBF317E0`), and “⬆️ Update now” installs a new version only if that signature is valid; the download page shows
-how to check it yourself (“Check it’s genuine”) · **pinned packages** – the setup installs the Python packages in exactly
-the checked versions, every file with a SHA-256 checksum (`Programm/pakete.lock`) · **all the source code on GitHub** –
-every change and every pull request is built and tested automatically on Windows, macOS and Linux (x64 and ARM) and in
-three browser engines; releases come from signed tags and are immutable once published · also new: this program’s
-change list `CHANGELOG.md`, a privacy section on the download page, and a clearer note that phone access is meant for
-your own home network only. Updating keeps your cards, ideas, settings and learning progress.
+**Security update** – Pillow 13 closes the vulnerabilities of the image library published in October
+2026; an existing installation fetches the new packages on its first start of this version (internet needed once) ·
+new installations get Python 3.13.17 (Windows) or 3.13.18 (macOS, Linux) · a damaged update ZIP and unusual card lists
+(old encodings, Mac line endings, very long picture names) now end with a friendly message instead of an error · the
+automatic checks on GitHub install every helper with checksums, run on fixed system versions and include fuzzing.
+Version 2.5 brought signed releases, pinned packages and all the source code on GitHub. Updating keeps your cards,
+ideas, settings and learning progress.
 
 Earlier versions: see `CHANGELOG.md`.
 

@@ -1,6 +1,6 @@
 # Me Goos-ta Deutsch – Spezifikation
 
-**Version 2.5 · Stand 23.10.2026** · (früher „GANS LERNKARTEN“)
+**Version 2.5.1 · Stand 10.11.2026** · (früher „GANS LERNKARTEN“)
 
 Diese Datei beschreibt verbindlich, **wie die Lernkarten „Me Goos-ta Deutsch“ gebaut sind**. Zusammen mit
 `gans_lernkarten.py` (Generator), `ki_modelle.py` (KI-Bildverbesserung), `ki_bild.py` (KI-Bilder), `uebersetzer.py` (Übersetzungsvorschläge), `sprachen.py`

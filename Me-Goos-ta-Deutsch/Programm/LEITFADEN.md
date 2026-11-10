@@ -1,6 +1,6 @@
 # Me Goos-ta Deutsch – Leitfaden
 
-Stand: 23.10.2026 · Programm und Oberfläche Version 2.5 · Englisch: `LEITFADEN_en.md` · Spanisch: `LEITFADEN_es.md`
+Stand: 10.11.2026 · Programm und Oberfläche Version 2.5.1 · Englisch: `LEITFADEN_en.md` · Spanisch: `LEITFADEN_es.md`
 
 Schön, dass du da bist! Dieser Leitfaden begleitet dich vom ersten Doppelklick bis zur fertigen Karte – Schritt für Schritt und ohne Fachchinesisch. Du musst ihn nicht von vorn bis hinten lesen: Spring einfach zu dem Teil, den du gerade brauchst. Und keine Sorge – das ist hier kein Gänsemarsch, du kannst jeden Schritt in deinem Tempo gehen.
 

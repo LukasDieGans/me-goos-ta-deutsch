@@ -6,13 +6,14 @@ version such as 2.5.1). Updating always keeps your cards, images, ideas, setting
 
 ## [Unreleased]
 
+## [2.5.1] – 2026-11-10
+
 ### Security
 - Pillow 13 everywhere: the standard package set and both fallback sets for Smart App Control now install Pillow 13.0.0,
   which closes the vulnerabilities in the image library published in October 2026 (every older version is affected).
   An existing installation fetches the new packages on its first start of this version (needs the internet once).
 - New installations get Python 3.13.17 (Windows) and 3.13.18 (macOS, Linux) with their security fixes.
 - pypdfium2 5.15.2 in the standard package set.
-
 - The automatic checks on GitHub install every helper with checksums, run on fixed system versions, use the newest
   GitHub Actions and now include fuzzing: five entry points that read outside data (help pages, word lists, release
   signatures, update ZIPs, the card list) get fed huge numbers of scrambled inputs every week.
@@ -112,7 +113,8 @@ version such as 2.5.1). Updating always keeps your cards, images, ideas, setting
 ### Changed
 - Updating keeps your own cards: the example cards ship as `beispiel-karten.csv` and `beispiel-bilder/`.
 
-[Unreleased]: https://github.com/lukasdiegans/me-goos-ta-deutsch/compare/v2.5...HEAD
+[Unreleased]: https://github.com/lukasdiegans/me-goos-ta-deutsch/compare/v2.5.1...HEAD
+[2.5.1]: https://github.com/lukasdiegans/me-goos-ta-deutsch/compare/v2.5...v2.5.1
 [2.5]: https://github.com/lukasdiegans/me-goos-ta-deutsch/releases/tag/v2.5
 [2.4]: https://github.com/lukasdiegans/me-goos-ta-deutsch/releases/tag/v2.4
 [2.3]: https://github.com/lukasdiegans/me-goos-ta-deutsch/releases/tag/v2.3

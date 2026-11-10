@@ -1,6 +1,6 @@
 #!/bin/sh
 # ============================================================================
-#  Me Goos-ta Deutsch – start for Linux                            Version 2.5
+#  Me Goos-ta Deutsch – start for Linux                            Version 2.5.1
 #
 #  In a terminal:  sh "Me Goos-ta Deutsch - Linux.sh"
 #  In the file manager: right-click → “Run as a program” (without a terminal
