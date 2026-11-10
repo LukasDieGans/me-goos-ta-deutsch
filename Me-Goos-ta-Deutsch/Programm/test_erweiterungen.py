@@ -6923,7 +6923,7 @@ def test_sichere_fassungen(tmp):
 
 
 E58_SHA = {"actions/setup-python": "6d4fd22b20465ccc0f7354476588e8df7c9ca0e0", "ossf/scorecard-action": "fa7117db83c52d787ae5a89f350999701505d78e",
-           "github/codeql-action/upload-sarif": "9b3254085494b55a0f7c4c2b3d2d52cc712ce370"}     # Fassungen aus Dependabot-PR 2
+           "github/codeql-action/upload-sarif": "33d7b85da1a04171e211befe2c739303b9a4c066"}     # Fassungen aus Dependabot-PR 2 + 3
 E58_MAIN = "if: github.event_name != 'push' || github.ref != 'refs/heads/main'"
 
 
@@ -7037,7 +7037,7 @@ def test_github_meldungen(tmp):
             if name in E58_SHA and sha != E58_SHA[name]:
                 fehler.append(f"{n}: {name}@{sha[:8]}")
     pruefe("Workflows: feste Runner-Fassungen (kein ubuntu-/macos-latest), jedes pip install mit --require-hashes -r <lock>, "
-           "setup-python 7.1.0, scorecard-action 2.5.0, codeql upload-sarif 4.39.1 (Stand Dependabot-PR 2)",
+           "setup-python 7.1.0, scorecard-action 2.5.0, codeql upload-sarif 4.39.3 (Stand Dependabot-PR 3)",
            not fehler and sum(t.count("actions/setup-python@") for t in y.values()) >= 10, fehler)
     # 3) macOS nicht beim Push auf main
     tt = y["tests.yml"].split("\njobs:\n", 1)[1]
