@@ -1038,7 +1038,13 @@ neuer Ordner, pip aus dem Rad, beschädigtes NumPy mit automatischer Reparatur, 
   WebKit unter Playwright ist nicht dasselbe wie ein iPhone (kein „Zum Home-Bildschirm“, keine 7-Tage-Löschung, keine
   echte Kamera/Teilen-Leiste). Seit 2.5 baut GitHub Actions Release-Ordner, ZIP und Web-App selbst aus dem Quellbaum (Job
   `bau`, auch für jeden Pull Request auf `main`; Fork-PRs nur mit Lese-Rechten, ohne Secrets), dazu ein kleiner Lint
-  (ruff: Syntaxfehler, undefinierte Namen), OpenSSF Scorecard auf `main` und Dependabot für die Actions. Ein Release wird
+  (ruff: Syntaxfehler, undefinierte Namen), OpenSSF Scorecard auf `main` und Dependabot für die Actions. Seit 2.5.1: feste
+  Runner-Fassungen (`ubuntu-26.04`, macOS Apple Silicon auf `macos-26`), jedes `pip install` der CI mit Prüfsummen
+  (`.github/ci/lint.lock`, `browser.lock`, `fuzz.lock`), die macOS-Jobs laufen beim Push auf `main` nicht erneut (derselbe
+  Inhalt lief vorher auf `ci`), und Fuzzing (`fuzz.yml`, Atheris, wöchentlich und bei jedem CI-Lauf) füttert
+  `markdown_html`, `wortliste_lesen`, `signatur.pruefe`, `aktualisieren.pruefe_zip` und `lies_karten` mit abgewandelten
+  Daten – erlaubt ist dort nur der eigene, verständliche Fehler. Das pip-Rad in `Programm/werkzeuge/` bleibt im Repo (das
+  embeddable Python braucht es ohne Internet; der Selbsttest verlangt es), Scorecard meldet es als „Binary-Artifact“. Ein Release wird
   nur nach grünem Lauf für genau diesen Inhalt (gleiche Prüfsumme lokal und im CI-Bau) veröffentlicht; sobald ein Release
   veröffentlicht ist (seit 2.5 am Ereignis `release: published`, vorher nach jedem Push auf `main`), prüft die
   Release-Prüfung es erneut (sobald ZIP und Download-Seite zu `Me-Goos-ta-Deutsch/` im Tag passen; frisch installiert, auch

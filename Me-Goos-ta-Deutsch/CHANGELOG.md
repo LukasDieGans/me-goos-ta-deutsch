@@ -13,9 +13,17 @@ version such as 2.5.1). Updating always keeps your cards, images, ideas, setting
 - New installations get Python 3.13.17 (Windows) and 3.13.18 (macOS, Linux) with their security fixes.
 - pypdfium2 5.15.2 in the standard package set.
 
+- The automatic checks on GitHub install every helper with checksums, run on fixed system versions, use the newest
+  GitHub Actions and now include fuzzing: five entry points that read outside data (help pages, word lists, release
+  signatures, update ZIPs, the card list) get fed huge numbers of scrambled inputs every week.
+
 ### Fixed
 - A request without a valid session always gets its clear “403” answer now; on Windows the connection was occasionally
   reset instead.
+- A damaged update ZIP (wrong checksum inside, unknown ZIP version) now ends with the friendly “The ZIP is damaged.”
+  instead of an internal error (found by fuzzing).
+- A card list that is neither UTF-8 nor Windows-1252, that uses old Mac line endings (CR only) or that names a picture
+  with an extremely long name is read instead of stopping with an error (found by fuzzing).
 
 ## [2.5] – 2026-10-23
 

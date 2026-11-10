@@ -5,6 +5,9 @@
 # Browser-Test (Oberfläche, Web-App, Download-Seite, Anleitungen in WebKit, Firefox und Chromium). Keine Person nötig.
 # Auslöser: Branch ci (werkstatt/ci_lauf.py, verwaister Commit des Quellbaums), main, Pull Requests auf main (Fork-PRs
 # bekommen nur ein Lese-Token, keine Secrets) und von Hand. Keine Secrets, nur Lesen.
+# Seit 2.5.1 (G03): feste Runner-Fassungen (kein ubuntu-latest), jedes pip install mit --require-hashes; die macOS-Jobs
+# laufen beim Push auf main nicht mit (derselbe Inhalt lief vorher auf ci, die Release-Prüfung testet macOS ohnehin,
+# und zu viele macOS-Jobs zugleich bekamen keinen Runner) – übersprungen zählt als bestanden.
 name: Frischtest
 
 on:
@@ -24,13 +27,13 @@ concurrency:
 jobs:
   bau:
     name: bau
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: "3.13"
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
@@ -58,13 +61,13 @@ jobs:
 
   lint:
     name: lint
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: "3.13"
       - name: ruff in fester Fassung (lint.lock mit Prüfsummen)
@@ -84,9 +87,7 @@ jobs:
         include:
           - { name: windows-x64, os: windows-latest }
           - { name: windows-arm, os: windows-11-arm }
-          - { name: macos-arm, os: macos-15 }        # macos-14 wird am 02.11.2026 abgeschaltet (Brownouts ab 05.10.); Probe 23.10.2026: macos-15/-26/-latest laufen
-          - { name: macos-intel, os: macos-15-intel }
-          - { name: linux-x64, os: ubuntu-latest }
+          - { name: linux-x64, os: ubuntu-26.04 }
           - { name: linux-arm, os: ubuntu-24.04-arm }
     steps:
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
@@ -94,7 +95,7 @@ jobs:
           name: baum
       - name: Testbaum auspacken
         run: tar -xf baum.tar
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: "3.13"
       - name: desktop-file-validate + minisign (nur Linux, zum Prüfen des Menüeintrags und der Signatur)
@@ -110,11 +111,43 @@ jobs:
           retention-days: 14
           if-no-files-found: warn
 
+  frischtest-macos:
+    # nicht beim Push auf main (siehe oben); auf ci, in Pull Requests und von Hand wie bisher
+    if: github.event_name != 'push' || github.ref != 'refs/heads/main'
+    name: ${{ matrix.name }}
+    needs: bau
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: macos-arm, os: macos-26 }        # seit G03: macos-15 (arm64) bekam im November 2026 oft keinen Runner; macos-26 = macos-latest
+          - { name: macos-intel, os: macos-15-intel }
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: baum
+      - name: Testbaum auspacken
+        run: tar -xf baum.tar
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.13"
+      - name: Frischtest
+        run: python baum/.github/ci/frischtest.py --system ${{ matrix.name }} --ergebnis ergebnis.json
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: ergebnis-${{ matrix.name }}
+          path: ergebnis.json
+          retention-days: 14
+          if-no-files-found: warn
+
   debian:
     # schlankes Debian: nur wget (kein curl), ca-certificates, tar – python3 nur als Dirigent des Tests
     name: debian-slim
     needs: bau
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     container: debian:stable-slim
     timeout-minutes: 45
     steps:
@@ -136,8 +169,8 @@ jobs:
           if-no-files-found: warn
 
   browser:
-    # Playwright (Apache-2.0) nur hier, nie im Programm. WebKit = Safaris Engine (kein echtes iPhone). Windows ohne
-    # Browser-Job (Chromium läuft dort schon über den Frischtest bzw. lokal).
+    # Playwright (Apache-2.0) nur hier, nie im Programm – fest per browser.lock (Prüfsummen). WebKit = Safaris Engine
+    # (kein echtes iPhone). Windows ohne Browser-Job (Chromium läuft dort schon über den Frischtest bzw. lokal).
     name: ${{ matrix.name }}
     needs: bau
     runs-on: ${{ matrix.os }}
@@ -146,22 +179,58 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { name: browser-linux, os: ubuntu-latest, engines: "chromium,firefox,webkit" }
-          - { name: browser-macos, os: macos-15-intel, engines: "webkit" }   # WebKit für macOS 14 ist eingefroren (hängt); Intel bleibt, bis WebKit auf arm64 geprüft ist
+          - { name: browser-linux, os: ubuntu-26.04, engines: "chromium,firefox,webkit" }
     steps:
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: baum
       - name: Testbaum auspacken
         run: tar -xf baum.tar
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: "3.13"
-      - name: Programm-Pakete (pakete.lock mit Prüfsummen) und Playwright (Browser-Download bis zu dreimal – der Spiegel von Microsoft ist manchmal kurz weg)
+      - name: Programm-Pakete (pakete.lock) und Playwright (browser.lock, beide mit Prüfsummen; Browser-Download bis zu dreimal – der Spiegel von Microsoft ist manchmal kurz weg)
         run: |
           if [ -f /etc/apt/apt-mirrors.txt ] && grep -qv 'azure\.archive\.ubuntu\.com' /etc/apt/apt-mirrors.txt; then sudo sed -i '/azure\.archive\.ubuntu\.com/d' /etc/apt/apt-mirrors.txt || true; fi
           python -m pip install -q --require-hashes --only-binary=:all: -r baum/Programm/pakete.lock
-          python -m pip install -q playwright==1.63.0
+          python -m pip install -q --require-hashes --only-binary=:all: -r baum/.github/ci/browser.lock
+          for i in 1 2 3; do python -m playwright install --with-deps $(echo "${{ matrix.engines }}" | tr ',' ' ') && break; [ "$i" = 3 ] && exit 1; sleep 20; done
+      - name: Browser-Test
+        run: python baum/.github/ci/browser_test.py --system ${{ matrix.name }} --engines ${{ matrix.engines }} --ergebnis ergebnis.json
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: ergebnis-${{ matrix.name }}
+          path: ergebnis.json
+          retention-days: 14
+          if-no-files-found: warn
+
+  browser-macos:
+    # WebKit auf macOS Intel (das WebKit für macOS 14 ist eingefroren und hing; Intel bleibt, bis WebKit auf arm64 geprüft
+    # ist); nicht beim Push auf main (siehe oben)
+    if: github.event_name != 'push' || github.ref != 'refs/heads/main'
+    name: ${{ matrix.name }}
+    needs: bau
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: browser-macos, os: macos-15-intel, engines: "webkit" }
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: baum
+      - name: Testbaum auspacken
+        run: tar -xf baum.tar
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.13"
+      - name: Programm-Pakete (pakete.lock) und Playwright (browser.lock, beide mit Prüfsummen; Browser-Download bis zu dreimal)
+        run: |
+          python -m pip install -q --require-hashes --only-binary=:all: -r baum/Programm/pakete.lock
+          python -m pip install -q --require-hashes --only-binary=:all: -r baum/.github/ci/browser.lock
           for i in 1 2 3; do python -m playwright install --with-deps $(echo "${{ matrix.engines }}" | tr ',' ' ') && break; [ "$i" = 3 ] && exit 1; sleep 20; done
       - name: Browser-Test
         run: python baum/.github/ci/browser_test.py --system ${{ matrix.name }} --engines ${{ matrix.engines }} --ergebnis ergebnis.json

@@ -4109,7 +4109,7 @@ def test_ci(tmp):
     subprocess.run([sys.executable, str(rel_bau), str(HIER.parent), str(rel)], env=env, capture_output=True, timeout=300)
     summe = cl.inhalt_pruefsumme(rel / HIER.parent.name) if (rel / HIER.parent.name).is_dir() else ""
     pruefe("ci_lauf.py --probe: Plan für Branch ci (Release-Inhalt + tests.yml + frischtest.py, Prüfsumme = Release-Ordner), ohne Netz, schreibt nichts",
-           pr.returncode == 0 and plan.get("branch") == "ci" and plan.get("workflows") == ["release_pruefung.yml", "scorecard.yml", "tests.yml"]
+           pr.returncode == 0 and plan.get("branch") == "ci" and plan.get("workflows") == ["fuzz.yml", "release_pruefung.yml", "scorecard.yml", "tests.yml"]
            and {".github/workflows/tests.yml", ".github/ci/frischtest.py", ".github/ci/bau.py"} <= set(plan.get("github", []))
            and plan.get("pruefsumme") == summe and len(summe) == 64 and plan.get("dateien", 0) > 60 and vorher == nachher,
            (pr.stdout + pr.stderr)[-500:])
@@ -4138,7 +4138,7 @@ def test_ci(tmp):
            and len(jobs) >= 2 and len(zeiten) == len(jobs) and all(0 < z <= 45 for z in zeiten)
            and "fail-fast: false" in y and "secrets." not in y
            and y.count("persist-credentials: false") == sum(1 for u in uses if u.startswith("actions/checkout@"))
-           and all(s in y for s in ("windows-latest", "windows-11-arm", "os: macos-15 }", "macos-15-intel", "ubuntu-latest",
+           and all(s in y for s in ("windows-latest", "windows-11-arm", "os: macos-26 }", "macos-15-intel", "ubuntu-26.04",
                                     "ubuntu-24.04-arm", "debian:stable-slim")) and "os: macos-14" not in y, f"{uses} {jobs} {zeiten}")
     version = re.search(r'^VERSION = "([\d.]+)', (HIER / "gans_lernkarten.py").read_text(encoding="utf-8"), re.M)[1]
     zip_pfad = tmp / "e36-release" / f"Me-Goos-ta-Deutsch-{version}.zip"
@@ -4222,16 +4222,17 @@ def test_ci_browser(tmp):
            and re.search(r"name: Prüfsumme[^\n]*SHA256SUMS[^\n]*\n\s+run: python \.github/ci/neuestes_release\.py", y)
            and y.count("frischtest.py --neuestes-release") == 3 and "browser_test.py --live --neuestes-release" in y
            and y.count("--neuestes-release --neueste-pakete") == 1 and y.count("name: neueste-") == 3
-           and all(s in y for s in ("windows-latest", "windows-11-arm", "os: macos-15 }", "macos-15-intel", "ubuntu-latest",
+           and all(s in y for s in ("windows-latest", "windows-11-arm", "os: macos-26 }", "macos-15-intel", "ubuntu-26.04",
                                     "ubuntu-24.04-arm", "debian:stable-slim")) and "os: macos-14" not in y
-           and len(jobs) == 5 and "neueste" in jobs and len(zeiten) == len(jobs) and all(0 < z <= 45 for z in zeiten)
+           and "-r .github/ci/browser.lock" in y and len(jobs) == 5 and "neueste" in jobs and len(zeiten) == len(jobs) and all(0 < z <= 45 for z in zeiten)
            and y.count("persist-credentials: false") == len(jobs) and y.count("needs: release") == 4, f"{jobs} {zeiten} {uses[:2]}")
     # 3) tests.yml: Browser-Job
     t2 = wf.read_text(encoding="utf-8")
     job = t2.split("\n  browser:\n", 1)[1] if "\n  browser:\n" in t2 else ""
-    pruefe("tests.yml: Job browser (Ubuntu: Chromium, Firefox, WebKit · macOS: WebKit), Playwright fest 1.63.0, Ergebnis als Artefakt",
-           "browser-linux, os: ubuntu-latest, engines: \"chromium,firefox,webkit\"" in job
-           and "browser-macos, os: macos-15-intel, engines: \"webkit\"" in job and "playwright==1.63.0" in job
+    pruefe("tests.yml: Job browser (Ubuntu: Chromium, Firefox, WebKit · macOS: WebKit), Playwright fest per browser.lock, Ergebnis als Artefakt",
+           "browser-linux, os: ubuntu-26.04, engines: \"chromium,firefox,webkit\"" in job
+           and "browser-macos, os: macos-15-intel, engines: \"webkit\"" in job
+           and "--require-hashes --only-binary=:all: -r baum/.github/ci/browser.lock" in job
            and "python baum/.github/ci/browser_test.py --system ${{ matrix.name }}" in job and "name: ergebnis-${{ matrix.name }}" in job
            and "--live" not in job and "for i in 1 2 3; do python -m playwright install" in job, job[:200])
     # 4) ci_lauf.py: web-app/ im Branch ci; --release-pruefung nur die Release-Prüfung mit push-Auslöser auf ci
@@ -5730,7 +5731,7 @@ def test_update(p, tmp):
             if isinstance(n, (ast.Import, ast.ImportFrom))}
     bau = HIER.parent.parent / "werkstatt" / "bau_webapp.py"                      # nur im Arbeitsordner: die App braucht das Modul nicht
     pruefe("aktualisieren.py: oben nur Standardbibliothek (anwenden läuft ohne Pakete), kein api.github.com; nicht in der Web-App",
-           oben <= {"__future__", "argparse", "hashlib", "json", "os", "re", "shutil", "subprocess", "sys", "time", "urllib", "zipfile", "pathlib"}
+           oben <= {"__future__", "argparse", "hashlib", "json", "os", "re", "shutil", "subprocess", "sys", "time", "urllib", "zipfile", "zlib", "pathlib"}
            and "api.github.com" not in (HIER / "aktualisieren.py").read_text(encoding="utf-8")
            and (not bau.is_file() or '"aktualisieren.py", "signatur.py"}' in bau.read_text(encoding="utf-8")), oben)
     pruefe("Oberfläche: „Nach neuer Version suchen“ in Werkzeuge, Über und Fußzeile (nur am Rechner); „Jetzt aktualisieren“ nur, wenn möglich",
@@ -6307,7 +6308,8 @@ def test_paket_fassungen(tmp):
         im_release = all((rel / n).is_file() for n in E52_LOCKS) if rel.is_dir() else None
         pruefe("bau_lock.py --probe (offline, gespeicherte PyPI-Antworten): baut alle Locks gleich nach; geänderte Prüfsumme → Abweichung; "
                "Release-Ordner (bau_release.py) enthält alle Lock-Dateien",
-               p1.returncode == 0 and p1.stdout.count("✓ ") == len(E52_LOCKS) and "✗" not in p1.stdout
+               p1.returncode == 0 and sum(1 for z in p1.stdout.splitlines() if z.startswith("✓ pakete")) == len(E52_LOCKS)
+               and "✗" not in p1.stdout
                and plan.get("locks", {}).get("pakete.lock") == haupt and p2.returncode == 1 and "✗ pakete.lock" in p2.stdout
                and im_release is not False, (p1.stdout + p1.stderr)[-400:] + (p2.stdout + p2.stderr)[-200:])
     else:
@@ -6421,7 +6423,7 @@ def test_ci_quellbaum(tmp):
            and "kopf_sauber(mime)" in quelle and "self.send_header(kopf_sauber(k), kopf_sauber(v))" in quelle, boese)
     arbeit = HIER.parent.parent
     gh = arbeit / ".github"
-    wfs = {n: gh / "workflows" / n for n in ("tests.yml", "release_pruefung.yml", "scorecard.yml")}
+    wfs = {n: gh / "workflows" / n for n in ("tests.yml", "release_pruefung.yml", "scorecard.yml", "fuzz.yml")}
     bau, ci_lauf = gh / "ci" / "bau.py", arbeit / "werkstatt" / "ci_lauf.py"
     if not all(x.is_file() for x in (*wfs.values(), bau, ci_lauf, gh / "dependabot.yml", arbeit / "ruff.toml")):
         print("  (.github/, werkstatt/ und ruff.toml liegen nur im Quellbaum – 5 Prüfungen entfallen)")
@@ -6451,10 +6453,10 @@ def test_ci_quellbaum(tmp):
            "Schreibrechte nur im Scorecard-Job (security-events + id-token, nur main), Zeitlimit je Job", not fehler, fehler)
     tt = y["tests.yml"]
     teile = {}
-    for j in ("bau", "lint", "frischtest", "debian", "browser"):
+    for j in ("bau", "lint", "frischtest", "frischtest-macos", "debian", "browser", "browser-macos"):
         rest = tt.split(f"\n  {j}:\n", 1)[1] if f"\n  {j}:\n" in tt else ""
         teile[j] = re.split(r"\n  [a-z][a-z0-9_-]*:\n", rest, maxsplit=1)[0]
-    test_jobs = [teile[j] for j in ("frischtest", "debian", "browser")]
+    test_jobs = [teile[j] for j in ("frischtest", "frischtest-macos", "debian", "browser", "browser-macos")]
     pruefe("tests.yml: Job bau (bau.py aus dem Quellbaum, Pakete per pakete.lock mit Hashes, Pyodide-Cache, Artefakt baum.tar) "
            "und Job lint; Testjobs needs: bau, ohne Checkout, packen baum.tar aus und starten baum/.github/ci/…",
            "python .github/ci/bau.py --ergebnis ergebnis.json --tar baum.tar --cache" in teile["bau"]
@@ -6502,9 +6504,9 @@ def test_ci_quellbaum(tmp):
         modi = {m.name: m.mode for m in tf.getmembers() if m.isfile()}
     git_ok = (arbeit / ".git").is_dir()
     pruefe("ci_lauf.py --probe: Branch ci = Quellbaum (quellbaum.py-Prüfung ✓, baut dasselbe Release wie der Arbeitsordner, "
-           "3 Workflows); bau.py: Startdateien oben 0755, sonst 0644 im tar",
+           "4 Workflows); bau.py: Startdateien oben 0755, sonst 0644 im tar",
            pr.returncode == 0 and (not git_ok or (q.get("pruefung_ok") and q.get("pruefsumme_gleich") and q.get("dateien", 0) >= 90
-                                                  and q.get("workflows") == ["release_pruefung.yml", "scorecard.yml", "tests.yml"]))
+                                                  and q.get("workflows") == ["fuzz.yml", "release_pruefung.yml", "scorecard.yml", "tests.yml"]))
            and modi.get("baum/Me Goos-ta Deutsch - Mac.command") == 0o755 and modi.get("baum/Me Goos-ta Deutsch - Linux.sh") == 0o755
            and modi.get("baum/README.md") == 0o644 and modi.get("baum/Programm/x.sh") == 0o644,
            (q, modi, (pr.stdout + pr.stderr)[-300:]))
@@ -6920,6 +6922,178 @@ def test_sichere_fassungen(tmp):
     print(f"  E57 {time.time() - t0:.1f} s")
 
 
+E58_SHA = {"actions/setup-python": "6d4fd22b20465ccc0f7354476588e8df7c9ca0e0", "ossf/scorecard-action": "fa7117db83c52d787ae5a89f350999701505d78e",
+           "github/codeql-action/upload-sarif": "9b3254085494b55a0f7c4c2b3d2d52cc712ce370"}     # Fassungen aus Dependabot-PR 2
+E58_MAIN = "if: github.event_name != 'push' || github.ref != 'refs/heads/main'"
+
+
+def _e58_git(arbeit, *args):
+    kandidaten = [shutil.which("git")] + sorted(str(x) for x in Path(os.environ.get("LOCALAPPDATA", "-")).glob(
+        "GitHubDesktop/app-*/resources/app/git/cmd/git.exe"))
+    git = next((k for k in reversed(kandidaten) if k and Path(k).is_file()), None)
+    if not git:
+        return None
+    r = subprocess.run([git, "-C", str(arbeit), *args], capture_output=True, text=True, encoding="utf-8", errors="replace",
+                       timeout=60)
+    return r.stdout if r.returncode == 0 else None
+
+
+def test_github_meldungen(tmp):
+    """E58 (2.5.1): GitHub-Meldungen beseitigt – Fuzzing-Funde behoben (Update-ZIP mit kaputtem Eintrag, unbekannter ZIP-
+    Fassung, karten.csv weder UTF-8 noch cp1252, einzelne CR-Zeilenenden, Bildname zu lang in Bytes); Workflows mit festen Runner-Fassungen (kein
+    ubuntu-latest), jedes pip install mit --require-hashes, Actions auf dem Stand von Dependabot-PR 2, macOS-Jobs nicht beim
+    Push auf main; browser.lock/fuzz.lock fest mit Prüfsummen (bau_lock.py); fuzz.yml nur Lesen mit 5 Zielen, Zufalls-
+    Fuzzing lokal ohne Fund; getrackt ist nur das pip-Rad (verlangt der Haupttest). Ohne .github/ entfallen 5 der 6
+    Prüfungen."""
+    print("\n[E58] GitHub-Meldungen: Workflows, Locks der CI, Fuzzing")
+    import importlib
+    import gans_lernkarten as gl
+    t0 = time.time()
+    ak = importlib.import_module("aktualisieren")
+    # 1) Fuzzing-Funde (gelten auch ohne Quellbaum)
+    w = ak.WURZEL_NAME
+
+    def zip_mit(namen, kaputt=None):
+        roh = io.BytesIO()
+        with zipfile.ZipFile(roh, "w", zipfile.ZIP_DEFLATED) as z:
+            for n in namen:
+                z.writestr(f"{w}/{n}", b'VERSION = "9.9"\n' * 50 if n.endswith("gans_lernkarten.py") else b"#")
+        b = bytearray(roh.getvalue())
+        if kaputt:
+            kaputt(b)
+        return bytes(b)
+
+    def eintraege(b, start):                             # Kopf-Positionen des Generator-Eintrags (lokal bzw. Verzeichnis)
+        name = f"{w}/Programm/gans_lernkarten.py".encode()
+        kopf, i, aus = (30 if start == b"PK\x03\x04" else 46), 0, []
+        while (i := b.find(start, i)) >= 0:
+            if b[i + kopf:i + kopf + len(name)] == name:
+                aus.append(i)
+            i += 4
+        return aus
+
+    def crc_kaputt(b):                                   # CRC im lokalen Kopf + im Verzeichnis ändern
+        for i in eintraege(b, b"PK\x03\x04"):
+            b[i + 14] ^= 0xFF
+        for i in eintraege(b, b"PK\x01\x02"):
+            b[i + 16] ^= 0xFF
+
+    def fassung_kaputt(b):                               # „needs version“ auf 14.8 (zipfile: NotImplementedError)
+        for i in eintraege(b, b"PK\x01\x02"):
+            b[i + 6] = 148
+
+    def grund(f):
+        try:
+            f()
+            return "ok"
+        except ak.UpdateFehler:
+            return "UpdateFehler"
+        except Exception as e:  # noqa: BLE001
+            return type(e).__name__
+    gruende = {n: grund(lambda d=d: ak.pruefe_zip(io.BytesIO(d), "9.9")) for n, d in (
+        ("heil", zip_mit(ak.PFLICHT)), ("crc", zip_mit(ak.PFLICHT, crc_kaputt)),
+        ("fassung", zip_mit(ak.PFLICHT, fassung_kaputt)), ("ende", b"PK\x05\x06" + b"\xff" * 18))}
+    k1, k2 = tmp / "e58-a.csv", tmp / "e58-b.csv"
+    k1.write_bytes("bild;de;es;notiz\nhaus.jpg;Haus;casa;".encode("cp1252") + b"\x81\x8d\n")
+    k2.write_bytes(b"bild;de;es;notiz\rhaus.jpg;Haus;casa;\rbaum.jpg;Baum;arbol;\r")
+    try:
+        s1, z1, h1 = gl.lies_csv(k1)
+        s2, z2, _h2 = gl.lies_csv(k2)
+        lang = "g" + "\u00ff" * 170 + ".jpg"                   # 175 Zeichen, aber 345 Bytes (Linux: \u201eFile name too long\u201c)
+        k3 = tmp / "e58-c.csv"
+        k3.write_text(f"bild;de;es;notiz\n{lang};Haus;casa;\n", encoding="utf-8")
+        (tmp / "e58-bilder").mkdir(exist_ok=True)
+        karten3, _m3 = gl.lies_karten(k3, tmp / "e58-bilder")
+        csv_ok = (s1[:4] == ["bild", "de", "es", "notiz"] and len(z1) == 1 and "\ufffd" in z1[0].get("notiz", "") and h1
+                  and len(z2) == 2 and z2[1].get("de") == "Baum" and not gl.sicherer_name(lang)
+                  and gl.sicherer_name("g" + "a" * 170 + ".jpg") and karten3 == [])
+        csv_info = (s1, z1, h1, s2, z2, karten3)
+    except Exception as e:  # noqa: BLE001
+        csv_ok, csv_info = False, repr(e)
+    pruefe("Fuzzing-Funde behoben: Update-ZIP mit falscher CRC, unbekannter ZIP-Fassung oder abgeschnittenem Ende → "
+           "verständlicher UpdateFehler (heiles ZIP besteht); karten.csv mit Bytes, die cp1252 nicht kennt, mit einzelnen "
+           "CR-Zeilenenden und mit einem Bildnamen über 240 Bytes (Umlaute) wird gelesen statt abzustürzen",
+           gruende == {"heil": "ok", "crc": "UpdateFehler", "fassung": "UpdateFehler", "ende": "UpdateFehler"} and csv_ok,
+           (gruende, str(csv_info)[:300]))
+    arbeit = HIER.parent.parent
+    gh = arbeit / ".github"
+    fz, bl = gh / "ci" / "fuzz_ziele.py", arbeit / "werkstatt" / "bau_lock.py"
+    wf_dir = gh / "workflows"
+    if not all(x.is_file() for x in (fz, bl, wf_dir / "tests.yml", wf_dir / "release_pruefung.yml", wf_dir / "fuzz.yml")):
+        print("  (.github/ und werkstatt/ liegen nur im Quellbaum – 5 Prüfungen entfallen)")
+        print(f"  E58 {time.time() - t0:.1f} s")
+        return
+    y = {f.name: re.sub(r"(?m)^\s*#.*\n|[ \t]+#.*$", "", f.read_text(encoding="utf-8"))   # ohne Kommentare
+         for f in sorted(wf_dir.glob("*.yml"))}
+    # 2) Runner-Fassungen, pip mit Hashes, Actions-Fassungen
+    fehler = []
+    for n, txt in y.items():
+        if "ubuntu-latest" in txt or "macos-latest" in txt or "windows-2019" in txt:
+            fehler.append(f"{n}: *-latest/alt")
+        for z in re.findall(r"^\s*(?:run: )?(.*\bpip install\b.*)$", txt, re.M):
+            if "--require-hashes" not in z or " -r " not in z:
+                fehler.append(f"{n}: {z.strip()[:80]}")
+        for name, sha in re.findall(r"uses:\s*([a-z0-9-]+/[a-z0-9_./-]+)@([0-9a-f]{40})", txt):
+            if name in E58_SHA and sha != E58_SHA[name]:
+                fehler.append(f"{n}: {name}@{sha[:8]}")
+    pruefe("Workflows: feste Runner-Fassungen (kein ubuntu-/macos-latest), jedes pip install mit --require-hashes -r <lock>, "
+           "setup-python 7.1.0, scorecard-action 2.5.0, codeql upload-sarif 4.39.1 (Stand Dependabot-PR 2)",
+           not fehler and sum(t.count("actions/setup-python@") for t in y.values()) >= 10, fehler)
+    # 3) macOS nicht beim Push auf main
+    tt = y["tests.yml"].split("\njobs:\n", 1)[1]
+    bloecke = dict(re.findall(r"^  ([a-z][a-z0-9_-]*):\n((?:(?!^  [a-z]).*\n?)*)", tt, re.M))
+    mac = sorted(j for j, b in bloecke.items() if "macos" in b)
+    ohne = sorted(j for j, b in bloecke.items() if "macos" not in b and "\n    if:" in "\n" + b)
+    rp = y["release_pruefung.yml"]
+    pruefe("tests.yml: macOS-Jobs (frischtest-macos, browser-macos) laufen nicht beim Push auf main, alle anderen immer; "
+           "Release-Prüfung: macOS Apple Silicon auf macos-26",
+           mac == ["browser-macos", "frischtest-macos"] and all(E58_MAIN in bloecke[j] for j in mac) and not ohne
+           and "{ name: macos-arm, os: macos-26 }" in rp and "{ name: neueste-macos, os: macos-26 }" in rp
+           and "os: macos-15 }" not in rp + y["tests.yml"], (mac, ohne))
+    # 4) Locks der CI
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("bau_lock_e58", bl)
+    blm = importlib.util.module_from_spec(spec)
+    vorher = sys.dont_write_bytecode
+    sys.dont_write_bytecode = True
+    try:
+        spec.loader.exec_module(blm)
+    finally:
+        sys.dont_write_bytecode = vorher
+    locks = {n: (gh / "ci" / n).read_text(encoding="utf-8") if (gh / "ci" / n).is_file() else "" for n in ("browser.lock", "fuzz.lock")}
+    pakete = {n: dict(re.findall(r"^([a-z][a-z0-9._-]*)==([^\s\\]+) \\$", l, re.M)) for n, l in locks.items()}
+    hashes_ok = all(l.isascii() and re.findall(r"--hash=sha256:[0-9a-f]{64}", l) for l in locks.values())
+    pruefe("browser.lock (Playwright 1.63.0 + greenlet, pyee, typing-extensions) und fuzz.lock (Atheris) fest mit SHA-256, "
+           "nur ASCII, gebaut von bau_lock.py (CI_SAETZE → .github/ci/)",
+           set(blm.CI_SAETZE) == {"browser.lock", "fuzz.lock"} and blm.lock_pfad(HIER, "fuzz.lock") == gh / "ci" / "fuzz.lock"
+           and pakete["browser.lock"].get("playwright") == "1.63.0"
+           and set(pakete["browser.lock"]) == {"playwright", "greenlet", "pyee", "typing-extensions"}
+           and set(pakete["fuzz.lock"]) == {"atheris"} and hashes_ok, pakete)
+    # 5) fuzz.yml + Zufalls-Fuzzing
+    f = y["fuzz.yml"]
+    env = dict(os.environ, PYTHONIOENCODING="utf-8", PYTHONDONTWRITEBYTECODE="1")
+    env.pop("MGD_DATEN", None)
+    r = subprocess.run([sys.executable, str(fz), str(HIER), "--ziel", "alle", "--zufall", "120"], env=env, cwd=str(tmp),
+                       capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=600)
+    ziele = re.search(r"ziel: \[([^\]]*)\]", f)
+    q = fz.read_text(encoding="utf-8")
+    pruefe("fuzz.yml: nur contents: read, wöchentlich + ci + von Hand, 5 Ziele (= fuzz_ziele.ZIELE), Atheris per fuzz.lock, "
+           "Fund als Artefakt; fuzz_ziele.py --zufall (ohne Atheris): 5 Ziele ohne Fund",
+           re.search(r"^permissions:\n  contents: read\n\n", f, re.M) and "write" not in f and "secrets." not in f
+           and "cron:" in f and "workflow_dispatch:" in f and "branches: [ci]" in f and "pull_request" not in f
+           and ziele and [z.strip() for z in ziele.group(1).split(",")] == ["markdown", "wortliste", "signatur", "update_zip", "karten"]
+           and "-r .github/ci/fuzz.lock" in f and "import atheris" in q and "if: failure()" in f
+           and r.returncode == 0 and r.stdout.count("✓ ") == 5, (r.stdout + r.stderr)[-400:])
+    # 6) getrackte Räder
+    liste = _e58_git(arbeit, "ls-files", "*.whl") if (arbeit / ".git").is_dir() else None
+    raeder = sorted(z for z in (liste or "").splitlines() if z.strip())
+    pruefe("Quellbaum: getrackt ist nur das pip-Rad (Programm/werkzeuge/pip-*.whl – verlangt der unveränderliche Haupttest für "
+           "das embeddable Python), kein anderes .whl",
+           liste is None or (len(raeder) == 1 and re.fullmatch(r"Me-Goos-ta-Deutsch/Programm/werkzeuge/pip-[\d.]+-py3-none-any\.whl",
+                                                                raeder[0]) is not None), raeder)
+    print(f"  E58 {time.time() - t0:.1f} s")
+
+
 def main():
     global ECHTES_KI_BILD, ECHT_DA
     t0 = time.time()
@@ -6992,6 +7166,7 @@ def main():
         test_veroeffentlichung(Path(tmp))
         test_auftritt(Path(tmp))
         test_sichere_fassungen(Path(tmp))
+        test_github_meldungen(Path(tmp))
     ok =sum(1 for e in tg.ergebnisse if e[1])
     print(f"\n{ok} von {len(tg.ergebnisse)} Prüfungen bestanden ({time.time() - t0:.0f} s).")
     if ok == len(tg.ergebnisse):

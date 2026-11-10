@@ -32,6 +32,7 @@ import sys
 import time
 import urllib.parse
 import zipfile
+import zlib
 from pathlib import Path
 
 HIER = Path(__file__).resolve().parent                  # …/Programm
@@ -139,6 +140,10 @@ def _lies(antwort, ziel, grenze, melde=None):
     return h.hexdigest()
 
 
+# alles, was zipfile bei einem kaputten ZIP werfen kann (CRC, unbekannte Fassung/Kompression, abgeschnitten) – Fuzzing 2.5.1
+ZIP_KAPUTT = (zipfile.BadZipFile, OSError, EOFError, ValueError, NotImplementedError, RuntimeError, zlib.error)
+
+
 def pruefe_zip(pfad, version):
     """Ist das ein echtes Release-ZIP dieser Version? Gibt die Liste der Dateien (ZipInfo) zurück."""
     def nein(de, en, es):
@@ -146,7 +151,7 @@ def pruefe_zip(pfad, version):
 
     try:
         z = zipfile.ZipFile(pfad)
-    except (zipfile.BadZipFile, OSError):
+    except ZIP_KAPUTT:
         nein("Das ZIP ist beschädigt.", "The ZIP is damaged.", "El ZIP está dañado.")
     with z:
         infos = [i for i in z.infolist() if not i.is_dir()]
@@ -169,7 +174,10 @@ def pruefe_zip(pfad, version):
         fehlt = [p for p in PFLICHT if p not in namen]
         if fehlt:
             nein(f"Im ZIP fehlt {fehlt[0]}.", f"The ZIP lacks {fehlt[0]}.", f"Al ZIP le falta {fehlt[0]}.")
-        kopf = z.read(f"{WURZEL_NAME}/Programm/gans_lernkarten.py")[:20000].decode("utf-8", "replace")
+        try:                                       # kaputter Eintrag (CRC, Kompression, abgeschnitten) – Fuzzing-Fund 2.5.1
+            kopf = z.read(f"{WURZEL_NAME}/Programm/gans_lernkarten.py")[:20000].decode("utf-8", "replace")
+        except ZIP_KAPUTT:
+            nein("Das ZIP ist beschädigt.", "The ZIP is damaged.", "El ZIP está dañado.")
         m = re.search(r'^VERSION = "([0-9.]+)[ "]', kopf, re.M)
         if not m or m.group(1) != version:
             nein(f"Das ZIP enthält Version {m.group(1) if m else '?'} statt {version}.",

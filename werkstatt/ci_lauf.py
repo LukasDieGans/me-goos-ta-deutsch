@@ -138,6 +138,7 @@ def branch_inhalt(release, ziel, app=None, release_pruefung=False):
             shutil.copyfile(p, z)
     if release_pruefung:
         (ziel / ".github" / "workflows" / WORKFLOW).unlink()
+        (ziel / ".github" / "workflows" / "fuzz.yml").unlink(missing_ok=True)   # braucht den Quellbaum (seit G03)
         w = ziel / ".github" / "workflows" / RELEASE_PRUEFUNG
         text = w.read_text(encoding="utf-8")
         if text.count(RP_AUSLOESER) != 1:
@@ -449,7 +450,12 @@ def main(argv):
                 print(z)
             print(("✓ RELEASE-PRÜFUNG GRÜN" if ok else "✗ RELEASE-PRÜFUNG NICHT GRÜN") + " (Probe auf Branch ci)")
             return 0 if ok else 1
+        fuzz = finde_lauf(weg, tok, sha, time.time() + 60, "fuzz.yml") if fertig else None   # seit G03, läuft daneben
+        if fuzz:
+            fuzz = warte(weg, tok, fuzz, max(ende, time.time() + 600))
+            print(f"  Fuzzing: {fuzz.get('conclusion') or fuzz.get('status')} · {fuzz.get('html_url')}", flush=True)
         ERGEBNIS.write_text(json.dumps(dict(
+            fuzz=(fuzz or {}).get("conclusion"),
             zeit=time.strftime("%Y-%m-%d %H:%M:%S"), version=p["version"], pruefsumme=p["pruefsumme"], commit=sha,
             lauf=lauf.get("html_url"), conclusion=lauf.get("conclusion"), ok=ok,
             systeme={n: dict(ok=bool(e.get("ok")), bestanden=sum(1 for x in e.get("pruefungen") or [] if x.get("ok")),

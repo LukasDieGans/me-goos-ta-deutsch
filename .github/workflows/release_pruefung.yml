@@ -5,7 +5,7 @@
 # Fassungen aus pakete.lock mit Prüfsummen) und prüft Download-Seite und Web-App live in WebKit, Firefox und Chromium.
 # Job „neueste“ (Frühwarnung): dasselbe Release mit den neuesten Fassungen innerhalb von requirements.txt – rot heißt:
 # in der nächsten Release-Gruppe nicht einfach `bau_lock.py --neueste` übernehmen. Keine Person nötig, keine Secrets,
-# nur Lesen. Kein Zeitplan (wird also nie pausiert).
+# nur Lesen. Kein Zeitplan (wird also nie pausiert). Seit 2.5.1 (G03): feste Runner-Fassungen, Playwright per browser.lock.
 name: Release-Pruefung
 
 on:
@@ -23,13 +23,13 @@ concurrency:
 jobs:
   release:
     name: release
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: "3.13"
       - name: Prüfsumme des neuesten Releases (Signatur, ZIP gegen SHA256SUMS.txt, beim Release = Inhalt des Tags)
@@ -53,15 +53,15 @@ jobs:
         include:
           - { name: windows-x64, os: windows-latest }
           - { name: windows-arm, os: windows-11-arm }
-          - { name: macos-arm, os: macos-15 }        # macos-14 wird am 02.11.2026 abgeschaltet (Brownouts ab 05.10.); Probe 23.10.2026: macos-15/-26/-latest laufen
+          - { name: macos-arm, os: macos-26 }        # seit G03: macos-15 (arm64) bekam im November 2026 oft keinen Runner; macos-26 = macos-latest
           - { name: macos-intel, os: macos-15-intel }
-          - { name: linux-x64, os: ubuntu-latest }
+          - { name: linux-x64, os: ubuntu-26.04 }
           - { name: linux-arm, os: ubuntu-24.04-arm }
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: "3.13"
       - name: desktop-file-validate + minisign (nur Linux, zum Prüfen des Menüeintrags und der Signatur)
@@ -80,7 +80,7 @@ jobs:
   debian:
     needs: release
     name: debian-slim
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     container: debian:stable-slim
     timeout-minutes: 45
     steps:
@@ -109,13 +109,13 @@ jobs:
       matrix:
         include:
           - { name: neueste-windows, os: windows-latest }
-          - { name: neueste-macos, os: macos-15 }
-          - { name: neueste-linux, os: ubuntu-latest }
+          - { name: neueste-macos, os: macos-26 }
+          - { name: neueste-linux, os: ubuntu-26.04 }
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: "3.13"
       - name: desktop-file-validate + minisign (nur Linux)
@@ -140,19 +140,19 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { name: browser-linux, os: ubuntu-latest, engines: "chromium,firefox,webkit" }
+          - { name: browser-linux, os: ubuntu-26.04, engines: "chromium,firefox,webkit" }
           - { name: browser-macos, os: macos-15-intel, engines: "webkit" }   # WebKit für macOS 14 ist eingefroren (hängt); Intel bleibt, bis WebKit auf arm64 geprüft ist
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: "3.13"
-      - name: Playwright (Browser-Download bis zu dreimal – der Spiegel von Microsoft ist manchmal kurz weg)
+      - name: Playwright (browser.lock mit Prüfsummen; Browser-Download bis zu dreimal – der Spiegel von Microsoft ist manchmal kurz weg)
         run: |
           if [ -f /etc/apt/apt-mirrors.txt ] && grep -qv 'azure\.archive\.ubuntu\.com' /etc/apt/apt-mirrors.txt; then sudo sed -i '/azure\.archive\.ubuntu\.com/d' /etc/apt/apt-mirrors.txt || true; fi
-          python -m pip install -q playwright==1.63.0
+          python -m pip install -q --require-hashes --only-binary=:all: -r .github/ci/browser.lock
           for i in 1 2 3; do python -m playwright install --with-deps $(echo "${{ matrix.engines }}" | tr ',' ' ') && break; [ "$i" = 3 ] && exit 1; sleep 20; done
       - name: Browser-Test gegen die Live-Adressen (Download-Seite, Web-App)
         run: python .github/ci/browser_test.py --live --neuestes-release --system ${{ matrix.name }} --engines ${{ matrix.engines }} --ergebnis ergebnis.json

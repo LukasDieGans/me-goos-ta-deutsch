@@ -1,0 +1,10 @@
+# Me Goos-ta Deutsch - feste Paketfassungen mit SHA-256: CI: Atheris fuer das Fuzzing (fuzz.yml, Linux x64)
+# pip install --require-hashes --only-binary=:all: -r fuzz.lock
+# Gebaut von bau_lock.py (Arbeitsordner) aus: atheris==3.1.0 | PyPI-Stand 2026-11-10
+# Python 3.13 (CPython) | Linux x64 (glibc)
+# Nicht von Hand aendern - neu bauen: python bau_lock.py [--neueste]
+
+# atheris 3.1.0: 1 Raeder
+#   atheris-3.1.0-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.whl
+atheris==3.1.0 \
+    --hash=sha256:f8a9f51ce8369026e8eb7b7174835e8c4c85a1a6db5d9add36c15100779d2a39

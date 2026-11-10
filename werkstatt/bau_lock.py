@@ -13,7 +13,10 @@ Apple Silicon und Linux x64 + ARM (glibc). Abhängigkeiten werden über `require
 Spannen: `pakete.lock` aus requirements.txt, die Ersatz-Sätze für Smart App Control (nur Windows x64) und uharfbuzz
 (Sprachen hi/ar) unten in SAETZE. Die PyPI-Antworten (Fassungen, Abhängigkeiten, Dateinamen + SHA-256) landen in
 bau_lock_antworten.json neben diesem Skript – `--probe` braucht kein Netz. Nur Standardbibliothek + das mit pip
-mitgelieferte `packaging` (eigenes Python des Programms)."""
+mitgelieferte `packaging` (eigenes Python des Programms).
+
+Seit 2.5.1 (G03) zusätzlich die Locks der CI in .github/ci/ (CI_SAETZE): browser.lock (Playwright, Jobs browser) und
+fuzz.lock (Atheris, fuzz.yml) – jedes `pip install` der Workflows läuft so mit --require-hashes."""
 import json
 import re
 import sys
@@ -64,6 +67,18 @@ SAETZE = {
                            ("win_amd64",), "Ersatz-Satz „älter“ (nur Windows, wenn Smart App Control sperrt)"),
     "pakete-sprachen.lock": (["uharfbuzz==0.56.3"], ALLE, "Tool Sprachen: uharfbuzz für hi/ar (pip --target, ohne Abhängigkeiten)"),
 }
+# Locks der CI (seit G03, liegen in .github/ci/, nie im Release): gleiche Form wie SAETZE
+CI_ORDNER = HIER.parent / ".github" / "ci"
+CI_SAETZE = {
+    "browser.lock": (["playwright==1.63.0"], ("macos_x86_64", "linux_x86_64"),
+                     "CI: Playwright für den Browser-Test (Jobs browser: Linux x64, macOS Intel)"),
+    "fuzz.lock": (["atheris==3.1.0"], ("linux_x86_64",), "CI: Atheris für das Fuzzing (fuzz.yml, Linux x64)"),
+}
+SAETZE.update(CI_SAETZE)
+
+
+def lock_pfad(programm, datei):
+    return (CI_ORDNER if datei in CI_SAETZE else Path(programm)) / datei
 
 
 class LockFehler(Exception):
@@ -283,7 +298,7 @@ def baue(programm, offline=False, neueste=False, fassungen=()):
     texte, aenderungen = {}, []
     for datei, (_sp, plattformen, _z) in SAETZE.items():
         spannen = spannen_aus(programm, datei)
-        alt = lies_lock(Path(programm) / datei)
+        alt = lies_lock(lock_pfad(programm, datei))
         wuensche = {} if neueste else dict(alt)
         oben = {canonicalize_name(Requirement(s).name) for s in spannen}
         wuensche.update({n: v for n, v in vorgaben.items() if n in oben or n in alt})
@@ -321,7 +336,7 @@ def main(argv):
         return 1
     plan = {}
     for datei, text in texte.items():
-        pfad = programm / datei
+        pfad = lock_pfad(programm, datei)
         e = loese_cache[datei]
         plan[datei] = {n: x["version"] for n, x in e.items()}
         gleich = pfad.is_file() and pfad.read_text(encoding="utf-8") == text
@@ -336,7 +351,7 @@ def main(argv):
         print("  " + a)
     print("#plan " + json.dumps(dict(stand=stand, locks=plan), ensure_ascii=False, sort_keys=True))
     if offline:
-        return 0 if all((programm / d).is_file() and (programm / d).read_text(encoding="utf-8") == t
+        return 0 if all(lock_pfad(programm, d).is_file() and lock_pfad(programm, d).read_text(encoding="utf-8") == t
                         for d, t in texte.items()) else 1
     quelle.speichern(stand)
     return 0

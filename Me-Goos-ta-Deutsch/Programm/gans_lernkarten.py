@@ -1130,8 +1130,10 @@ def lies_csv(csv_pfad):
     try:
         text = roh.decode("utf-8-sig")
     except UnicodeDecodeError:
-        text = roh.decode("cp1252")
+        text = roh.decode("cp1252", "replace")     # 5 Bytes kennt cp1252 nicht → „�“ statt Absturz (Fuzzing-Fund 2.5.1)
         hinweise.append(meldung("csv_kodierung")["text"])
+    if "\r" in text.replace("\r\n", ""):               # einzelnes CR (alte Mac-Zeilenenden) → csv bräche ab (Fuzzing-Fund 2.5.1)
+        text = text.replace("\r\n", "\n").replace("\r", "\n")
     kopf = text.splitlines()[0] if text.strip() else ""
     delim = max((";", ",", "\t"), key=kopf.count)
     leser = csv.DictReader(io.StringIO(text), delimiter=delim)
@@ -1248,10 +1250,11 @@ def bilder_der_karten(csv_pfad, bilder_dir):
 
 
 def sicherer_name(name):
-    """Nur einfache Dateinamen (kein Pfad, kein Laufwerk, kein Datenstrom, nicht versteckt)."""
+    """Nur einfache Dateinamen (kein Pfad, kein Laufwerk, kein Datenstrom, nicht versteckt, nicht zu lang – auch in Bytes:
+    Linux/macOS erlauben 255 Bytes je Name, Umlaute zählen doppelt; Fuzzing-Fund 2.5.1)."""
     name = str(name or "")
     return bool(name) and not any(z in name for z in '/\\:\x00') and not name.startswith(".") and name.strip() == name \
-        and len(name) <= 180
+        and len(name) <= 180 and len(name.encode("utf-8", "surrogatepass")) <= 240
 
 
 def pruefe_texte(karten, cfg):
