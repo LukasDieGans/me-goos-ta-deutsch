@@ -1,6 +1,6 @@
 # Me Goos-ta Deutsch - feste Paketfassungen mit SHA-256: Standard (Erststart, Reparatur, neue Version)
 # pip install --require-hashes --only-binary=:all: -r pakete.lock
-# Gebaut von bau_lock.py (Arbeitsordner) aus: reportlab>=4.0,<6, pillow>=10.3,<13, numpy>=1.24,<3, pypdfium2>=4.0,<6 | PyPI-Stand 2026-10-23
+# Gebaut von bau_lock.py (Arbeitsordner) aus: reportlab>=4.0,<6, pillow>=10.3,>=13,<14, numpy>=1.24,<3, pypdfium2>=4.0,<6 | PyPI-Stand 2026-11-10
 # Python 3.13 (CPython) | Windows x64, Windows ARM (falls vorhanden), macOS Intel, macOS Apple Silicon, Linux x64 (glibc), Linux ARM (glibc)
 # Nicht von Hand aendern - neu bauen: python bau_lock.py [--neueste]
 
@@ -48,35 +48,35 @@ numpy==2.5.4 \
     --hash=sha256:8b4d2fd2d34e5f8c9235ee787de5631a37a28402b15cb80814df973d2be54129 \
     --hash=sha256:bc39ac66a7a9a3fbd6134fda43136b60ffde99c8f4501e64e0d2b24da137babf
 
-# pillow 12.3.0: 6 Raeder
-#   pillow-12.3.0-cp313-cp313-macosx_10_13_x86_64.whl
-#   pillow-12.3.0-cp313-cp313-macosx_11_0_arm64.whl
-#   pillow-12.3.0-cp313-cp313-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl
-#   pillow-12.3.0-cp313-cp313-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl
-#   pillow-12.3.0-cp313-cp313-win_amd64.whl
-#   pillow-12.3.0-cp313-cp313-win_arm64.whl
-pillow==12.3.0 \
-    --hash=sha256:7a743ff716f746fc19a9557f60dab1600d4613255f8a7aeb3cdde4db7eb15a66 \
-    --hash=sha256:d69141514cc30b774ceea5e3ed3a6635c8d8a96edf664689b890f4089111fb35 \
-    --hash=sha256:f7401aebd7f581d7f83a439d87d474999317ee099218e5ad25d125290990ba65 \
-    --hash=sha256:0847a763afefb695bc912d7c131e7e0632d4edc1d8698f58ddabec8e46b8b6d3 \
-    --hash=sha256:1cca606cd25738df4ed873d5ad46bbdb3d83b5cbca291f6b4ff13a4df6b0bbe8 \
-    --hash=sha256:b629de27fda84b42cde7edef0d85f13b958b47f6e9bbcbba9b673c562a89bd8b
+# pillow 13.0.0: 6 Raeder
+#   pillow-13.0.0-cp313-cp313-macosx_10_13_x86_64.whl
+#   pillow-13.0.0-cp313-cp313-macosx_11_0_arm64.whl
+#   pillow-13.0.0-cp313-cp313-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl
+#   pillow-13.0.0-cp313-cp313-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl
+#   pillow-13.0.0-cp313-cp313-win_amd64.whl
+#   pillow-13.0.0-cp313-cp313-win_arm64.whl
+pillow==13.0.0 \
+    --hash=sha256:ef5fe6b7db3f501c56000ba8fe7c7e1a35ca1d45824fbeb95a67daa85cff4dbe \
+    --hash=sha256:f11a3c1358bb3c68012a7b1f41b223c3db9f7bfde90b481df028cfe1c3363313 \
+    --hash=sha256:19b66ca0a4d25cc0200b381ce824c7ea090db61427315e73cfb05dbf1b35c369 \
+    --hash=sha256:5f56499c1a74d2b862beb0c33b8016f99d095858455df9d21583bbbc1c15b582 \
+    --hash=sha256:9dda0788a9932776a75d8bcc020076edc308ce2508b51f6739a45e3158b3fc42 \
+    --hash=sha256:40a266371ece581e5de13b6635ef78d7487824af80561b6ca27694a88c19bc0f
 
-# pypdfium2 5.14.0: 6 Raeder
-#   pypdfium2-5.14.0-py3-none-macosx_13_0_arm64.whl
-#   pypdfium2-5.14.0-py3-none-macosx_13_0_x86_64.whl
-#   pypdfium2-5.14.0-py3-none-manylinux_2_17_aarch64.manylinux2014_aarch64.whl
-#   pypdfium2-5.14.0-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
-#   pypdfium2-5.14.0-py3-none-win_amd64.whl
-#   pypdfium2-5.14.0-py3-none-win_arm64.whl
-pypdfium2==5.14.0 \
-    --hash=sha256:2de384df66ba55fcaab0775f30f28ec1090af3dfa60276a07821efc96d993118 \
-    --hash=sha256:e4e203ea9710fd00e5448edb6f1615dc8587035357f75f40b432dde0c33e8da1 \
-    --hash=sha256:f1b696e6901e16f114a2ec6332e5e3f8f5033a901614ead28499ab18ca6024f5 \
-    --hash=sha256:11f281613fa22313d9c7ab89947665e84eccf8ebe40e1198a84a88352305648d \
-    --hash=sha256:149fd5c6397b8df8bf7911a93506eff0be874f877afe7ac936cf5d37d21a6a06 \
-    --hash=sha256:eb8aeca157808f323e39ea298cc6d6c8e080c192ea2efb1ca81daa0f0ff4d095
+# pypdfium2 5.15.2: 6 Raeder
+#   pypdfium2-5.15.2-py3-none-macosx_13_0_arm64.whl
+#   pypdfium2-5.15.2-py3-none-macosx_13_0_x86_64.whl
+#   pypdfium2-5.15.2-py3-none-manylinux_2_17_aarch64.manylinux2014_aarch64.whl
+#   pypdfium2-5.15.2-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
+#   pypdfium2-5.15.2-py3-none-win_amd64.whl
+#   pypdfium2-5.15.2-py3-none-win_arm64.whl
+pypdfium2==5.15.2 \
+    --hash=sha256:e71fe832e94421ac3c28d6a6ed4a9e61f22417089652d339f391c4ffc2a44c35 \
+    --hash=sha256:7f296a298074d76fb7c3d1ecb80d7097a96778bf0ad9c5c48a0170e56e2c6821 \
+    --hash=sha256:dd46e93c0c3a73f6cea8489baff6d77a5d0759dd53fbbce0aeb49c91830176fc \
+    --hash=sha256:dc31aea5b0fb9fefc9b537a65f4113980b2c40798445736a7e6565bc85161e37 \
+    --hash=sha256:74d1bace34fb01c660d0b64344d5a4b7d276942b7c6623c88ab59ea21c5acfbd \
+    --hash=sha256:a20398367f188eb817be156bfd00077dcb5f8ad06c093849f3fa70b8087b4a87
 
 # reportlab 5.1.0: 1 Raeder
 #   reportlab-5.1.0-py3-none-any.whl

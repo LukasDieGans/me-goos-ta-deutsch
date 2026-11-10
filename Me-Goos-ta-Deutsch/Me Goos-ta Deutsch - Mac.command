@@ -17,12 +17,12 @@
 #  If macOS refuses the double-click: open Terminal, type "sh ",
 #  drag this file into the Terminal window, press Return.
 # ============================================================================
-PBS_TAG="20260924"
-PY_VER="3.13.15"
-SHA_aarch64_apple_darwin="064afb7c2fc0bbf511d886288adf98696af5105e36c138cdf2c199c0146fcf68"
-SHA_x86_64_apple_darwin="327814efd865a0b6a99c149b12a261e9d0ad409183515c745d41bda2d07282e9"
-SHA_aarch64_unknown_linux_gnu="5ad58156cbec94e5643c13caa792e92df72a23f33d3a6425d4cbff5c4b7a040c"
-SHA_x86_64_unknown_linux_gnu="d0b640eed27fbdd6f5f2bd33444aee53df2c8863f8b2a96f4094717411e3de9c"
+PBS_TAG="20261026"
+PY_VER="3.13.18"
+SHA_aarch64_apple_darwin="8392b6ea51d94391befb2c31ebe75463f045d0b69dfcf5e1bb3234e1f5fa3405"
+SHA_x86_64_apple_darwin="7412c19d896c99431b74a18a5643e110449a7f9590fbab179c3e5ab27b9aa9e3"
+SHA_aarch64_unknown_linux_gnu="578d9da1983463ffb0c8c98ab0da2f18177f44069328eb0af847860c1eb05c3e"
+SHA_x86_64_unknown_linux_gnu="df15fe60d3ff55bf9dcf25824b5572756bb8816ff93865a273d3301d7066a8b7"
 
 unset PYTHONHOME PYTHONPATH PYTHONSTARTUP
 export PYTHONNOUSERSITE=1

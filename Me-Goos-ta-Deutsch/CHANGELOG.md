@@ -6,6 +6,17 @@ version such as 2.5.1). Updating always keeps your cards, images, ideas, setting
 
 ## [Unreleased]
 
+### Security
+- Pillow 13 everywhere: the standard package set and both fallback sets for Smart App Control now install Pillow 13.0.0,
+  which closes the vulnerabilities in the image library published in October 2026 (every older version is affected).
+  An existing installation fetches the new packages on its first start of this version (needs the internet once).
+- New installations get Python 3.13.17 (Windows) and 3.13.18 (macOS, Linux) with their security fixes.
+- pypdfium2 5.15.2 in the standard package set.
+
+### Fixed
+- A request without a valid session always gets its clear “403” answer now; on Windows the connection was occasionally
+  reset instead.
+
 ## [2.5] – 2026-10-23
 
 ### Security

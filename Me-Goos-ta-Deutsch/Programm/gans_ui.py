@@ -3146,6 +3146,18 @@ class Handler(BaseHTTPRequestHandler):
     def _fehler(self, status, text, code=None):
         self._senden(status, {"fehler": text, "code": code} if code else {"fehler": text})
 
+    def _ablehnen(self, status, text):
+        """Ablehnung, bevor der Anfragekörper gelesen wurde: einen kleinen Körper (≤ 64 KB) erst abholen. Schließt der
+        Server mit ungelesenen Daten, setzt Windows die Verbindung zurück – der Browser sähe statt der Antwort einen
+        Netzwerkfehler (im Test: WinError 10053). Größere Körper bleiben ungelesen wie bisher."""
+        try:
+            n = int(self.headers.get("Content-Length") or 0)
+            if 0 < n <= 65536:
+                self.rfile.read(n)
+        except (ValueError, OSError):
+            pass
+        return self._fehler(status, text)
+
     def _antwort(self, erg):
         status, kopf, inhalt = erg
         kopf = dict(kopf)
@@ -3194,12 +3206,12 @@ class Handler(BaseHTTPRequestHandler):
     def do_POST(self):
         _lern_lokal.liste = []
         if not self._host_ok() or not self._origin_ok():
-            return self._fehler(403, tx("nur_lokal"))
+            return self._ablehnen(403, tx("nur_lokal"))
         self._sprache_setzen()
         if erweiterungen and self.path == "/lan-pin" and erweiterungen.lan_ist(self):
             return erweiterungen.lan_pin(self)
         if not (self._cookie_ok() and self._kopf_token_ok()):
-            return self._fehler(403, tx("sitzung"))
+            return self._ablehnen(403, tx("sitzung"))
         url = urlparse(self.path)
         return self._antwort(verarbeite("POST", url.path, url.query, self.rfile, self.headers, self._am_handy()))
 
@@ -3207,7 +3219,7 @@ class Handler(BaseHTTPRequestHandler):
         return self.do_GET()
 
     def do_OPTIONS(self):                                  # keine CORS-Freigaben
-        return self._fehler(405, tx("ungueltig"))
+        return self._ablehnen(405, tx("ungueltig"))
 
     do_PUT = do_DELETE = do_PATCH = do_OPTIONS
 

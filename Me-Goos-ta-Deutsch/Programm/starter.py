@@ -67,8 +67,8 @@ LOCK = "pakete.lock"
 # Nur Windows: Blockiert „Smart App Control“ eine Datei der neuesten Pakete, werden ältere, seit Langem weit
 # verbreitete Fassungen probiert (Windows kennt deren Dateien eher als „vertrauenswürdig“). Spannen in bau_lock.py.
 ERSATZ_SAETZE = [
-    ("bewährt", "pakete-bewaehrt.lock"),       # reportlab 4.x, pillow 11.x, numpy 2.1–2.2, pypdfium2 4.30+
-    ("älter", "pakete-aelter.lock"),           # reportlab 4.0–4.2, pillow 11.0, numpy 2.1, pypdfium2 4.30+
+    ("bewährt", "pakete-bewaehrt.lock"),       # reportlab 4.x, pillow 13.x, numpy 2.1–2.2, pypdfium2 4.30+
+    ("älter", "pakete-aelter.lock"),           # reportlab 4.0–4.2, pillow 13.x, numpy 2.1, pypdfium2 4.30+
 ]
 SPERR_CODES = {4551: "sac", 577: "sac", 1260: "richtlinie", 225: "virus"}
 SPERR_WORTE = ("4551", "application control", "anwendungssteuerung", "control de aplicaciones",

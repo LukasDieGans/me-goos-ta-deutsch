@@ -1,6 +1,6 @@
 # Me Goos-ta Deutsch - feste Paketfassungen mit SHA-256: Ersatz-Satz "bewaehrt" (nur Windows, wenn Smart App Control sperrt)
 # pip install --require-hashes --only-binary=:all: -r pakete-bewaehrt.lock
-# Gebaut von bau_lock.py (Arbeitsordner) aus: reportlab>=4.0,<5, pillow>=11.0,<12, numpy>=2.1,<2.3, pypdfium2>=4.30,<5 | PyPI-Stand 2026-10-23
+# Gebaut von bau_lock.py (Arbeitsordner) aus: reportlab>=4.0,<5, pillow>=13,<14, numpy>=2.1,<2.3, pypdfium2>=4.30,<5 | PyPI-Stand 2026-11-10
 # Python 3.13 (CPython) | Windows x64
 # Nicht von Hand aendern - neu bauen: python bau_lock.py [--neueste]
 
@@ -18,10 +18,10 @@ charset-normalizer==3.5.2 \
 numpy==2.2.6 \
     --hash=sha256:b0544343a702fa80c95ad5d3d608ea3599dd54d4632df855e4c8d24eb6ecfa1c
 
-# pillow 11.3.0: 1 Raeder
-#   pillow-11.3.0-cp313-cp313-win_amd64.whl
-pillow==11.3.0 \
-    --hash=sha256:0bce5c4fd0921f99d2e858dc4d4d64193407e1b99478bc5cacecba2311abde51
+# pillow 13.0.0: 1 Raeder
+#   pillow-13.0.0-cp313-cp313-win_amd64.whl
+pillow==13.0.0 \
+    --hash=sha256:9dda0788a9932776a75d8bcc020076edc308ce2508b51f6739a45e3158b3fc42
 
 # pypdfium2 4.30.0: 1 Raeder
 #   pypdfium2-4.30.0-py3-none-win_amd64.whl

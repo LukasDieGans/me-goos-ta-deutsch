@@ -21,9 +21,9 @@ rem  umlauts in the name.
 rem ===========================================================================
 setlocal EnableExtensions DisableDelayedExpansion
 title Me Goos-ta Deutsch
-set "PY_VER=3.13.16"
-set "PY_SHA=97dae5274cc54867065e8d5a3226e48c35017ed332a0fdb0e27d5b5821961297"
-set "PY_URL=https://www.python.org/ftp/python/3.13.16/python-3.13.16-embed-amd64.zip"
+set "PY_VER=3.13.17"
+set "PY_SHA=9e35319bffedab8b36ad44d8f377cb4f1733bcec257a0b6d04d94f01486ddb38"
+set "PY_URL=https://www.python.org/ftp/python/3.13.17/python-3.13.17-embed-amd64.zip"
 set "SYS32=%SystemRoot%\System32"
 set "PS=%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe"
 set "PYTHONHOME="

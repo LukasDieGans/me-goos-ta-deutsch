@@ -1,6 +1,6 @@
 # Me Goos-ta Deutsch - feste Paketfassungen mit SHA-256: Tool Sprachen: uharfbuzz fuer hi/ar (pip --target, ohne Abhaengigkeiten)
 # pip install --require-hashes --only-binary=:all: -r pakete-sprachen.lock
-# Gebaut von bau_lock.py (Arbeitsordner) aus: uharfbuzz==0.56.3 | PyPI-Stand 2026-10-23
+# Gebaut von bau_lock.py (Arbeitsordner) aus: uharfbuzz==0.56.3 | PyPI-Stand 2026-11-10
 # Python 3.13 (CPython) | Windows x64, Windows ARM (falls vorhanden), macOS Intel, macOS Apple Silicon, Linux x64 (glibc), Linux ARM (glibc)
 # Nicht von Hand aendern - neu bauen: python bau_lock.py [--neueste]
 

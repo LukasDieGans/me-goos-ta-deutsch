@@ -34,7 +34,7 @@ except ImportError:                                        # pragma: no cover �
 
 HIER = Path(__file__).resolve().parent
 ANTWORTEN = HIER / "bau_lock_antworten.json"
-PY_VOLL = "3.13.16"                                         # Windows-Startdatei (Mac/Linux 3.13.15 – gleiche Räder)
+PY_VOLL = "3.13.17"                                         # Windows-Startdatei (Mac/Linux 3.13.18 – gleiche Räder)
 _UMG = dict(python_version="3.13", python_full_version=PY_VOLL, implementation_name="cpython",
             implementation_version=PY_VOLL, platform_python_implementation="CPython", platform_release="",
             platform_version="", extra="")
@@ -57,9 +57,9 @@ ALLE = tuple(PLATTFORMEN)
 # Lock-Datei: (Spannen – None = requirements.txt, Plattformen, Zweck für die Kopfzeile)
 SAETZE = {
     "pakete.lock": (None, ALLE, "Standard (Erststart, Reparatur, neue Version)"),
-    "pakete-bewaehrt.lock": (["reportlab>=4.0,<5", "pillow>=11.0,<12", "numpy>=2.1,<2.3", "pypdfium2>=4.30,<5"],
+    "pakete-bewaehrt.lock": (["reportlab>=4.0,<5", "pillow>=13,<14", "numpy>=2.1,<2.3", "pypdfium2>=4.30,<5"],
                              ("win_amd64",), "Ersatz-Satz „bewährt“ (nur Windows, wenn Smart App Control sperrt)"),
-    "pakete-aelter.lock": (["reportlab>=4.0,<4.3", "pillow>=11.0,<11.1", "numpy>=2.1,<2.2", "pypdfium2>=4.30,<5",
+    "pakete-aelter.lock": (["reportlab>=4.0,<4.3", "pillow>=13,<14", "numpy>=2.1,<2.2", "pypdfium2>=4.30,<5",
                             "chardet>=7,<8"],                      # 0BSD erst ab 7.0 (5.x ist LGPL)
                            ("win_amd64",), "Ersatz-Satz „älter“ (nur Windows, wenn Smart App Control sperrt)"),
     "pakete-sprachen.lock": (["uharfbuzz==0.56.3"], ALLE, "Tool Sprachen: uharfbuzz für hi/ar (pip --target, ohne Abhängigkeiten)"),

@@ -6828,6 +6828,98 @@ def test_auftritt(tmp):
     print(f"  E56 {time.time() - t0:.1f} s")
 
 
+def _e57_v(s):
+    return tuple(int(x) for x in re.findall(r"\d+", s))
+
+
+E57_PILLOW_WEG = (r"get_child_images", r"Image\._show\b", r"\.product_name\b", r"\.product_info\b", r"IFD\.Makernote\b",
+                  r"load_djpeg", r"align8to32", r"fromarray\([^()]*\bmode\s*=")          # in Pillow 13 entfernt/veraltet
+E57_PILLOW_NEU = (r"MKS2013", r"MKS2021", r"strip_namespaces")                         # erst ab Pillow 13 (Handy-App: 12.2)
+
+
+def test_sichere_fassungen(tmp):
+    """E57 (2.5.1): Pakete und Python auf sicherem Stand – Pillow ≥ 13 in requirements.txt und in jedem Paketsatz
+    (alle älteren Fassungen haben bekannte Lücken), Startdateien mit Python ≥ 3.13.17 (Windows) bzw. ≥ 3.13.18
+    (Mac/Linux) samt Prüfsummen, Code ohne Aufrufe, die Pillow 13 entfernt hat oder die es erst ab 13 gibt (die Handy-App
+    bringt Pillow 12.2 mit), und das installierte Pillow kann, was das Programm braucht; dazu: der Server liest vor einer Ablehnung den kleinen Körper."""
+    print("\n[E57] Sichere Fassungen: Pillow 13, Python 3.13.17/3.13.18")
+    t0 = time.time()
+    # 1) Spannen und Locks
+    zeile = next((z.strip() for z in (HIER / "requirements.txt").read_text(encoding="utf-8").splitlines()
+                  if z.strip().lower().startswith("pillow")), "")
+    unten = max([_e57_v(x) for x in re.findall(r">=\s*([\d.]+)", zeile)] or [(0,)])
+    oben = min([_e57_v(x) for x in re.findall(r"(?<![<>=!~])<\s*([\d.]+)", zeile)] or [(999,)])
+    in_locks = {}
+    for n in ("pakete.lock", "pakete-bewaehrt.lock", "pakete-aelter.lock"):
+        lock = (HIER / n).read_text(encoding="ascii") if (HIER / n).is_file() else ""
+        in_locks[n] = next((e[2] for e in _e52_lock(lock) if _e52_name(e[0]) == "pillow"), "0")
+    pruefe("Pillow ≥ 13 überall: requirements.txt (Untergrenze 13, Obergrenze < 14) und jeder Paketsatz – Standard und beide "
+           "Ersatz-Sätze für Smart App Control",
+           unten >= (13,) and oben == (14,) and all(_e57_v(v) >= (13,) for v in in_locks.values()), (zeile, in_locks))
+    # 2) Startdateien
+    cmd = (HIER.parent / "Me Goos-ta Deutsch - Windows.cmd").read_bytes().decode("ascii", "replace")
+    mac = (HIER.parent / "Me Goos-ta Deutsch - Mac.command").read_text(encoding="utf-8")
+    win = dict(re.findall(r'^set "(PY_VER|PY_SHA|PY_URL)=([^"]*)"', cmd, re.M))
+    m_ver = (re.search(r'^PY_VER="([^"]+)"', mac, re.M) or [None, ""])[1]
+    m_tag = (re.search(r'^PBS_TAG="([^"]+)"', mac, re.M) or [None, ""])[1]
+    m_sha = dict(re.findall(r'^SHA_(\w+)="([0-9a-f]*)"', mac, re.M))
+    bl = HIER.parent.parent / "werkstatt" / "bau_lock.py"
+    voll = (re.search(r'^PY_VOLL = "([^"]+)"', bl.read_text(encoding="utf-8"), re.M) or [None, ""])[1] if bl.is_file() else None
+    spec = (HIER / "SPEC.md").read_text(encoding="utf-8")
+    pruefe("Startdateien: Windows lädt Python ≥ 3.13.17 (PY_VER zweimal in PY_URL von python.org, SHA-256 mit 64 Zeichen, "
+           "= PY_VOLL in bau_lock.py), Mac/Linux ≥ 3.13.18 von python-build-standalone ≥ 20261026 mit 4 verschiedenen "
+           "SHA-256; SPEC nennt dieselben Fassungen",
+           (3, 13, 17) <= _e57_v(win.get("PY_VER", "0")) < (3, 14)
+           and win.get("PY_URL", "") == f"https://www.python.org/ftp/python/{win.get('PY_VER')}/python-{win.get('PY_VER')}-embed-amd64.zip"
+           and re.fullmatch(r"[0-9a-f]{64}", win.get("PY_SHA", "")) is not None and voll in (None, win.get("PY_VER"))
+           and (3, 13, 18) <= _e57_v(m_ver) < (3, 14) and re.fullmatch(r"\d{8}", m_tag) is not None and m_tag >= "20261026"
+           and set(m_sha) == {"aarch64_apple_darwin", "x86_64_apple_darwin", "aarch64_unknown_linux_gnu", "x86_64_unknown_linux_gnu"}
+           and len(set(m_sha.values())) == 4 and all(len(s) == 64 for s in m_sha.values())
+           and f"embeddable Python {win.get('PY_VER')}**" in spec and f"python-build-standalone {m_ver}**" in spec
+           and f"releases/tag/{m_tag}" in spec, (win, voll, m_ver, m_tag, sorted(m_sha)))
+    # 3) Code passt zu Pillow 12.2 (Handy-App) und 13
+    funde = []
+    for f in sorted(HIER.glob("*.py")):
+        if f.name.startswith("test_"):
+            continue
+        q = f.read_text(encoding="utf-8")
+        funde += [f"{f.name}: {p}" for p in (*E57_PILLOW_WEG, *E57_PILLOW_NEU) if re.search(p, q)]
+    pruefe("Programmcode läuft mit Pillow 12.2 (Handy-App) und 13: kein Aufruf, den Pillow 13 entfernt hat oder abkündigt, "
+           "und keiner, den es erst ab Pillow 13 gibt", not funde, funde[:6])
+    # 4) Das installierte Pillow kann, was das Programm braucht (Verhalten, das sich in 13 geändert hat)
+    import numpy as np
+    import PIL
+    from PIL import Image
+    feld = np.zeros((40, 60, 4), dtype=np.uint8)
+    feld[..., 0], feld[..., 3] = 200, 0
+    feld[10:30, 15:45, 3] = 255
+    im = Image.fromarray(feld)                                    # ohne mode (Pillow 13: mode darf den Datentyp nicht ändern)
+    klein = im.copy()
+    klein.thumbnail((30, 30), Image.Resampling.LANCZOS)           # Pillow 13: reducing_gap gilt jetzt auch für RGBA
+    alpha = klein.getchannel("A")
+    puffer = io.BytesIO()
+    klein.save(puffer, "PNG")
+    wieder = Image.open(io.BytesIO(puffer.getvalue()))
+    wieder.load()
+    jpg = io.BytesIO()
+    im.convert("RGB").save(jpg, "JPEG", quality=90)
+    pruefe(f"Installiertes Pillow {PIL.__version__} (≥ 12.2): Bild aus NumPy ohne mode, RGBA verkleinern behält Format und "
+           "Transparenz (Ecke durchsichtig, Mitte deckend), PNG und JPEG hin und zurück",
+           _e57_v(PIL.__version__) >= (12, 2) and im.mode == "RGBA" and klein.size == (30, 20) and alpha.getpixel((0, 0)) == 0
+           and alpha.getpixel((15, 10)) == 255 and wieder.mode == "RGBA" and wieder.size == klein.size
+           and Image.open(io.BytesIO(jpg.getvalue())).size == (60, 40),
+           (PIL.__version__, im.mode, klein.size, alpha.getpixel((0, 0)), alpha.getpixel((15, 10))))
+    # 5) Ablehnung ohne Sitzung: kleinen Körper erst lesen (Fund G02: sonst gelegentlich WinError 10053 statt der 403)
+    ui = (HIER / "gans_ui.py").read_text(encoding="utf-8")
+    post = (re.search(r"    def do_POST\(self\):\n(.*?)\n    def ", ui, re.S) or [None, ""])[1]
+    abl = (re.search(r"    def _ablehnen\(self, status, text\):\n(.*?)\n    def ", ui, re.S) or [None, ""])[1]
+    pruefe("Server: POST ohne gültige Sitzung/Herkunft wird erst abgelehnt, nachdem ein kleiner Körper (≤ 64 KB) gelesen ist – "
+           "die 403 kommt an, statt dass Windows die Verbindung zurücksetzt",
+           post.count("self._ablehnen(403") == 2 and "self._fehler(" not in post and "self.rfile.read(n)" in abl
+           and "65536" in abl and "return self._fehler(status, text)" in abl, (post[:200], abl[-200:]))
+    print(f"  E57 {time.time() - t0:.1f} s")
+
+
 def main():
     global ECHTES_KI_BILD, ECHT_DA
     t0 = time.time()
@@ -6899,6 +6991,7 @@ def main():
         test_ci_quellbaum(Path(tmp))
         test_veroeffentlichung(Path(tmp))
         test_auftritt(Path(tmp))
+        test_sichere_fassungen(Path(tmp))
     ok =sum(1 for e in tg.ergebnisse if e[1])
     print(f"\n{ok} von {len(tg.ergebnisse)} Prüfungen bestanden ({time.time() - t0:.0f} s).")
     if ok == len(tg.ergebnisse):
