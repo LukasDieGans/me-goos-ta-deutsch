@@ -519,7 +519,8 @@ charset-normalizer aus der `pyodide-lock.json`, ReportLab 5.0.1 von PyPI – all
   `MGD_KEIN_BROWSER=1` (Neustart mit `--kein-browser`).
 - **Rückgängig und Wiederholen (seit 2.4, `verlauf.py`, nur Standardbibliothek):** Jede Anfrage aus `VERLAUF_WEGE`
   (Kartenliste, Karte speichern/abhaken, Bild ändern/weg/zurück, Entwurf hinzufügen/prüfen/übernehmen/verwerfen,
-  Gänse-Bild, KI-Bild übernehmen, Gans ergänzen, Werkzeuge, Ideen samt Bild/Wort/Aufnehmen, Wortliste, Import) läuft in
+  Gänse-Bild, KI-Bild übernehmen, Gans ergänzen, Werkzeuge, Ideen samt Bild/Wort/Aufnehmen, Wortliste, Import, eigene
+  Aufnahmen einlesen/löschen/aufräumen) läuft in
   `verarbeite()` als Schritt: vorher `.csv`/`.json` der eigenen Daten als Bytes, sonst Größe + Zeit; Dateien, die die
   Anfrage löschen, verschieben oder überschreiben will, sichert der Code vorher mit `_sichere(pfad)` (in `_aufheben`,
   `_gans_beiseite`, `_atomar`, `_beiseite`, beim Übernehmen/Verwerfen von Entwürfen …). Danach bekommt jede geänderte
@@ -682,6 +683,7 @@ danach ist es wieder installierbar. Programmcode wird nie nachgeladen – nur Mo
 | `ki-bild` | KI-Bilder (9.3) | Lauf `ki_bild.py --laden` (fortsetzbar) | ca. 3,5 GB | `Daten/modelle/ki-bild` | alle 14 Dateien geprüft |
 | `sprachen` | Rückseiten-Sprachen (Teil je Sprache, Standard-Teil `en`) | lateinisch sofort; sonst Lauf `sprachen.py --laden <code>` (fortsetzbar) | 0–17 MB je Sprache | `Daten/sprachen/<code>`, `Daten/sprachen/_pakete` | mindestens eine weitere Sprache vollständig |
 | `lernen` | Karten lernen (FSRS, `lernen.py`) | Eintrag in `tools.json` (Aktivierung) | kein Download | `lernstand.json` neben `karten.csv` | aktiviert |
+| `stimmen` | Eigene Stimme (Stimmenwahl, eigene Aufnahmen; `stimmen.py`) | Eintrag in `tools.json` (Aktivierung) | kein Download | `stimmen/<sprache>/` neben `karten.csv` | aktiviert |
 Ohne Tool bleibt der Kern vollständig (FSRCNN/Lanczos, Druck wie bisher). Vorhandene Modelle und eine erteilte Zustimmung
 aus 1.6 zählen sofort als installiert. **Erstabfrage:** einmalig, nur wenn noch etwas fehlt – im Willkommens-Assistenten
 als Schritt „Tools“, sonst als Fenster beim Öffnen (nicht über den Handy-Zugang); nichts vorausgewählt, „Später“ bzw.
@@ -857,6 +859,48 @@ lernt · jung · sicher, Hover „n× gelernt, nächste Wiederholung …“), Fi
 Speichern „Speichern setzt den Lernstand dieser Karte zurück“, die Tabelle denselben Hinweis in der Zeile; pi() zeigt
 jede lernstand_meldung als Toast. Rückfrage beim Deinstallieren des Tools bietet „Lernstand vorher exportieren“.
 
+**Eigene Stimme (seit 2.6, Prüfungen E60; `stimmen.py`, optional eingebunden, nur Standardbibliothek, läuft auch in der
+Handy-App).** Tool `stimmen` (Aktivierung, kein Download, 🎙). Ohne Tool verhält sich alles wie zuvor (Stimme des
+Systems, Tempo/Tonhöhe 1). **Ablage:** `<Projektordner>/stimmen/<sprache>/<schlüssel>.<endung>` – `sprache` = `de` oder
+Code aus `sprachen.SPRACHEN`, `schlüssel` = erste 16 Hex-Zeichen von SHA-256 über den normalisierten Text (NFC,
+Leerraum außen weg und innen einfach, `casefold`), Endungen `wav mp3 ogg opus m4a webm`; eine Datei je Schlüssel (eine
+neue ersetzt die alte, auch bei anderer Endung), kein Index. Die Aufnahme gehört zum Text, nicht zur Karte. **Annahme
+(`stimmen.pruefe`):** Endung aus dem Namen, Kennbytes des Formats (RIFF/WAVE, ID3 bzw. MPEG-Sync, OggS, `ftyp`, EBML)
+müssen dazu passen, höchstens 2 MB; WAV wird mit `wave` geöffnet (nur PCM, 1–2 Kanäle, höchstens 15 s) und neu
+geschrieben. Nichts wird umgewandelt. **Zuordnung beim Einlesen:** Dateiname ohne Endung = Schlüssel, Ordner darüber =
+Sprache (ohne Ordner die Sprache, in deren Wörtern der Schlüssel als einziger steht); nur Schlüssel, zu denen eine Karte
+ein Wort hat (jede Sprache der Karten), sonst „unbekannt“. ZIP: höchstens 200 MB und 20 000 Einträge, ein Pfad nach
+außen (`..`, absolut, `\`, `:`) lehnt die ganze ZIP ab, `__MACOSX` und Punkt-Dateien werden übersprungen. **API** (ohne
+Tool 409 `tool_fehlt`, `tool: stimmen`): `GET /api/stimmen` → `{liste {sprache: {schlüssel: endung}}, woerter [{sprache,
+schluessel, text, endung}] (Wörter mit Datei), gesamt/fehlen {sprache: n} (Deutsch + Kartensprache), verwaist, belegt,
+zielsprache, sprachen, endungen, max_mb, max_sekunden}`; `GET /api/stimme?sprache=&schluessel=` → die Datei mit festem
+`Content-Type` je Endung (`audio/wav|mpeg|ogg|mp4|webm`) und `nosniff` – gesucht wird nur über Sprache (Katalog) und
+Schlüssel (`^[0-9a-f]{16}$`), nie über einen Pfad aus der Anfrage; `GET /api/stimmen-wortliste` → CSV-Download (UTF-8 mit
+BOM, `;`, Spalten `datei;sprache;text;vorhanden`, `datei` = `<sprache>/<schlüssel>` ohne Endung, alle Karten, Deutsch +
+Kartensprache ohne Doppelte, Formel-Anfang mit `'` entschärft); `POST /api/stimmen-import?name=` (rohe Bytes: ZIP – an
+den Kennbytes `PK` erkannt – oder eine einzelne Audiodatei mit `name` = `<sprache>/<schlüssel>.<endung>`) → Stand wie
+`/api/stimmen` + `ergebnis {neu, ersetzt, unbekannt, abgelehnt, gruende {code: n}}`; `POST /api/stimme-loeschen {sprache,
+schluessel}`; `POST /api/stimmen-aufraeumen` (löscht Aufnahmen, zu denen keine Karte mehr ein Wort hat) → `geloescht`.
+Die drei POST-Wege sind Rückgängig-Schritte (`stimmen_import`, `stimme_weg`, `stimmen_aufraeumen`; `stimmen/` gehört zum
+Bereich, vor jedem Löschen/Überschreiben `_sichere`). Mit Tool tragen `/api/karten` je Karte und die Lernkarte
+(`/api/lernen-karte`, `naechste`) `stimme {de, zs}` = Schlüssel von Deutsch-Text und Wort – die Seite bildet keinen Hash.
+CSP der Seite: `media-src 'self' blob:`; das Mikrofon bleibt gesperrt (`microphone=()`). **Oberfläche:** Bereich
+`#stimmen-bereich` unter den Tools (ohne Tool Hinweis + „Aktivieren“ über `brauchtTool("stimmen")`): Erlaubnis-Hinweis
+(nur die eigene Stimme oder eine mit Erlaubnis); je Sprache (Deutsch + Kartensprache) Auswahl „Automatisch“ + lokale
+Stimmen (`lokaleStimmen(code)`, nur `localService !== false`), Regler Tempo 0,6–1,2 und Tonhöhe 0,8–1,2, „Probe hören“ –
+gespeichert je Gerät in `localStorage` `mgd-stimmen` `{sprache: {name, tempo, hoehe}}`; `lernStimme(code)` nimmt die Wahl
+und fällt still auf die Automatik zurück. Einlesen in drei Schritten (Wortliste laden → Dateien benennen, Link zum
+Leitfaden → Ordner/Dateien/ZIP ablegen oder wählen; die Seite schickt Dateien einzeln mit derselben Rückgängig-Gruppe),
+Ergebnis-Zeile, Liste der Wörter mit Aufnahme (▶, 🗑), „Aufräumen“. **Wiedergabe:** jedes 🔊 über `vorlesen(text, stimme,
+{sprache, schluessel})`: eigene Aufnahme (`STIMMEN.liste`, als `blob:`-Adresse vorgeladen, `new Audio()`) → sonst
+`sprich()` mit der Stimme des Systems (`rate`/`pitch` aus der Wahl); kann der Browser das Format nicht spielen, spricht
+die Stimme. 🔊 erscheint, wenn es eine Aufnahme **oder** eine Stimme gibt (`kannVorlesen`). Lern-Einstellungen zeigen je
+Sprache „n Wörter mit eigener Aufnahme“ + Link zum Bereich. **Mitnehmen:** Projekt-ZIP (ganzer Ordner), Sicherung der
+Handy-App (`SICHERUNG_ORDNER`, nur Namen `<sprache>/<16 hex>.<endung>`, Inhalt beim Einspielen wie beim Einlesen
+geprüft); `stimmen/` ist Nutzerdaten (`aktualisieren.NUTZER`, `.gitignore`, nie im Release). **Deinstallieren** löscht
+nur die eigenen Audiodateien in `stimmen/` und danach leere Ordner (`tools.stimmen_dateien`, von `gans_ui` gesetzt).
+Fuzz-Ziel `stimmen` (`pruefe` + `aus_zip`).
+
 **Oberfläche:** Werkzeuge → Bereich „🧰 Tools“ ganz oben: Karte je Tool (Symbol, Name, Nutzen, Größe, Zustand mit
 Fortschritt, „Installieren“ bzw. Teil-Knopf `.knopf.teil` zweizeilig: fett „+ Schneller ×2“, klein „fast gleiche
 Qualität, etwa 4× schneller · 64 MB“ – Teil-Titel kurz, Erklärung im Feld `hinweis` je Teil, von `/api/tools`
@@ -965,7 +1009,8 @@ allen Karten – nicht rückgängig zu machen), `--kein-browser`.
 | Zugriff aus dem Netzwerk | Server nur an `127.0.0.1`; unter Windows `SO_EXCLUSIVEADDRUSE` (kein Port-Teilen mit fremden Programmen) |
 | Andere Benutzer/Programme auf demselben Rechner | Zugang nur mit geheimem **Startschlüssel** (32 Zeichen, je Start neu) aus dem Startprogramm → Sitzungs-Cookie `HttpOnly; SameSite=Strict`; ohne Cookie nur eine Hinweisseite |
 | Fremde Webseiten (CSRF, DNS-Rebinding) | Host-Kopfzeile muss `127.0.0.1:<port>`/`localhost:<port>` sein; Schreibzugriffe brauchen zusätzlich die Token-Kopfzeile `X-GL-Token` (Vergleich mit `hmac.compare_digest`) und eine passende `Origin`; keine CORS-Freigaben (OPTIONS/PUT/DELETE → 405) |
-| Eingeschleuster Code in der Seite (XSS) | alle Texte maskiert; Hilfe-Markdown maskiert (auch Anführungszeichen, nur `https`-Links); **Content-Security-Policy** mit Nonce (`default-src 'none'`, keine Inline-Ereignisse), `X-Frame-Options: DENY`, `frame-ancestors 'none'`, `nosniff`, `Referrer-Policy: no-referrer`, COOP/CORP, `Permissions-Policy` |
+| Eingeschleuster Code in der Seite (XSS) | alle Texte maskiert; Hilfe-Markdown maskiert (auch Anführungszeichen, nur `https`-Links); **Content-Security-Policy** mit Nonce (`default-src 'none'`, keine Inline-Ereignisse), `X-Frame-Options: DENY`, `frame-ancestors 'none'`, `nosniff`, `Referrer-Policy: no-referrer`, COOP/CORP, `Permissions-Policy` (Mikrofon, Kamera, Ort gesperrt); Ton nur von hier (`media-src 'self' blob:`) |
+| Fremde Audiodateien (Tool „Eigene Stimme“) | Annahme nur mit passenden Kennbytes, höchstens 2 MB, WAV neu geschrieben; Ablage und Abruf nur über Sprache + Schlüssel (nie ein Pfad aus der Anfrage); Auslieferung mit festem `audio/…`-Typ und `nosniff`; ZIP ohne Pfade nach außen, mit Obergrenzen; Fuzz-Ziel |
 | Pfad-Ausbruch | nur einfache Dateinamen (kein `/ \ :`, kein NUL, nicht versteckt), aufgelöster Pfad muss im Zielordner liegen (auch bei Verknüpfungen); Ordner-Einstellungen nur im Projekt- oder Benutzerordner, keine Netzwerkpfade; `--csv` muss `.csv` sein, Gänse-Bild ein vorhandenes Bild |
 | Starten von Programmen | „Öffnen“ nur für bekannte Ordner und harmlose Typen (`.pdf .png .jpg .webp .csv .zip .txt .md`); andere Dateien werden nur als Download ausgeliefert |
 | Kommandozeilen-Einschleusung | Generator-Aufruf ohne Shell, Werte als `--schalter=wert` (ein Wert kann kein Schalter werden), Prüfung mit dem echten Parser |
@@ -1090,6 +1135,12 @@ neuer Ordner, pip aus dem Rad, beschädigtes NumPy mit automatischer Reparatur, 
   neues Release nicht mehr enthält, bleiben im Ordner liegen (nie wird geraten, was eigene Daten sein könnten). Der
   echte Neustart über die Startdatei läuft in den automatischen Tests auf allen GitHub-Rechnern (Stufe k des
   Frischtests mit einem Release-Server auf 127.0.0.1), lokal unter Windows nur in Teilen (sonst entstünden echte Symbole).
+- Eigene Stimme (seit 2.6): Das Programm erzeugt keine Stimme und wandelt keine Formate um – ob eine Aufnahme spielt,
+  hängt vom Browser ab (WAV und MP3 überall; OGG/Opus/WebM nicht in jedem Safari, M4A nicht in jedem Firefox); sonst
+  liest die Stimme des Systems. Geprüft werden Kennbytes, Größe und bei WAV der Aufbau, nicht der Klang. Die Stimmenwahl
+  gilt je Gerät (Stimmen heißen überall anders), Tempo und Tonhöhe nur für die Stimme des Systems. Eine Aufnahme hängt
+  am genauen Text (ohne Groß/Klein und Leerraum): ein geändertes Wort braucht eine neue. Aufnehmen im Programm sowie
+  Aufnahmen in Lernseite und Anki-Paket folgen getrennt.
 - Rückgängig (seit 2.4) gilt nur für die laufende Sitzung und nur für die eigenen Daten des Programms; was außerhalb
   geändert wird (z. B. `karten.csv` in Excel), bricht den Verlauf zur Sicherheit ab. Der Lernstand einer Karte, deren Text
   zurückgenommen wird, beginnt wie bei jeder Änderung von vorn.
@@ -1114,6 +1165,7 @@ Me-Goos-ta-Deutsch/
    ├─ tools.py                  Tools: Katalog, Zustand, installieren (Auftrag für die Warteschlange), deinstallieren (9.4)
    ├─ sprachen.py               Sprachen der Rückseite: Katalog (15), Sprachpakete laden/prüfen/entfernen (9.4)
    ├─ lernen.py                 Karten lernen: FSRS-6, Lernstand, Sitzung, Stapel, Statistik (9.4)
+   ├─ stimmen.py                Eigene Stimme: Schlüssel, Annahme der Audiodateien, Wortliste, Einlesen, Aufräumen (9.4)
    ├─ verlauf.py                Rückgängig/Wiederholen der eigenen Daten (Schritte, Kopien in ausgabe/.verlauf) (9)
    ├─ aktualisieren.py          Update im Programm: Release laden/prüfen, im selben Ordner ersetzen, neu starten (9)
    ├─ signatur.py               Signatur der Releases prüfen: Ed25519 (RFC 8032), minisign-Format, vertraute Schlüssel (9)
@@ -1129,6 +1181,7 @@ Me-Goos-ta-Deutsch/
    ├─ test_erweiterungen.py     Selbsttest der Erweiterungen
    ├─ ideen.json, ideen/        eigene Ideen für künftige Karten (entstehen beim ersten Anlegen)
    ├─ lernstand.json            Lernstand (Tool „Karten lernen“); lernstand.bak.json = vorige Fassung
+   ├─ stimmen/<sprache>/        eigene Aufnahmen (Tool „Eigene Stimme“), eine Audiodatei je Wort
    ├─ ui/index.html             Seite der Oberfläche (drei Sprachen)
    ├─ test_gans_lernkarten.py   Selbsttest
    ├─ beispiel-karten.csv       die 10 Beispielkarten (Vorlage für eine fehlende karten.csv)

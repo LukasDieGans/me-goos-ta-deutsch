@@ -553,7 +553,8 @@ STIMMEN_JS = """stimmen => {
   window.__sp = window.__sp || { gesagt: [], cancel: 0 };
   window.SpeechSynthesisUtterance = class { constructor(t) { this.text = t; this.lang = ""; this.voice = null; } };
   Object.defineProperty(window, "speechSynthesis", { configurable: true, value: { getVoices: () => stimmen,
-    speak: x => __sp.gesagt.push({ text: x.text, lang: x.lang, stimme: x.voice && x.voice.name }), cancel: () => { __sp.cancel++; },
+    speak: x => __sp.gesagt.push({ text: x.text, lang: x.lang, stimme: x.voice && x.voice.name, tempo: x.rate, hoehe: x.pitch }),
+    cancel: () => { __sp.cancel++; },
     addEventListener() {} } });
   zeichneSitzung();
   return document.querySelectorAll("#lern-inhalt [data-ln='vorlesen-de']").length;
@@ -629,6 +630,84 @@ def b1_aussprache_beide(s, u):
            "das Wort (es-MX bevorzugt), ohne Stimmen 2 Links zum Leitfaden, wieder aus",
            aus == 0 and an == 1 and g.get("text") == gesagt[1] and stimme_ok and links == 2,
            f"aus {aus} · an {an} · gesagt {gesagt} · Links {links}", t0=t0)
+    b1_stimmen(s, u)
+
+
+# Nachgebildetes Audio (eigene Aufnahmen, Tool „stimmen“): merkt sich nur, welche Adresse gespielt würde
+AUDIO_JS = """() => {
+  window.__au = [];
+  window.Audio = class { constructor() { this.src = ""; } play() { __au.push(this.src); return Promise.resolve(); } pause() {} };
+}"""
+STIMMEN_EIN_JS = """async () => {
+  await api("/api/tool", { methode: "POST", daten: { id: "stimmen", aktion: "installieren" } });
+  await ladeTools(); await stimmenAktiviert();
+  return stimmenDa() && !!STIMMEN && !!document.querySelector("[data-ln-stimmen] [data-ln='stimmen-tool']");
+}"""
+STIMMEN_DATEI_JS = """async () => {
+  const k = LS.n.karte, n = 1600, b = new Uint8Array(44 + 2 * n), v = new DataView(b.buffer);
+  const t = (o, s) => { for (let i = 0; i < s.length; i++) b[o + i] = s.charCodeAt(i); };
+  t(0, "RIFF"); v.setUint32(4, 36 + 2 * n, true); t(8, "WAVEfmt "); v.setUint32(16, 16, true); v.setUint16(20, 1, true);
+  v.setUint16(22, 1, true); v.setUint32(24, 8000, true); v.setUint32(28, 16000, true); v.setUint16(32, 2, true);
+  v.setUint16(34, 16, true); t(36, "data"); v.setUint32(40, 2 * n, true);
+  for (let i = 0; i < n; i++) v.setInt16(44 + 2 * i, Math.round(8000 * Math.sin(i / 6)), true);
+  const r = await api(url("/api/stimmen-import", { name: "de/" + k.stimme.de + ".wav" }), { methode: "POST", roh: new Blob([b]) });
+  STIMMEN = r; stimmenGeaendert();
+  return [r.ergebnis.neu, stimmeDatei("de", k.stimme.de), k.stimme.de];
+}"""
+STIMMEN_AUS_JS = """async () => {
+  try { localStorage.removeItem("mgd-stimmen"); } catch (e) {}
+  await toolsAuffrischen(); await ladeStimmen();           // offene Abfragen der Ansicht abwarten (sonst 409 nach dem Deinstallieren)
+  for (let i = 0; i < 20; i++) { await new Promise(r => setTimeout(r, 300)); if (!enteOffen) break; }
+  await api("/api/tool", { methode: "POST", daten: { id: "stimmen", aktion: "deinstallieren" } });
+  await ladeTools(); STIMMEN = null; stimmenBlobsLeeren();
+  return stimmenDa();
+}"""
+
+
+def b1_stimmen(s, u):
+    """Tool „Eigene Stimme“ (seit 2.6): aktivieren, eine Aufnahme für das deutsche Wort einlesen → 🔊 auch ohne Stimme des
+    Systems, Klick spielt die Datei (blob:) und nicht die Stimme; ohne Datei liest die gewählte Stimme mit Tempo und Tonhöhe;
+    der Bereich in den Werkzeugen zeigt Stimmenwahl, Schritte und die Aufnahme; danach wieder deinstalliert."""
+    t0 = time.time()
+    de = "#lern-inhalt [data-ln='vorlesen-de']"
+    s.warte("() => !!document.querySelector(\"#lern-inhalt [data-ln='lernen']\")")
+    ein = s.js(STIMMEN_EIN_JS)
+    s.js(AUDIO_JS)
+    s.page.click("#lern-inhalt [data-ln='lernen']")
+    s.page.click("#lern-inhalt [data-ln='zeigen']")
+    s.warte("() => !!document.querySelector('#lern-inhalt .lern-de')")
+    ohne = s.js(STIMMEN_JS, [{"lang": "en-US", "localService": True, "name": "en"}])
+    datei = s.js(STIMMEN_DATEI_JS)
+    s.warte(f"() => document.querySelectorAll(\"{de}\").length === 1")
+    vor = s.js("() => __sp.gesagt.length")
+    s.page.click(de)
+    s.warte("() => __au.length === 1")
+    gespielt = s.js("() => [__au[0].slice(0, 5), __sp.gesagt.length]")
+    # Stimmenwahl: Aufnahme weg → die gewählte Stimme des Systems liest mit Tempo und Tonhöhe
+    s.js(STIMMEN_JS, [{"lang": "de-DE", "localService": True, "name": "de"}, {"lang": "de-CH", "localService": True, "name": "ch"}])
+    s.js("async k => { stimmenWahlSetzen('de', { name: 'ch', tempo: 0.8, hoehe: 1.1 });"
+         " STIMMEN = await api('/api/stimme-loeschen', { methode: 'POST', daten: { sprache: 'de', schluessel: k } }); stimmenGeaendert(); }",
+         datei[2])
+    s.warte(f"() => document.querySelectorAll(\"{de}\").length === 1")
+    s.page.click(de)
+    s.warte(f"() => __sp.gesagt.length > {vor}")
+    gesagt = s.js("() => [__sp.gesagt.slice(-1)[0], __au.length, LS.n.karte.de]")
+    s.page.click("#lern-inhalt [data-ln='beenden']")
+    _ansicht(s, "werkzeuge")
+    s.warte("() => !!document.querySelector('#stimmen-bereich [data-st-ablage]')")
+    bereich = s.js("() => { const b = document.getElementById('stimmen-bereich'); return [b.hidden, b.querySelectorAll('.stimmen-sprache').length,"
+                   " b.querySelectorAll('.stimmen-schritte > li').length, !!b.querySelector(\"a[href='/api/stimmen-wortliste']\"),"
+                   " (b.querySelector(\"select[data-st-wahl='name'][data-code='de']\") || {}).value || '',"
+                   " document.documentElement.scrollWidth <= window.innerWidth + 1]; }")
+    aus = s.js(STIMMEN_AUS_JS)
+    _ansicht(s, "lernen")
+    g = gesagt[0] or {}
+    pruefe(f"[{s.kurz}] B1 Eigene Stimme: Aufnahme vor Stimme (🔊 auch ohne Stimme des Systems, spielt blob:), ohne Aufnahme liest "
+           "die gewählte Stimme mit Tempo/Tonhöhe; Bereich mit Stimmenwahl und drei Schritten",
+           ein is True and ohne == 0 and datei[0] == 1 and datei[1] is True and gespielt == ["blob:", vor]
+           and g.get("stimme") == "ch" and g.get("tempo") == 0.8 and g.get("hoehe") == 1.1 and g.get("text") == gesagt[2] and gesagt[1] == 1
+           and bereich == [False, 2, 3, True, "ch", True] and aus is False,
+           f"aktiv {ein} · ohne Stimme {ohne} · Datei {datei} · gespielt {gespielt} · gesagt {gesagt} · Bereich {bereich} · aus {aus}", t0=t0)
 
 
 def b1_neue_version(s, u):

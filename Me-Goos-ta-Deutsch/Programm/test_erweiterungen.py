@@ -1658,7 +1658,7 @@ def fehler(fn):
         return [f.code, f.status]
     return None
 liste = {t["id"]: t for t in tools.liste()}
-e["katalog"] = sorted(liste) == ["bildverbesserung", "ki-bild", "lernen", "sprachen", "uebersetzung"] and \
+e["katalog"] = sorted(liste) == ["bildverbesserung", "ki-bild", "lernen", "sprachen", "stimmen", "uebersetzung"] and \
     60e6 < liste["bildverbesserung"]["groesse"] < 70e6 and 3.4e9 < liste["ki-bild"]["groesse"] < 3.7e9 and \
     liste["uebersetzung"]["groesse"] == 0 and all(set(t["titel"]) == {"de", "en", "es"} and set(t["nutzen"]) == {"de", "en", "es"}
                                                   for t in liste.values())
@@ -1723,7 +1723,7 @@ def test_tools(p, tmp):
     e = json.loads(m.group(1)) if m else {}
     if not m:
         print((r.stdout + r.stderr)[-1500:])
-    pruefe("Katalog: 5 Tools, Größen aus den Katalogen, Texte de/en/es", e.get("katalog"))
+    pruefe("Katalog: 6 Tools, Größen aus den Katalogen, Texte de/en/es", e.get("katalog"))
     pruefe("Frisch: nichts installiert → Erstabfrage nötig", e.get("frisch"))
     pruefe("Übernahme: vorhandenes Modell bzw. erteilte Zustimmung zählen als installiert", e.get("uebernahme"))
     pruefe("Installieren liefert den Download-Auftrag (bzw. nichts, wenn schon da)",
@@ -1791,7 +1791,7 @@ def test_tools(p, tmp):
         code, ti = se.json("/api/tools")
         ids = [x["id"] for x in ti.get("tools", [])]
         pruefe("HTTP: /api/tools mit Zustand, Größe, Ort, Texten in der Sprache der Seite",
-               code == 200 and ids == ["bildverbesserung", "uebersetzung", "ki-bild", "sprachen", "lernen"] and ti.get("erstabfrage") is True
+               code == 200 and ids == ["bildverbesserung", "uebersetzung", "ki-bild", "sprachen", "lernen", "stimmen"] and ti.get("erstabfrage") is True
                and all(x["zustand"] == "nicht" and x["ort"] and x["dauer"] for x in ti["tools"]
                        if x["id"] != "ki-bild") and ti["tools"][0]["titel"].startswith("Bildverbesserung"), str(ti)[:200])
         _, wz = se.json("/api/werkzeuge")
@@ -1887,7 +1887,7 @@ def test_tools_anbinden(p, tmp):
         _, st = se.json("/api/status")
         pruefe("Status: Feld „tools“ (installiert je id), alte Felder bleiben",
                st.get("tools") == {"bildverbesserung": False, "uebersetzung": False, "ki-bild": False, "sprachen": False,
-                                   "lernen": False}
+                                   "lernen": False, "stimmen": False}
                and "modelle" in st and "ki_bild" in st, str(st.get("tools")))
         code, r = se.json("/api/lauf", daten={"art": "verbessern", "bilder": [bild]})
         pruefe("Verbessern mit Real-ESRGAN ohne Tool → 409 tool_fehlt (bildverbesserung)",
@@ -2911,7 +2911,8 @@ def test_lernen_oberflaeche(p, tmp):
                                  'class="lern-hinten" aria-live="polite"', 'role="progressbar"', 'e.pointerType !== "touch"',
                                  "vorschau_text", 'data-ln="bearbeiten"', "ln_problem_hinweis")))
     pruefe("Vorlesen nur mit Systemstimme (offline) für die Sprache, sonst kein Knopf",
-           "speechSynthesis.getVoices().find(v => v.localService !== false" in ui and "lernStimme(k.sprache) ?" in ui)
+           "speechSynthesis.getVoices().find(v => v.localService !== false" in ui and "kannVorlesen(k.sprache, sz.zs) ?" in ui   # seit 2.6 (E60): Aufnahme oder Stimme
+           and "const kannVorlesen = (code, schluessel) => stimmeDatei(code, schluessel) || !!lernStimme(code);" in ui)
     pruefe("Übersicht: Heute-Kachel, Stapel ✎/🗑, Woche als SVG mit Farb-Variablen, Einstellungen 80–95 %, Export/Import/Zurücksetzen",
            all(s in ui for s in ("function lernWocheSVG", ".lern-woche rect { fill: var(--wasser); }", 'type="range" min="80" max="95"',
                                  'href="/api/lernen-export"', "/api/lernen-import", "/api/lernen-zuruecksetzen", 'data-ln="stapel-loeschen"',
@@ -4312,12 +4313,12 @@ def test_aussprache(tmp):
            stimme.count("localService !== false") == 2 and 'de: ["de-de", "de-at", "de-ch"]' in ui    # seit 2.6 (E59) in STIMME_VORZUG
            and "for (const r of STIMME_VORZUG[code] || [])" in stimme and 'ziel.includes(lang(v).split("-")[0])' in stimme, stimme[:200])
     pruefe("🔊 Deutsch nur nach dem Aufdecken (beide Richtungen), nur mit Stimme, mit aria-label; Text bleibt lang=\"de\"",
-           karte.count('data-ln="vorlesen-de"') == 1 and 'LS.gezeigt && k.de && lernStimme("de") ?' in karte
+           karte.count('data-ln="vorlesen-de"') == 1 and 'LS.gezeigt && k.de && kannVorlesen("de", sz.de) ?' in karte
            and 'aria-label="${esc(t("h_ln_vorlesen_de"))}"' in karte and '<span lang="de">${esc(k.de)}</span>' in karte
            and karte.count("${deZeile}") == 2 and "deZeile" not in karte.split("const vorn", 1)[1].split("\n", 1)[0])
     pruefe("Klick liest genau den deutschen Text über vorlesen() (cancel, Stimme, lang); Beenden ruft cancel",
-           'if (a === "vorlesen-de" && LS && LS.n.karte && LS.gezeigt) { vorlesen(LS.n.karte.de, lernStimme("de")); return; }' in klick
-           and "vorlesen(k.wort, lernStimme(k.sprache))" in klick and "speechSynthesis.cancel(); const s = new SpeechSynthesisUtterance(text); s.voice = stimme; s.lang = stimme.lang;" in ui
+           'if (a === "vorlesen-de" && LS && LS.n.karte && LS.gezeigt) { vorlesen(LS.n.karte.de, lernStimme("de"), { sprache: "de", schluessel: (LS.n.karte.stimme || {}).de }); return; }' in klick
+           and "vorlesen(k.wort, lernStimme(k.sprache), { sprache: k.sprache, schluessel: (k.stimme || {}).zs })" in klick and "speechSynthesis.cancel(); const s = new SpeechSynthesisUtterance(text); s.voice = stimme; s.lang = stimme.lang;" in ui
            and "function lernBeenden() { LS = null; if (window.speechSynthesis) speechSynthesis.cancel();" in ui)
     import lernkarten_digital as ld
     ls = ld.LERNSEITE
@@ -7077,13 +7078,13 @@ def test_github_meldungen(tmp):
                        capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=600)
     ziele = re.search(r"ziel: \[([^\]]*)\]", f)
     q = fz.read_text(encoding="utf-8")
-    pruefe("fuzz.yml: nur contents: read, wöchentlich + ci + von Hand, 5 Ziele (= fuzz_ziele.ZIELE), Atheris per fuzz.lock, "
-           "Fund als Artefakt; fuzz_ziele.py --zufall (ohne Atheris): 5 Ziele ohne Fund",
+    pruefe("fuzz.yml: nur contents: read, wöchentlich + ci + von Hand, 6 Ziele (= fuzz_ziele.ZIELE), Atheris per fuzz.lock, "
+           "Fund als Artefakt; fuzz_ziele.py --zufall (ohne Atheris): 6 Ziele ohne Fund",
            re.search(r"^permissions:\n  contents: read\n\n", f, re.M) and "write" not in f and "secrets." not in f
            and "cron:" in f and "workflow_dispatch:" in f and "branches: [ci]" in f and "pull_request" not in f
-           and ziele and [z.strip() for z in ziele.group(1).split(",")] == ["markdown", "wortliste", "signatur", "update_zip", "karten"]
+           and ziele and [z.strip() for z in ziele.group(1).split(",")] == ["markdown", "wortliste", "signatur", "update_zip", "karten", "stimmen"]
            and "-r .github/ci/fuzz.lock" in f and "import atheris" in q and "if: failure()" in f
-           and r.returncode == 0 and r.stdout.count("✓ ") == 5, (r.stdout + r.stderr)[-400:])
+           and r.returncode == 0 and r.stdout.count("✓ ") == 6, (r.stdout + r.stderr)[-400:])
     # 6) getrackte Räder
     liste = _e58_git(arbeit, "ls-files", "*.whl") if (arbeit / ".git").is_dir() else None
     raeder = sorted(z for z in (liste or "").splitlines() if z.strip())
@@ -7137,9 +7138,9 @@ def test_aussprache_beide(tmp):
            'data-le="aussprache_beide"${e.aussprache_beide ? " checked" : ""}' in einst and 'title="${esc(t("h_ln_aussprache_beide"))}"' in einst
            and 'class="schalter"' in einst and 'i.type === "checkbox" ? i.checked :' in senden)
     pruefe("🔊 der Kartensprache nur mit Schalter (Knopf und Klick), Deutsch unverändert; lernBeide() verlangt === true",
-           "const stimme = lernBeide() && lernStimme(k.sprache) ?" in karte and 'LS.gezeigt && k.de && lernStimme("de") ?' in karte
+           "const stimme = lernBeide() && kannVorlesen(k.sprache, sz.zs) ?" in karte and 'LS.gezeigt && k.de && kannVorlesen("de", sz.de) ?' in karte
            and 'if (a === "vorlesen" && LS && LS.n.karte && lernBeide()) {' in klick
-           and "LERN.einstellungen.aussprache_beide === true" in ui and "vorlesen(k.wort, lernStimme(k.sprache))" in klick)
+           and "LERN.einstellungen.aussprache_beide === true" in ui and "vorlesen(k.wort, lernStimme(k.sprache), {" in klick)
     pruefe("Spanisch = wie in Mexiko: es-MX → es-419 → es-US → es-ES → andere es (Seite und Lernseite), nur lokale Stimmen",
            'es: ["es-mx", "es-419", "es-us", "es-es"]' in ui and 'es: ["es-mx", "es-419", "es-us", "es-es"]' in ld.LERNSEITE
            and "localService !== false" in ld.LERNSEITE.split("function stimmeFuer", 1)[1].split("\n}", 1)[0])
@@ -7170,6 +7171,447 @@ def test_aussprache_beide(tmp):
            and "Französisch" in fr["vorlesen_zs"] and "Französisch" in fr["beide_titel"], fr.get("vorlesen_zs"))
 
 
+E60_PROZESS = r'''
+import io, json, os, sys, wave, zipfile
+from pathlib import Path
+sys.path.insert(0, sys.argv[1])
+os.environ.pop("MGD_IM_PROZESS", None)
+p = Path(sys.argv[1])
+import gans_ui as ui, gans_lernkarten as gl, stimmen as st
+gl.setze_sprache("de")
+E = []
+def ok(name, gut, detail=""):
+    E.append([name, bool(gut), str(detail)[:700]])
+KOPF, ROH = {}, b""
+def direkt(weg, daten=None, roh=None, abfrage="", methode="POST", gruppe=""):
+    global KOPF, ROH
+    koerper = roh if roh is not None else json.dumps(daten or {}).encode()
+    k = {"X-GL-Sprache": "de", "Content-Type": "application/json"}
+    if gruppe:
+        k["X-GL-Gruppe"] = gruppe
+    s, KOPF, ROH = ui.verarbeite(methode, weg, abfrage, koerper if methode == "POST" else b"", k)
+    try:
+        return s, json.loads(ROH)
+    except ValueError:
+        return s, {}
+def stand():
+    return json.loads(KOPF.get("X-MGD-Verlauf", "{}"))
+def wav(sek=0.2, rate=8000, extra=b""):
+    b = io.BytesIO()
+    with wave.open(b, "wb") as w:
+        w.setnchannels(1); w.setsampwidth(2); w.setframerate(rate); w.writeframes(b"\x01\x02" * int(rate * sek))
+    roh = bytearray(b.getvalue())
+    if extra:                                   # fremder Zusatzblock hinter den Daten (RIFF-Länge anpassen)
+        roh += extra
+        roh[4:8] = (len(roh) - 8).to_bytes(4, "little")
+    return bytes(roh)
+MP3 = b"ID3\x04\x00\x00\x00\x00\x00\x0a" + b"\x00" * 10 + b"\xff\xfb\x90\x00" + b"\x00" * 400
+OGG = b"OggS\x00\x02" + b"\x00" * 200
+ordner = p / "stimmen"
+
+# --- ohne Tool ---
+s1, r1 = direkt("/api/stimmen", methode="GET")
+s2, r2 = direkt("/api/stimmen-import", roh=wav(), abfrage="name=de/0123456789abcdef.wav")
+s3, _ = direkt("/api/stimme-loeschen", {"sprache": "de", "schluessel": "0" * 16})
+s4, _ = direkt("/api/stimmen-wortliste", methode="GET")
+s5, _ = direkt("/api/stimme", methode="GET", abfrage="sprache=de&schluessel=" + "0" * 16)
+s6, _ = direkt("/api/stimmen-aufraeumen", {})
+k_ohne = ui.karten_daten()["karten"][0]
+ok("Ohne Tool „stimmen“: jede Adresse 409 tool_fehlt (lesen, Datei, Wortliste, einlesen, löschen, aufräumen), Karten ohne Feld „stimme“, nichts angelegt",
+   s1 == s2 == s3 == s4 == s5 == s6 == 409 and r1.get("code") == "tool_fehlt" and r1.get("tool") == "stimmen"
+   and r2.get("tool") == "stimmen" and "stimme" not in k_ohne and not ordner.exists(), (s1, s2, s3, s4, s5, s6, r1))
+
+# --- aktivieren ---
+sa, ra = direkt("/api/tool", {"id": "stimmen", "aktion": "installieren"})
+si, info = direkt("/api/stimmen", methode="GET")
+karten = ui.karten_daten()["karten"]
+k0, k1 = karten[0], karten[1]
+de0, es0, de1 = st.schluessel(k0["de"]), st.schluessel(k0["es"]), st.schluessel(k1["de"])
+n_de = len({st.schluessel(k["de"]) for k in karten if k["de"].strip()})
+ok("Aktivieren (ohne Download, sofort bereit): /api/stimmen mit liste/woerter/gesamt/fehlen/Grenzen, Karten tragen stimme {de, zs} = Schlüssel der Texte",
+   sa == 200 and ra.get("tool", {}).get("installiert") is True and not ra.get("lauf") and si == 200 and info["liste"] == {}
+   and info["woerter"] == [] and info["gesamt"]["de"] == info["fehlen"]["de"] == n_de and info["sprachen"] == ["de", "es"]
+   and info["max_mb"] == 2 and info["max_sekunden"] == 15 and info["endungen"] == list(st.ENDUNGEN)
+   and k0.get("stimme") == {"de": de0, "zs": es0}, (sa, str(ra)[:200], info))
+
+# --- Wortliste ---
+sw, _ = direkt("/api/stimmen-wortliste", methode="GET")
+text = ROH.decode("utf-8-sig") if sw == 200 else ""
+zeilen = [z.split(";") for z in text.strip().split("\r\n")]
+ok("Wortliste: CSV-Download (UTF-8 mit BOM, Semikolon), Kopf datei;sprache;text;vorhanden, Deutsch + Kartensprache jeder Karte ohne Doppelte",
+   sw == 200 and ROH[:3] == b"\xef\xbb\xbf" and KOPF.get("Content-Type", "").startswith("text/csv")
+   and "attachment" in KOPF.get("Content-Disposition", "") and zeilen[0] == ["datei", "sprache", "text", "vorhanden"]
+   and [f"de/{de0}", "de", " ".join(k0["de"].split()), "nein"] in zeilen and any(z[0] == f"es/{es0}" and z[1] == "es" for z in zeilen)
+   and len({z[0] for z in zeilen}) == len(zeilen) and {z[1] for z in zeilen[1:]} == {"de", "es"}
+   and all(z[3] == "nein" for z in zeilen[1:]), zeilen[:3])
+
+# --- ZIP einlesen ---
+puffer = io.BytesIO()
+with zipfile.ZipFile(puffer, "w") as z:
+    z.writestr(f"aufnahmen/de/{de0}.wav", wav(extra=b"LIST\x08\x00\x00\x00fremdes!"))
+    z.writestr(f"aufnahmen/es/{es0}.mp3", MP3)
+    z.writestr("aufnahmen/es/" + "f" * 16 + ".mp3", MP3)          # kein Wort dazu
+    z.writestr(f"aufnahmen/de/{de1}.wav", b"kein Audio, nur so benannt")
+    z.writestr("aufnahmen/notiz.txt", b"hallo")
+    z.writestr("__MACOSX/aufnahmen/de/._x.wav", b"x")
+sz, rz = direkt("/api/stimmen-import", roh=puffer.getvalue(), abfrage="name=aufnahmen.zip")
+erg = rz.get("ergebnis", {})
+neu_wav = (ordner / "de" / f"{de0}.wav").read_bytes() if (ordner / "de" / f"{de0}.wav").is_file() else b""
+st_zip = stand()
+ok("ZIP einlesen: Zuordnung über Ordner = Sprache und Name = Schlüssel → 2 neu, 2 unbekannt (kein Wort, Textdatei), 1 abgelehnt (falsche Kennbytes); __MACOSX übersprungen",
+   sz == 200 and (erg.get("neu"), erg.get("ersetzt"), erg.get("unbekannt"), erg.get("abgelehnt")) == (2, 0, 2, 1)
+   and erg.get("gruende") == {"kennbytes": 1} and rz["liste"] == {"de": {de0: "wav"}, "es": {es0: "mp3"}}
+   and sorted(q.name for q in ordner.rglob("*") if q.is_file()) == sorted([f"{de0}.wav", f"{es0}.mp3"])
+   and len(rz["woerter"]) == 2 and rz["fehlen"]["de"] == n_de - 1, (sz, erg, rz.get("liste")))
+ok("WAV wird neu geschrieben (fremder Zusatzblock fällt weg, gleiche Töne); der Schritt heißt stimmen_import",
+   neu_wav[:4] == b"RIFF" and b"fremdes!" not in neu_wav and neu_wav == wav() and st_zip.get("z") == 1
+   and st_zip.get("za") == "stimmen_import", (len(neu_wav), st_zip))
+
+# --- Datei nur über Sprache + Schlüssel ---
+sd, _ = direkt("/api/stimme", methode="GET", abfrage=f"sprache=de&schluessel={de0}")
+kopf_d, roh_d = dict(KOPF), ROH
+boese = [direkt("/api/stimme", methode="GET", abfrage=a)[0] for a in (
+    "sprache=de&schluessel=../karten.csv", "sprache=..&schluessel=" + de0, "sprache=de/..&schluessel=" + de0,
+    f"sprache=de&schluessel={de0}.wav", f"sprache=de&schluessel={de0.upper()}x", "sprache=xx&schluessel=" + de0,
+    "sprache=de&schluessel=" + "0" * 16, "sprache=de&pfad=karten.csv")]
+sm, _ = direkt("/api/stimme", methode="GET", abfrage=f"sprache=es&schluessel={es0}")
+ok("Datei nur über Sprache (Katalog) + Schlüssel (16 Hex): fester Content-Type je Endung, inline; Pfade, fremde Sprachen, andere Muster → 404",
+   sd == 200 and kopf_d.get("Content-Type") == "audio/wav" and roh_d == neu_wav and sm == 200 and KOPF.get("Content-Type") == "audio/mpeg"
+   and boese == [404] * 8, (sd, kopf_d, boese))
+
+# --- einzelne Datei ersetzt (andere Endung), zu groß, WAV zu lang ---
+se1, re1 = direkt("/api/stimmen-import", roh=OGG, abfrage=f"name=de/{de0}.ogg", gruppe="g1")
+se2, re2 = direkt("/api/stimmen-import", roh=OGG, abfrage=f"name={de1}.opus", gruppe="g1")     # ohne Ordner: Sprache aus der Wortliste
+se3, re3 = direkt("/api/stimmen-import", roh=wav(sek=15.5), abfrage=f"name=es/{es0}.wav", gruppe="g1")
+se4, re4 = direkt("/api/stimmen-import", roh=b"ID3" + b"\x00" * (st.MAX_DATEI + 5), abfrage=f"name=es/{es0}.mp3", gruppe="g1")
+se5, re5 = direkt("/api/stimmen-import", roh=MP3, abfrage="name=../../karten.mp3", gruppe="g1")
+ok("Einzelne Dateien: neue ersetzt die alte auch bei anderer Endung (eine Datei je Schlüssel), ohne Ordner zählt die Wortliste; "
+   "WAV über 15 s und Dateien über 2 MB abgelehnt, fremder Name unbekannt; gleiche Gruppe = ein Schritt",
+   se1 == se2 == se3 == se4 == se5 == 200 and re1["ergebnis"]["ersetzt"] == 1 and re1["liste"]["de"] == {de0: "ogg"}
+   and not (ordner / "de" / f"{de0}.wav").exists() and re2["ergebnis"]["neu"] == 1 and re2["liste"]["de"].get(de1) == "opus"
+   and re3["ergebnis"]["gruende"] == {"lang": 1} and re4["ergebnis"]["gruende"] == {"gross": 1}
+   and re5["ergebnis"]["unbekannt"] == 1 and re5["liste"]["es"] == {es0: "mp3"} and stand().get("z") == 2
+   and not (p / "karten.mp3").exists() and not (p.parent / "karten.mp3").exists(), (re1.get("ergebnis"), re3.get("ergebnis"), stand()))
+
+# --- kaputte ZIP, Pfad nach außen ---
+vorher = sorted(str(q) for q in ordner.rglob("*"))
+aussen = io.BytesIO()
+with zipfile.ZipFile(aussen, "w") as z:
+    z.writestr(f"de/{de0}.wav", wav())
+    z.writestr(f"../de/{de1}.wav", wav())
+sk1, rk1 = direkt("/api/stimmen-import", roh=aussen.getvalue(), abfrage="name=a.zip")
+sk2, rk2 = direkt("/api/stimmen-import", roh=b"PK\x03\x04kaputt", abfrage="name=a.zip")
+ok("ZIP mit Pfad nach außen bzw. kaputte ZIP: 400 mit verständlichem Text, nichts verändert",
+   sk1 == sk2 == 400 and "ZIP" in rk1.get("fehler", "") and rk2.get("fehler") and vorher == sorted(str(q) for q in ordner.rglob("*")),
+   (sk1, sk2, rk1))
+
+# --- Lernkarte trägt die Schlüssel ---
+direkt("/api/tool", {"id": "lernen", "aktion": "installieren"})
+sl, nk = direkt("/api/lernen-karte", methode="GET")
+lk = nk.get("karte") or {}
+ok("Lernkarte: stimme {de, zs} = Schlüssel von Deutsch-Text und Wort (die Seite braucht keinen Hash)",
+   sl == 200 and lk.get("stimme") == {"de": st.schluessel(lk.get("de")), "zs": st.schluessel(lk.get("wort"))} and lk["stimme"]["de"], lk)
+
+# --- Löschen und Rückgängig ---
+alt = (ordner / "es" / f"{es0}.mp3").read_bytes()
+sx, rx = direkt("/api/stimme-loeschen", {"sprache": "es", "schluessel": es0})
+weg = not (ordner / "es" / f"{es0}.mp3").exists()
+st_weg = stand()
+sy, _ = direkt("/api/stimme-loeschen", {"sprache": "es", "schluessel": es0})
+su, ru = direkt("/api/rueckgaengig")
+wieder = (ordner / "es" / f"{es0}.mp3").read_bytes() if (ordner / "es" / f"{es0}.mp3").is_file() else b""
+ok("Löschen (Schritt stimme_weg, zweites Mal 404) → Rückgängig stellt die Aufnahme Byte für Byte wieder her",
+   sx == 200 and weg and es0 not in rx["liste"].get("es", {}) and st_weg.get("za") == "stimme_weg" and sy == 404
+   and su == 200 and ru.get("art") == "stimme_weg" and wieder == alt, (sx, sy, su, st_weg))
+
+# --- Aufräumen ---
+(ordner / "es" / ("a" * 16 + ".mp3")).write_bytes(MP3)
+(ordner / "es" / "notiz.txt").write_bytes(b"gehoert nicht dazu")
+_, iv = direkt("/api/stimmen", methode="GET")
+sr, rr = direkt("/api/stimmen-aufraeumen", {})
+ok("Aufräumen: nur verwaiste Aufnahmen (kein Wort mehr) gehen, fremde Dateien im Ordner bleiben; Rückgängig holt sie zurück",
+   iv.get("verwaist") == 1 and sr == 200 and rr.get("geloescht") == 1 and rr.get("verwaist") == 0
+   and not (ordner / "es" / ("a" * 16 + ".mp3")).exists() and (ordner / "es" / "notiz.txt").is_file()
+   and (ordner / "es" / f"{es0}.mp3").is_file() and direkt("/api/rueckgaengig")[0] == 200
+   and (ordner / "es" / ("a" * 16 + ".mp3")).is_file() and direkt("/api/wiederholen")[0] == 200, (iv.get("verwaist"), sr, rr.get("geloescht")))
+
+# --- Sicherung der Handy-App hin und zurück ---
+roh_s, _ = ui.app_sicherung()
+namen = zipfile.ZipFile(io.BytesIO(roh_s)).namelist()
+da_vorher = {str(q.relative_to(ordner)).replace(os.sep, "/"): q.read_bytes() for q in st.dateien(p)}
+for q in st.dateien(p):
+    q.unlink()
+ein = ui.app_sicherung_einspielen(roh_s)
+da_nachher = {str(q.relative_to(ordner)).replace(os.sep, "/"): q.read_bytes() for q in st.dateien(p)}
+falsch = io.BytesIO()
+with zipfile.ZipFile(io.BytesIO(roh_s)) as zi, zipfile.ZipFile(falsch, "w") as zo:
+    for i in zi.infolist():
+        zo.writestr(i, zi.read(i))
+    zo.writestr("projekt/stimmen/es/boese.exe", b"MZ")
+try:
+    ui.app_sicherung_einspielen(falsch.getvalue())
+    abgelehnt = False
+except ui.Meldung:
+    abgelehnt = True
+unecht = io.BytesIO()
+with zipfile.ZipFile(io.BytesIO(roh_s)) as zi, zipfile.ZipFile(unecht, "w") as zo:
+    for i in zi.infolist():
+        zo.writestr(i, b"MZ kein Audio" if i.filename == f"projekt/stimmen/es/{es0}.mp3" else zi.read(i))
+ui.app_sicherung_einspielen(unecht.getvalue())
+ok("Sicherung der Handy-App: stimmen/<sprache>/<schlüssel>.<endung> reist mit (fremde Dateien nicht) und kommt Byte für Byte zurück; "
+   "andere Namen in stimmen/ → Sicherung abgelehnt, Inhalt ohne Kennbytes wird nicht geschrieben",
+   f"projekt/stimmen/es/{es0}.mp3" in namen and f"projekt/stimmen/de/{de0}.ogg" in namen and "projekt/stimmen/es/notiz.txt" not in namen
+   and ein.get("ok") and da_nachher == da_vorher and len(da_vorher) >= 3 and abgelehnt
+   and not (ordner / "es" / f"{es0}.mp3").exists() and (ordner / "de" / f"{de0}.ogg").is_file()
+   and "stimmen" in ui.SICHERUNG_ORDNER, (sorted(n for n in namen if "stimmen" in n), abgelehnt))
+
+# --- Deinstallieren ---
+(ordner / "es").mkdir(parents=True, exist_ok=True)
+(ordner / "es" / "notiz.txt").write_bytes(b"gehoert nicht dazu")
+csv0 = (p / "karten.csv").read_bytes()
+bilder0 = sorted(q.name for q in (p / "bilder").iterdir())
+_, ti = direkt("/api/tools", methode="GET")
+te = next(x for x in ti["tools"] if x["id"] == "stimmen")
+sdi, rdi = direkt("/api/tool", {"id": "stimmen", "aktion": "deinstallieren"})
+rest = sorted(str(q.relative_to(ordner)).replace(os.sep, "/") for q in ordner.rglob("*") if q.is_file())
+s_nach, _ = direkt("/api/stimmen", methode="GET")
+ok("Deinstallieren löscht nur die eigenen Aufnahmen in stimmen/ (fremde Datei, Karten, Bilder bleiben), nennt den Ordner und das Projekt-ZIP; danach wieder 409",
+   te["installiert"] and te["belegt"] > 0 and te["ort"].endswith("stimmen") and "Projekt-ZIP" in te["loeschen"] and "stimmen" in te["loeschen"]
+   and sdi == 200 and len(rdi.get("geloescht", [])) >= 2 and rest == ["es/notiz.txt"] and not (ordner / "de").exists()
+   and (p / "karten.csv").read_bytes() == csv0 and sorted(q.name for q in (p / "bilder").iterdir()) == bilder0
+   and s_nach == 409 and "stimme" not in ui.karten_daten()["karten"][0], (sdi, rest, te.get("ort")))
+(ordner / "es" / "notiz.txt").unlink()
+(ordner / "es").rmdir()
+ordner.rmdir()
+direkt("/api/tool", {"id": "lernen", "aktion": "deinstallieren"})
+print("#e60 " + json.dumps(E))
+'''
+
+
+def test_stimmen(p, tmp):
+    """E60 (2.6, G07a): Tool „Eigene Stimme“ – stimmen.py (Schlüssel, Annahme je Format, WAV neu geschrieben, Wortliste,
+    Einlesen, Aufräumen), Katalog-Eintrag, Adressen mit/ohne Tool, Datei nur über Sprache + Schlüssel, CSP media-src,
+    Sicherung, Rückgängig, Deinstallieren löscht nur stimmen/; Seite: Stimmenwahl, Wiedergabe Datei vor Stimme, Texte.
+    Klicks und Klang-Reihenfolge prüft browser_test.py (B1) mit nachgebildetem Audio."""
+    print("\n[E60] Eigene Stimme (Tool „stimmen“)")
+    import ast
+    import wave
+    import stimmen as st
+    import tools as tl
+    # ---------- Schlüssel ----------
+    s = st.schluessel
+    pruefe("Schlüssel: 16 Hex aus SHA-256 des normalisierten Textes – NFC, Groß/Klein und Leerraum egal; feste Beispielwerte; leer → \"\"",
+           s("die Gans") == "03ff8f061b45bd5c" and s("  Die   GANS \n") == s("die Gans") and s("el ganso") == "3c9096135fa823b1"
+           and s("Gänse") == s("Ga\u0308nse") == "9669fb4e819442a2" and s("Straße") == s("STRASSE") and s("die Gans") != s("die Gänse")
+           and s("") == s("   ") == "" and st.schluessel_ok(s("x")) and not st.schluessel_ok("5C4AC00CF9D82A2B")
+           and not st.schluessel_ok("../" + "a" * 13), (s("die Gans"), s("el ganso"), s("Gänse")))
+    baum = ast.parse((HIER / "stimmen.py").read_text(encoding="utf-8"))
+    importe = {(n.names[0].name if isinstance(n, ast.Import) else n.module).split(".")[0] for n in ast.walk(baum)
+               if isinstance(n, (ast.Import, ast.ImportFrom))}
+    quelle = (HIER / "stimmen.py").read_text(encoding="utf-8")
+    pruefe("stimmen.py: nur Standardbibliothek (+ sprachen), keine Threads, kein Unterprozess (läuft auch in der Handy-App)",
+           importe <= {"csv", "hashlib", "io", "re", "unicodedata", "wave", "zipfile", "pathlib", "sprachen", "sys"}
+           and "subprocess" not in quelle and "threading" not in quelle, importe)
+
+    # ---------- Annahme ----------
+    def wav(sek=0.1, rate=8000, kan=1, breite=2):
+        b = io.BytesIO()
+        with wave.open(b, "wb") as w:
+            w.setnchannels(kan)
+            w.setsampwidth(breite)
+            w.setframerate(rate)
+            w.writeframes(b"\x01" * (int(rate * sek) * kan * breite))
+        return b.getvalue()
+
+    def code(daten, name):
+        try:
+            st.pruefe(daten, name)
+            return "ok"
+        except st.StimmenFehler as e:
+            return e.code
+    gut = {"a.wav": wav(), "a.mp3": b"ID3\x04" + b"\x00" * 60, "b.mp3": b"\xff\xfb\x90\x00" + b"\x00" * 60,
+           "a.ogg": b"OggS" + b"\x00" * 60, "a.opus": b"OggS" + b"\x00" * 60, "a.m4a": b"\x00\x00\x00\x20ftypM4A " + b"\x00" * 60,
+           "a.webm": b"\x1a\x45\xdf\xa3" + b"\x00" * 60, "A.WAV": wav()}
+    angenommen = {n: code(d, n) for n, d in gut.items()}
+    alaw = bytearray(wav())
+    alaw[20:22] = (6).to_bytes(2, "little")                       # Formatkennung 6 = A-law (kein PCM)
+    schlecht = {"endung": code(wav(), "a.exe"), "ohne": code(wav(), "wav"), "leer": code(b"", "a.wav"),
+                "gross": code(b"ID3" + b"\x00" * st.MAX_DATEI, "a.mp3"), "falsch": code(b"MZ\x90\x00" + b"\x00" * 60, "a.mp3"),
+                "vertauscht": code(gut["a.ogg"], "a.mp3"), "wav_kurz": code(b"RIFF\x00\x00\x00\x00WAVE", "a.wav"),
+                "wav_lang": code(wav(sek=15.2), "a.wav"), "wav_alaw": code(bytes(alaw), "a.wav"),
+                "wav_stumm": code(wav(sek=0), "a.wav"), "html": code(b"<html><script>", "a.ogg")}
+    grenze = code(wav(sek=15.0), "a.wav")
+    pruefe("Annahme je Format über die Kennbytes (WAV, MP3 mit ID3/Sync, OGG, Opus, M4A, WebM); Ablehnung: Endung, leer, über 2 MB, "
+           "falsche/vertauschte Kennbytes, WAV kaputt/kein PCM/ohne Ton/über 15 s (genau 15 s geht)",
+           set(angenommen.values()) == {"ok"} and grenze == "ok"
+           and schlecht == {"endung": "endung", "ohne": "endung", "leer": "leer", "gross": "gross", "falsch": "kennbytes",
+                            "vertauscht": "kennbytes", "wav_kurz": "wav", "wav_lang": "lang", "wav_alaw": "wav",
+                            "wav_stumm": "leer", "html": "kennbytes"}
+           and st.MAX_DATEI == 2 * 1024 * 1024 and st.MAX_SEKUNDEN == 15, (angenommen, schlecht, grenze))
+    stereo = wav(kan=2, breite=1, rate=22050)
+    pruefe("WAV neu geschrieben: Kanäle, Breite, Rate und Töne bleiben, Ergebnis ist eine frische PCM-Datei",
+           st.pruefe(stereo + b"JUNK\x04\x00\x00\x00oooo", "a.wav") == ("wav", stereo) and st.pruefe(gut["a.mp3"], "a.mp3")[1] == gut["a.mp3"])
+
+    # ---------- Ablage, Wortliste, Einlesen ----------
+    pr = Path(tmp) / "e60"
+    pr.mkdir()
+    karten = [dict(de="die Gans", rueckseiten={"es": "el ganso", "fr": "l’oie"}), dict(de="Die  Gans", rueckseiten={"es": "la gansa"}),
+              dict(de="das Ei der Gans", rueckseiten={"es": "el ganso"}), dict(de="=Gans", rueckseiten={})]
+    wl = st.wortliste(karten, "es")
+    roh_csv = st.wortliste_csv(wl)
+    erlaubt = st.gewuenscht(karten)
+    pruefe("Wortliste: datei = <sprache>/<schlüssel> ohne Endung, Deutsch + Kartensprache, ohne Doppelte (auch bei anderer Schreibung), "
+           "Formel-Anfang entschärft; Einlesen/Aufräumen kennen jede Sprache der Karten",
+           [z[:3] for z in wl] == [(f"de/{s('die Gans')}", "de", "die Gans"), (f"es/{s('el ganso')}", "es", "el ganso"),
+                                   (f"es/{s('la gansa')}", "es", "la gansa"), (f"de/{s('das Ei der Gans')}", "de", "das Ei der Gans"),
+                                   (f"de/{s('=Gans')}", "de", "=Gans")]
+           and roh_csv.startswith(b"\xef\xbb\xbfdatei;sprache;text;vorhanden\r\n") and b";'=Gans;nein\r\n" in roh_csv
+           and set(erlaubt) == {"de", "es", "fr"} and s("l’oie") in erlaubt["fr"], wl)
+    a1 = st.speichere(pr, "es", s("el ganso"), gut["a.mp3"], "x.mp3")
+    a2 = st.speichere(pr, "es", s("el ganso"), wav(), "x.wav")
+    gesichert = []
+    a3 = st.speichere(pr, "es", s("el ganso"), gut["a.ogg"], "x.ogg", gesichert.append)
+    fehler = []
+    for sprache, schl in (("xx", s("a")), ("../es", s("a")), ("es", "ABC"), ("es", "../../x")):
+        try:
+            st.speichere(pr, sprache, schl, wav(), "x.wav")
+        except st.StimmenFehler as e:
+            fehler.append(e.code)
+    erg = st.importiere(pr, [(f"fr/{s('l’oie')}.webm", gut["a.webm"]), (f"{s('la gansa')}.m4a", gut["a.m4a"]),
+                             (f"{s('die Gans')}.wav", wav()), ("es/unbekannt.mp3", gut["a.mp3"]), (f"de/{s('die Gans')}.mp3", None)],
+                        erlaubt)
+    pruefe("Ablage stimmen/<sprache>/<schlüssel>.<endung>: eine Datei je Schlüssel (neu → ersetzt, alte Endung weg, vorher gesichert), "
+           "falsche Sprache/Schlüssel abgelehnt; Einlesen zählt neu/ersetzt/unbekannt/abgelehnt",
+           (a1, a2, a3) == ("neu", "ersetzt", "ersetzt") and [q.name for q in gesichert] == [s("el ganso") + ".wav"]
+           and fehler == ["sprache", "sprache", "schluessel", "schluessel"]
+           and st.liste(pr) == {"de": {s("die Gans"): "wav"}, "es": {s("el ganso"): "ogg", s("la gansa"): "m4a"}, "fr": {s("l’oie"): "webm"}}
+           and (erg["neu"], erg["ersetzt"], erg["unbekannt"], erg["abgelehnt"], erg["gruende"]) == (3, 0, 1, 1, {"gross": 1})
+           and st.pfad(pr, "es", s("el ganso")).name.endswith(".ogg") and st.pfad(pr, "es", "../x") is None
+           and st.pfad(pr, "../es", s("el ganso")) is None and st.belegt(pr) > 0, (a1, a2, a3, fehler, erg, st.liste(pr)))
+    (pr / "stimmen" / "es" / "fremd.txt").write_bytes(b"x")
+    n_auf = st.aufraeumen(pr, st.gewuenscht(karten[:1]))
+    weg = st.loesche_alles(pr)
+    pruefe("Aufräumen löscht nur verwaiste Aufnahmen; alles löschen nimmt nur die eigenen Dateien und leere Ordner",
+           n_auf == 1 and len(weg) == 3 and [str(q.relative_to(pr)).replace(os.sep, "/") for q in pr.rglob("*") if q.is_file()]
+           == ["stimmen/es/fremd.txt"] and not (pr / "stimmen" / "de").exists(), (n_auf, weg))
+
+    # ---------- Katalog, Nutzerdaten, CSP ----------
+    t = tl.TOOLS.get("stimmen") or {}
+    g = (HIER / "gans_ui.py").read_text(encoding="utf-8")
+    import aktualisieren as ak
+    pruefe("Katalog: Tool stimmen (Aktivierung, Größe 0, 🎙, Texte de/en/es mit Erlaubnis-Hinweis und Gans), stimmen/ zählt als Nutzerdaten",
+           t.get("art") == "aktivierung" and t.get("groesse") == 0 and t.get("symbol") == "🎙" and t["da"]() is False
+           and all(len(t[k]) == 3 and all(t[k].values()) for k in ("titel", "nutzen", "loeschen", "dauer"))
+           and "Erlaubnis" in t["nutzen"]["de"] and "permission" in t["nutzen"]["en"] and "permiso" in t["nutzen"]["es"]
+           and "Gans" in t["nutzen"]["de"] and "Projekt-ZIP" in t["loeschen"]["de"] and "project ZIP" in t["loeschen"]["en"]
+           and ak.NUTZER.match("Programm/stimmen/de/0123456789abcdef.wav") and not ak.NUTZER.match("Programm/stimmen.py")
+           and 'NUR_RECHNER_TOOLS = {"ki-bild"}' in g, str(t)[:200])
+    pruefe("CSP der Seite erlaubt Ton nur von hier (media-src 'self' blob:), Mikrofon bleibt gesperrt; Wege sind Rückgängig-Schritte",
+           g.count("media-src 'self' blob:;") == 1 and 'microphone=()' in g
+           and all(f'"{w}": "{a}"' in g for w, a in (("/api/stimmen-import", "stimmen_import"), ("/api/stimme-loeschen", "stimme_weg"),
+                                                     ("/api/stimmen-aufraeumen", "stimmen_aufraeumen")))
+           and "ordner.append(stimmen.ordner(csv_pfad.parent))" in g)
+
+    # ---------- Adressen, Rückgängig, Sicherung, Deinstallieren (im Prozess über verarbeite) ----------
+    daten = Path(tmp) / "daten-e60"
+    daten.mkdir()
+    env = dict(os.environ, PYTHONIOENCODING="utf-8", MGD_DATEN=str(daten), MGD_START_ID="test")
+    env.pop("MGD_IM_PROZESS", None)
+    r = subprocess.run([sys.executable, "-c", E60_PROZESS, str(p)], cwd=p, env=env,
+                       capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=300)
+    m = re.search(r"^#e60 (.*)$", r.stdout, re.M)
+    if not m:
+        print((r.stdout + r.stderr)[-3000:])
+        pruefe("E60-Prozess lief durch", False, (r.stdout + r.stderr)[-600:])
+    else:
+        for name, gut_, detail in json.loads(m.group(1)):
+            pruefe(name, gut_, detail)
+
+    # ---------- Über HTTP: nosniff, fester Content-Type ----------
+    daten_http = Path(tmp) / "daten-e60-http"
+    daten_http.mkdir()
+    proc, se = starte_server(p, daten_http)
+    try:
+        se.json("/api/tool", daten={"id": "stimmen", "aktion": "installieren"})
+        _, kd = se.json("/api/karten")
+        schl = kd["karten"][0]["stimme"]["de"]
+        c1, r1 = se.json(f"/api/stimmen-import?name=de/{schl}.wav", roh=wav())
+        c2, kopf, inhalt = se.anfrage(f"/api/stimme?sprache=de&schluessel={schl}")
+        c3, kopf3, seite = se.anfrage("/")
+        c4, _, _ = se.anfrage(f"/api/stimme?sprache=de&schluessel={schl}", mit_cookie=False)
+        pruefe("HTTP: einlesen → Datei mit audio/wav + nosniff, nur mit Sitzung; Seite mit media-src in der CSP",
+               c1 == 200 and r1["ergebnis"]["neu"] == 1 and c2 == 200 and kopf.get("content-type") == "audio/wav"
+               and kopf.get("x-content-type-options") == "nosniff" and inhalt == wav() and c4 == 403
+               and "media-src 'self' blob:" in kopf3.get("content-security-policy", "")
+               and "microphone=()" in kopf3.get("permissions-policy", ""), (c1, c2, c4, kopf))
+        se.json("/api/tool", daten={"id": "stimmen", "aktion": "deinstallieren"})
+    finally:
+        proc.terminate()
+        proc.wait(timeout=10)
+    pruefe("Nach den Prüfungen bleibt im Projekt kein Ordner stimmen/", not (p / "stimmen").exists())
+
+    # ---------- Seite ----------
+    ui = (HIER / "ui" / "index.html").read_text(encoding="utf-8")
+
+    def funktion(kopf, ende="\n}\n"):
+        i = ui.index(kopf)
+        return ui[i:ui.index(ende, i)]
+    vor, wahl, ls = funktion("function vorlesen(text, stimme, {"), funktion("function stimmenWahl(code)"), funktion("function lernStimme(code)")
+    pruefe("Wiedergabe: jedes 🔊 über vorlesen() – erst die eigene Aufnahme (Audio aus vorgeladener blob:-Adresse), sonst die Stimme "
+           "des Systems mit Tempo/Tonhöhe; scheitert die Datei, spricht die Stimme; 🔊 auch ohne Stimme, wenn es eine Aufnahme gibt",
+           "stimmeStopp();" in vor and "if (stimmeDatei(sprache, schluessel)) { spieleStimme(sprache, schluessel).catch(() => sprich(text, stimme, sprache)); return; }" in vor
+           and "s.rate = w.tempo; s.pitch = w.hoehe; speechSynthesis.speak(s);" in ui and "a = new Audio(); stimmeTon = a;" in ui
+           and "URL.createObjectURL(await r.blob())" in ui and 'if (k.stimme) { stimmeVorladen(k.sprache, k.stimme.zs); stimmeVorladen("de", k.stimme.de); }' in ui
+           and ui.count("kannVorlesen(") == 2 and ui.count("new SpeechSynthesisUtterance(") == 1)
+    pruefe("Stimmenwahl je Gerät (localStorage mgd-stimmen): Name, Tempo 0,6–1,2, Tonhöhe 0,8–1,2; ohne Tool immer Standard; "
+           "lernStimme() nimmt die Wahl nur unter den lokalen Stimmen der Sprache und fällt still auf die Automatik zurück",
+           "if (!stimmenDa()) return ST_STANDARD;" in wahl and "grenze(w.tempo, 0.6, 1.2)" in wahl and "grenze(w.hoehe, 0.8, 1.2)" in wahl
+           and 'localStorage.getItem("mgd-stimmen")' in ui and 'localStorage.setItem("mgd-stimmen"' in ui
+           and "if (wahl) { const v = lokaleStimmen(code).find(x => x.name === wahl); if (v) return v; }" in ls
+           and ls.index("lokaleStimmen(code)") < ls.index("STIMME_VORZUG[code]")
+           and "v.localService !== false" in funktion("function lokaleStimmen(code)")
+           and 'min="${min}" max="${max}" step="0.05"' in ui and 'data-st="probe"' in ui)
+    bereich = funktion("function zeichneStimmen()")
+    pruefe("Bereich „Eigene Stimme“ (Werkzeuge): ohne Tool Hinweis + Aktivieren über brauchtTool, mit Tool Erlaubnis-Hinweis, drei Schritte "
+           "(Wortliste, Dateien benennen + Leitfaden, ablegen/wählen), Liste mit ▶ und 🗑, Aufräumen; Stand nur bei aktivem Tool geladen",
+           '<section class="flaeche" id="stimmen-bereich" hidden></section>' in ui and 'data-st="aktivieren"' in bereich
+           and 'if (a === "aktivieren") return brauchtTool("stimmen", () => {});' in ui and 't("st_erlaubnis")' in bereich
+           and 'href="/api/stimmen-wortliste" download' in bereich and "data-st-ablage" in bereich and "webkitdirectory" in bereich
+           and 'data-st="anhoeren"' in bereich and 'data-st="loeschen"' in bereich and 'data-st="aufraeumen"' in bereich
+           and 'data-st="anleitung"' in bereich and "if (!stimmenDa()) { STIMMEN = null; stimmenBlobsLeeren(); return null; }" in ui
+           and '[data-st-ablage]"' in ui and 'if (g && g.matches("[data-st-ablage]")) stimmenAusAblage(e.dataTransfer).then(stimmenEinlesen);' in ui
+           and 'api(url("/api/stimmen-import", { name }), { methode: "POST", roh: f, gruppe })' in ui
+           and "🎙 ${esc(t(\"ln_stimme_eigen\", n))}" in ui and 'data-ln="stimmen-tool"' in ui)
+    schluessel = sorted(set(re.findall(r"\b((?:h_)?st_(?:tool_titel|aktivieren|intro|erlaubnis|wahl_titel|wahl_unter|stimme|stimme_auto|tempo|"
+                                       r"hoehe|probe|stand|import_titel|wortliste|schritt1|schritt2|anleitung|schritt3|schritt3_touch|waehlen|"
+                                       r"ordner|laeuft|ergebnis|abgelehnt_hinweis|liste_titel|leer|geloescht|aufraeumen|aufgeraeumt|wahl|"
+                                       r"anhoeren|loeschen)):", ui)))
+    bloecke = [b.split("h_st_aufraeumen:", 1)[0] for b in ui.split("/* Eigene Stimme (Tool „stimmen“) */")[1:4]]
+    hover = [len(re.findall(r"\bh_st_[a-z_]+:", ui.split("/* Eigene Stimme (Tool „stimmen“) */")[i + 1].split("\n  ln_zaehler", 1)[0]))
+             for i in range(3)]
+    pruefe("Texte: 40 Schlüssel je Sprache (10 Hover h_st_*), positiver Ton, Gänse-Witz in drei Sprachen, Erlaubnis-Hinweis, "
+           "Leitfäden haben den Abschnitt „Eigene Stimme“ (= st_tool_titel) mit Verweis aus „Stimmen installieren“",
+           len(schluessel) == 39 and all(ui.count(f"  {x}:") + ui.count(f", {x}:") == 3 for x in schluessel) and hover == [10, 10, 10]
+           and ui.count("ln_stimme_eigen:") == 3 and len(bloecke) == 3 and not re.search(r"Warnung|Warning|Advertencia", "".join(bloecke))
+           and "gans schön stimmig" in bloecke[0] and "honking" in bloecke[1] and "ganso" in bloecke[2]
+           and "Erlaubnis" in bloecke[0] and "permission" in bloecke[1] and "permiso" in bloecke[2]
+           and all(re.search(r"^#+ .*" + re.escape(titel), (HIER / datei).read_text(encoding="utf-8"), re.M)
+                   and "datei;sprache;text;vorhanden" in (HIER / datei).read_text(encoding="utf-8")
+                   for titel, datei in zip(re.findall(r'st_tool_titel: "([^"]+)"', ui), ("LEITFADEN.md", "LEITFADEN_en.md", "LEITFADEN_es.md"))),
+           (len(schluessel), hover))
+    fz = HIER.parent.parent / ".github" / "ci" / "fuzz_ziele.py"
+    if fz.is_file():
+        ft = fz.read_text(encoding="utf-8")
+        yml = (fz.parent.parent / "workflows" / "fuzz.yml").read_text(encoding="utf-8")
+        r = subprocess.run([sys.executable, str(fz), str(HIER), "--ziel", "stimmen", "--zufall", "400"], capture_output=True, text=True,
+                           encoding="utf-8", errors="replace", timeout=300, env=dict(os.environ, PYTHONIOENCODING="utf-8"))
+        pruefe("Fuzz-Ziel „stimmen“ (Annahme + ZIP): in fuzz_ziele.py und fuzz.yml, 400 Zufallseingaben ohne Fund",
+               '"stimmen"' in ft and "stimmen.StimmenFehler" in ft and "stimmen" in yml and r.returncode == 0 and "✓ stimmen" in r.stdout,
+               (r.stdout + r.stderr)[-300:])
+    else:
+        print("  (.github/ci/fuzz_ziele.py gibt es nur im Quellbaum – 1 Prüfung entfällt)")
+
+
 def main():
     global ECHTES_KI_BILD, ECHT_DA
     t0 = time.time()
@@ -7186,6 +7628,7 @@ def main():
         shutil.copy2(HIER / "sprachen.py", p / "sprachen.py")
         shutil.copy2(HIER / "lernkarten_digital.py", p / "lernkarten_digital.py")
         shutil.copy2(HIER / "lernen.py", p / "lernen.py")
+        shutil.copy2(HIER / "stimmen.py", p / "stimmen.py")
         shutil.copy2(HIER / "verlauf.py", p / "verlauf.py")
         shutil.copy2(HIER / "aktualisieren.py", p / "aktualisieren.py")
         shutil.copy2(HIER / "signatur.py", p / "signatur.py")
@@ -7244,6 +7687,7 @@ def main():
         test_sichere_fassungen(Path(tmp))
         test_github_meldungen(Path(tmp))
         test_aussprache_beide(Path(tmp))
+        test_stimmen(p, Path(tmp))
     ok =sum(1 for e in tg.ergebnisse if e[1])
     print(f"\n{ok} von {len(tg.ergebnisse)} Prüfungen bestanden ({time.time() - t0:.0f} s).")
     if ok == len(tg.ergebnisse):

@@ -284,6 +284,16 @@ TEXTE = {
                             "Esto no es un progreso de Me Goos-ta Deutsch (lernstand.json de «Exportar progreso»)."),
     "lern_ungueltig": L("Das hat nicht geklappt – bitte die Eingaben prüfen.", "That didn’t work – please check the input.",
                         "Eso no funcionó; revisa los datos."),
+    # Eigene Stimme (Tool „stimmen“, stimmen.py)
+    "st_fehlt": L("Für dieses Wort gibt es noch keine eigene Aufnahme.", "There is no recording of your own for this word yet.",
+                  "Todavía no hay una grabación propia para esta palabra."),
+    "st_ungueltig": L("Das hat nicht geklappt – bitte Sprache und Datei prüfen.", "That didn’t work – please check language and file.",
+                      "Eso no funcionó; revisa el idioma y el archivo."),
+    "st_zip": L("Diese ZIP-Datei lässt sich nicht lesen – nichts wurde verändert.",
+                "This ZIP file can’t be read – nothing was changed.", "Este ZIP no se puede leer; no se cambió nada."),
+    "st_zip_gross": L("Das ist der Gans zu schwer (höchstens {mb} MB auf einmal) – teile die Aufnahmen auf mehrere ZIPs auf.",
+                      "That’s too heavy for the goose (at most {mb} MB at once) – split the recordings into several ZIPs.",
+                      "Eso pesa demasiado para el ganso (máximo {mb} MB a la vez); reparte las grabaciones en varios ZIP."),
     # Nach neuer Version suchen (nur auf Klick)
     "nv_kein_release": L("Für dieses Programm ist keine Download-Adresse eingetragen – die Gans weiß nicht, wo sie nachsehen soll.",
                          "No download address is set for this program – the goose doesn’t know where to look.",
@@ -902,6 +912,9 @@ def karten_daten():
     if lern is not None:                                     # Tool „lernen“: Stand je Karte (sonst kein Feld)
         for k in liste:
             k["lernen"] = lern.get(k["bild"])
+    if stimmen_da():                                         # Tool „stimmen“: Schlüssel der Aufnahmen (sonst kein Feld)
+        for k in liste:
+            k["stimme"] = dict(de=stimmen.schluessel(k["de"]), zs=stimmen.schluessel(k["es"]))
     meldungen = [m for m in meldungen if m["code"] != "ohne_karte"]
     ohne_gans = sum(1 for k in liste if k["de"].strip() and not gl.hat_gans(k["de"]))
     if ohne_gans:                                            # seit 2.4: jede Karte braucht ihre Gans
@@ -2849,7 +2862,8 @@ class Anfrage:
             if weg == "/api/lernen":
                 return self._senden(200, lernen_info())
             if weg == "/api/lernen-karte":
-                return self._senden(200, st.naechste_karte(_lern_karten(), eins("stapel") or None, sprache=gl.sprache()))
+                return self._senden(200, _mit_stimme(st.naechste_karte(_lern_karten(), eins("stapel") or None,
+                                                                         sprache=gl.sprache())))
             if weg == "/api/lernen-export":
                 inhalt = json.dumps(st.export(), ensure_ascii=False, indent=1)
                 name = f"{gl.DATEI_PRAEFIX}_Lernstand_{time.strftime('%Y-%m-%d')}.json"
@@ -2857,6 +2871,21 @@ class Anfrage:
                                     {"Content-Disposition": f"attachment; filename*=UTF-8''{quote(name)}"})
         except lernen.LernFehler as e:
             raise _lern_meldung_fehler(e) from None
+        return self._fehler(404, tx("unbekannt"))
+
+    def _stimmen_get(self, weg, eins):
+        _stimmen_pruefen()
+        if weg == "/api/stimmen":
+            return self._senden(200, stimmen_info())
+        if weg == "/api/stimme":                               # Datei nur über Sprache + Schlüssel, nie über einen Pfad
+            pfad = stimmen.pfad(_projekt(), eins("sprache"), eins("schluessel"))
+            if pfad is None:
+                return self._fehler(404, tx("st_fehlt"))
+            return self._senden(200, pfad.read_bytes(), stimmen.MIME[pfad.suffix[1:]], {"Content-Disposition": "inline"})
+        if weg == "/api/stimmen-wortliste":
+            name = f"{gl.DATEI_PRAEFIX}_Wortliste_Stimmen_{time.strftime('%Y-%m-%d')}.csv"
+            return self._senden(200, stimmen_wortliste(), "text/csv; charset=utf-8",
+                                {"Content-Disposition": f"attachment; filename*=UTF-8''{quote(name)}"})
         return self._fehler(404, tx("unbekannt"))
 
     def _get_api(self, weg, q):
@@ -2881,6 +2910,8 @@ class Anfrage:
             return self._senden(200, tools_info())
         if weg.startswith("/api/lernen") and lernen:
             return self._lernen_get(weg, eins)
+        if weg.startswith("/api/stimme") and stimmen:
+            return self._stimmen_get(weg, eins)
         if weg == "/api/lauf":                                # laufender bzw. letzter Auftrag (oder ?id=)
             ab = int(eins("ab", "0") or 0)
             lauf = warteschlange.finde(eins("id")) if eins("id") else warteschlange.letzter
@@ -2973,6 +3004,12 @@ class Anfrage:
             if n > SICHERUNG_MAX:
                 raise Meldung("sicherung_gross", status=413, mb=SICHERUNG_MAX // (1024 * 1024))
             return self._senden(200, app_sicherung_einspielen(self.rfile.read(n) if n else b""))
+        if weg == "/api/stimmen-import" and stimmen:             # ZIP oder einzelne Audiodatei als rohe Bytes
+            n = int(self.headers.get("Content-Length") or 0)
+            if n > stimmen.MAX_ZIP:
+                raise Meldung("st_zip_gross", status=413, mb=stimmen.MAX_ZIP // (1024 * 1024))
+            roh = self.rfile.read(n) if n > 0 else b""
+            return self._senden(200, stimmen_import(roh, q.get("name", [""])[0]))
         if erweiterungen and weg in erweiterungen.ROH_WEGE and erweiterungen.post_roh(self, weg, q):
             return
         daten = self._json()
@@ -3014,6 +3051,8 @@ class Anfrage:
             return self._senden(200, tool_aktion(daten))
         if weg.startswith("/api/lernen") and lernen:
             return self._senden(200, lernen_post(weg, daten))
+        if weg.startswith("/api/stimme") and stimmen:
+            return self._senden(200, stimmen_post(weg, daten))
         if weg == "/api/tools-erstabfrage" and tools:
             return self._senden(200, tools_erstabfrage(daten))
         if weg == "/api/oeffnen":
@@ -3135,7 +3174,7 @@ class Handler(BaseHTTPRequestHandler):
             skript = f"'nonce-{nonce}'" if nonce else "'none'"
             self.send_header("Content-Security-Policy",
                              f"default-src 'none'; script-src {skript}; style-src 'self' 'unsafe-inline'; "
-                             "img-src 'self' blob: data:; font-src 'self'; connect-src 'self'; "
+                             "img-src 'self' blob: data:; media-src 'self' blob:; font-src 'self'; connect-src 'self'; "
                              "object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'")
         for k, v in (extra or {}).items():
             self.send_header(kopf_sauber(k), kopf_sauber(v))
@@ -3334,7 +3373,7 @@ def web_anfrage(methode, weg, abfrage="", koerper=None, kopf_json="{}"):
 SICHERUNG_MARKE = "me-goos-ta-deutsch-app-sicherung.json"
 SICHERUNG_MAX = 600 * 1024 * 1024
 SICHERUNG_PROJEKT = ("karten.csv", "ideen.json", "lernstand.json", "lernstand.bak.json", "ui_einstellungen.json")
-SICHERUNG_ORDNER = ("bilder", "ideen")
+SICHERUNG_ORDNER = ("bilder", "ideen", "stimmen")     # stimmen/: nur die eigenen Audiodateien (stimmen.name_ok)
 SICHERUNG_DATEN_WEG = {"modelle", "_pakete"}        # große Downloads (Real-ESRGAN, Pakete) lädt das Tool neu
 
 
@@ -3354,10 +3393,17 @@ def _sicherung_dateien():
             continue
         for p in sorted(basis.rglob("*")):
             rel = p.relative_to(basis)
+            if ziel == "projekt/stimmen" and not _stimmen_rel_ok(rel.parts):
+                continue
             if (p.is_file() and not p.is_symlink() and not (set(rel.parts) & SICHERUNG_DATEN_WEG)
                     and p.suffix not in (".part", ".tmp") and "_entfernt" not in rel.parts):
                 aus.append((p, f"{ziel}/{rel.as_posix()}"))
     return aus
+
+
+def _stimmen_rel_ok(teile):
+    """<sprache>/<16 hex>.<endung> – nur so heißen Audiodateien in stimmen/ (Sicherung hin und zurück)."""
+    return bool(stimmen) and len(teile) == 2 and stimmen.sprache_ok(teile[0]) and stimmen.name_ok(teile[1])
 
 
 def app_sicherung():
@@ -3381,6 +3427,8 @@ def _sicherung_ziel(name):
     _, _, ausgabe, _ = pfade()
     if teile[0] == "projekt" and len(teile) == 2 and teile[1] in SICHERUNG_PROJEKT:
         return HIER / teile[1]
+    if teile[:2] == ["projekt", "stimmen"] and not _stimmen_rel_ok(teile[2:]):
+        return None
     if teile[0] == "projekt" and len(teile) >= 3 and teile[1] in SICHERUNG_ORDNER + ("entwuerfe",):
         basis = ausgabe / ".entwuerfe" if teile[1] == "entwuerfe" else HIER / teile[1]
         return basis.joinpath(*teile[2:])
@@ -3414,6 +3462,11 @@ def app_sicherung_einspielen(roh):
     for p, _ in _sicherung_dateien():
         p.unlink(missing_ok=True)
     for ziel, daten in inhalt:
+        if stimmen and ziel.parent.parent == HIER / stimmen.ORDNER_NAME:   # Audiodateien wie beim Einlesen prüfen
+            try:
+                daten = stimmen.pruefe(daten, ziel.name)[1]
+            except stimmen.StimmenFehler:
+                continue
         ziel.parent.mkdir(parents=True, exist_ok=True)
         ziel.write_bytes(daten)
     if _VERLAUF is not None:                                  # ganzer Stand ersetzt → kein Weg zurück
@@ -3568,6 +3621,11 @@ except ImportError:                                      # Datei fehlt (z. B. in
     lernen = None
 
 try:
+    import stimmen  # noqa: E402
+except ImportError:                                      # Datei fehlt (z. B. in einer Testkopie) → ohne eigene Stimme
+    stimmen = None
+
+try:
     import verlauf  # noqa: E402
 except ImportError:                                      # Datei fehlt (z. B. in einer Testkopie) → ohne Rückgängig
     verlauf = None
@@ -3589,17 +3647,21 @@ VERLAUF_WEGE = {"/api/karten": "karten", "/api/karte-speichern": "karte", "/api/
                 "/api/gans-ergaenzen": "gans", "/api/werkzeug": "werkzeug", "/api/idee": "idee", "/api/idee-wort": "idee",
                 "/api/idee-bild": "idee", "/api/idee-weg": "idee_weg", "/api/idee-zurueck": "idee",
                 "/api/idee-aufnehmen": "idee_karte", "/api/wortliste-uebernehmen": "wortliste",
-                "/api/wortliste-rueckgaengig": "wortliste", "/api/import-uebernehmen": "import"}
+                "/api/wortliste-rueckgaengig": "wortliste", "/api/import-uebernehmen": "import",
+                "/api/stimmen-import": "stimmen_import", "/api/stimme-loeschen": "stimme_weg",
+                "/api/stimmen-aufraeumen": "stimmen_aufraeumen"}
 _VERLAUF = None
 _verlauf_lock = threading.Lock()
 
 
 def _verlauf_bereich():
     """Die eigenen Daten, die Rückgängig zurückholen kann: Kartenliste, Bilder (auch _entfernt), Entwürfe von
-    „Bilder vorbereiten“, Ideen samt Bildern, Gänse-Bild der Rückseite."""
+    „Bilder vorbereiten“, Ideen samt Bildern, Gänse-Bild der Rückseite, eigene Aufnahmen (stimmen/)."""
     csv_pfad, bilder, ausgabe, _ = pfade()
     dateien = [csv_pfad] + [GANS_ORDNER / n for n in GANS_NAMEN]
     ordner = [bilder, ausgabe / ".entwuerfe", GANS_ORDNER / "_alt"]
+    if stimmen:
+        ordner.append(stimmen.ordner(csv_pfad.parent))
     if erweiterungen:
         dateien.append(erweiterungen.IDEEN_DATEI)
         ordner.append(erweiterungen.IDEEN_ORDNER)
@@ -3825,11 +3887,12 @@ def lernen_post(weg, daten):
             karten = _lern_karten()
             erg = st.bewerten(karten, str(daten.get("id") or ""), daten.get("note"), daten.get("dauer_ms") or 0)
             if "stapel" in daten:                         # gleich die nächste Karte mitschicken
-                erg["naechste"] = st.naechste_karte(karten, daten.get("stapel") or None, sprache=gl.sprache())
+                erg["naechste"] = _mit_stimme(st.naechste_karte(karten, daten.get("stapel") or None, sprache=gl.sprache()))
             return erg
         if weg == "/api/lernen-rueckgaengig":
             erg = st.rueckgaengig()
-            erg["naechste"] = st.naechste_karte(_lern_karten(), daten.get("stapel") or None, sprache=gl.sprache())
+            erg["naechste"] = _mit_stimme(st.naechste_karte(_lern_karten(), daten.get("stapel") or None,
+                                                            sprache=gl.sprache()))
             return erg
         if weg == "/api/lernen-einstellungen":
             st.einstellungen_setzen(daten.get("werte") if isinstance(daten.get("werte"), dict) else daten)
@@ -3851,6 +3914,95 @@ def lernen_post(weg, daten):
             return dict(lernen_info(), importiert=st.importieren(roh))
     except lernen.LernFehler as e:
         raise _lern_meldung_fehler(e) from None
+    raise Meldung("unbekannt", status=404)
+
+
+# ---------- Eigene Stimme (Tool „stimmen“, stimmen.py): Audiodateien je Wort in <Projektordner>/stimmen ----------
+def _projekt():
+    return pfade()[0].parent
+
+
+def _stimmen_dateien():
+    return stimmen.dateien(_projekt()) if stimmen else []
+
+
+if tools and stimmen:
+    tools.stimmen_dateien = _stimmen_dateien
+    tools.stimmen_ordner = lambda: stimmen.ordner(_projekt())
+
+
+def stimmen_da():
+    """Ist das Tool „Eigene Stimme“ aktiv? (ohne stimmen.py bzw. tools.py nie)"""
+    return bool(stimmen and tools and tools.gibt_es("stimmen") and tool_da("stimmen"))
+
+
+def _stimmen_pruefen():
+    if not stimmen_da():
+        _tool_fehlt("stimmen")
+
+
+def _stimmen_fehler(e):
+    code = "st_" + e.code
+    return Meldung(code if code in TEXTE else "st_ungueltig", status=413 if e.code == "zip_gross" else 400,
+                   mb=stimmen.MAX_ZIP // (1024 * 1024))
+
+
+def _mit_stimme(n):
+    """Lernkarte um die Schlüssel der eigenen Aufnahmen ergänzen: stimme = {de, zs} (nur mit Tool „stimmen“)."""
+    k = n.get("karte") if isinstance(n, dict) else None
+    if k and stimmen_da():
+        k["stimme"] = dict(de=stimmen.schluessel(k.get("de")), zs=stimmen.schluessel(k.get("wort")))
+    return n
+
+
+def stimmen_info():
+    """GET /api/stimmen → was da ist (liste), die Wörter mit Datei, Zahl der Wörter mit/ohne Datei je Sprache."""
+    projekt, zs = _projekt(), zielsprache()
+    da = stimmen.liste(projekt)
+    alle = stimmen.woerter(_lern_karten(), zs)
+    gesamt, fehlen = {"de": 0, zs: 0}, {"de": 0, zs: 0}
+    woerter = []
+    for code, schl, text in alle:
+        gesamt[code] += 1
+        if schl in da.get(code, {}):
+            woerter.append(dict(sprache=code, schluessel=schl, text=text, endung=da[code][schl]))
+        else:
+            fehlen[code] += 1
+    erlaubt = stimmen.gewuenscht(_lern_karten())
+    verwaist = sum(1 for code, d in da.items() for schl in d if schl not in erlaubt.get(code, ()))
+    return dict(liste=da, belegt=stimmen.belegt(projekt), woerter=woerter, gesamt=gesamt, fehlen=fehlen,
+                verwaist=verwaist, zielsprache=zs, sprachen=["de", zs], endungen=list(stimmen.ENDUNGEN),
+                max_mb=stimmen.MAX_DATEI // (1024 * 1024), max_sekunden=stimmen.MAX_SEKUNDEN)
+
+
+def stimmen_wortliste():
+    """GET /api/stimmen-wortliste → CSV (datei;sprache;text;vorhanden) für Deutsch und die Kartensprache, alle Karten."""
+    return stimmen.wortliste_csv(stimmen.wortliste(_lern_karten(), zielsprache(), stimmen.liste(_projekt())))
+
+
+def stimmen_import(roh, name):
+    """POST /api/stimmen-import (rohe Bytes): ZIP (Kennbytes PK) oder eine einzelne Audiodatei (?name=<sprache>/<schlüssel>.<endung>)
+    → Stand wie /api/stimmen + ergebnis {neu, ersetzt, unbekannt, abgelehnt, gruende}."""
+    _stimmen_pruefen()
+    ist_zip = roh[:4] in (b"PK\x03\x04", b"PK\x05\x06") or str(name).lower().endswith(".zip")
+    quelle = roh if ist_zip else [(str(name), roh if len(roh) <= stimmen.MAX_DATEI else None)]
+    try:
+        erg = stimmen.importiere(_projekt(), quelle, stimmen.gewuenscht(_lern_karten()), _sichere)
+    except stimmen.StimmenFehler as e:
+        raise _stimmen_fehler(e) from None
+    return dict(stimmen_info(), ergebnis=erg)
+
+
+def stimmen_post(weg, daten):
+    """POST /api/stimme-loeschen {sprache, schluessel} · /api/stimmen-aufraeumen (verwaiste Dateien löschen)."""
+    _stimmen_pruefen()
+    if weg == "/api/stimme-loeschen":
+        if not stimmen.loesche(_projekt(), daten.get("sprache"), daten.get("schluessel"), _sichere):
+            raise Meldung("st_fehlt", status=404)
+        return dict(stimmen_info(), geloescht=1)
+    if weg == "/api/stimmen-aufraeumen":
+        n = stimmen.aufraeumen(_projekt(), stimmen.gewuenscht(_lern_karten()), _sichere)
+        return dict(stimmen_info(), geloescht=n)
     raise Meldung("unbekannt", status=404)
 
 

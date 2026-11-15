@@ -356,12 +356,32 @@ Algunos extras ocupan mucho espacio o envían algo a internet. Por eso son **her
 | 🎨 Imágenes IA | imágenes realistas de gansos, sin conexión en tu computadora | unos 3,5 GB |
 | 🗣 Idiomas (reverso) | más idiomas para el reverso, cada uno por separado (ver «Más idiomas») | 0–17 MB por idioma |
 | 🎓 Aprender cartas | aprende tus cartas como con Anki (planificador FSRS); instalar aquí significa: activarla; desinstalar borra tu progreso (expórtalo antes si quieres conservarlo) | sin descarga |
+| 🎙 Tu propia voz | elegir voz, velocidad y tono por idioma e importar tus propias grabaciones, que cada 🔊 reproduce primero (ver «Tu propia voz»); instalar aquí significa activarla; desinstalar borra tus grabaciones | sin descarga |
 
 - **La primera vez que abres el programa** pregunta una sola vez qué herramientas descargar de inmediato; no hay nada preseleccionado y «Después» está perfecto.
 - **Herramientas → Herramientas opcionales** muestra cada una con su estado (no instalada · en espera · descargando … % · instalada) y el espacio que ocupa. «Instalar» la descarga por la **fila de espera**; mientras, sigues trabajando.
 - **Si falta una herramienta** cuando la necesitas, el programa pregunta (para qué sirve, tamaño, ubicación, tiempo). «Instalar y seguir» la descarga y después continúa solo con lo que estabas haciendo.
 - **«Desinstalar …»** pregunta antes y borra solo los archivos de la herramienta para liberar espacio. Tus cartas, imágenes e ideas se quedan, y puedes volver a instalarla cuando quieras.
 - Los modelos o un permiso de una versión anterior cuentan como instalados de inmediato. La mejora de imagen guarda además una copia en la carpeta de datos: una versión nueva del programa la conserva sin descargar.
+
+### Tu propia voz
+
+Con la herramienta **🎙 Tu propia voz** (Herramientas → «Tu propia voz» → **Activar**) le das tu toque a cada 🔊, muy a lo ganso. Sin la herramienta todo sigue como antes: lee la voz de tu sistema.
+
+**Ajustar la voz de tu sistema.** Para el alemán y para el idioma de las cartas eliges qué voz lee («Automática» toma la más adecuada), además de la **velocidad** (0,6 a 1,2) y el **tono** (0,8 a 1,2). «▶ Escuchar una muestra» lee una palabra de tus cartas. La elección vale para este dispositivo, porque las voces se llaman distinto en cada sistema; si alguna vez falta la voz elegida, vuelve a leer la automática sin avisos.
+
+**Importar tus grabaciones**, en tres pasos:
+
+1. **Descarga la lista de palabras.** El archivo CSV (`datei;sprache;text;vorhanden`) indica el nombre del archivo para cada palabra de tus cartas (alemán e idioma de las cartas), p. ej. `es/3f2a9c0d1e4b5a67`.
+2. **Crea los archivos.** Graba cada palabra (grabadora del celular, un programa de grabación en la computadora …) y guárdala con exactamente ese nombre más la extensión, p. ej. `es/3f2a9c0d1e4b5a67.mp3`. Se aceptan WAV, MP3, OGG, Opus, M4A y WebM, máximo 2 MB por archivo (WAV máximo 15 segundos). Lo ideal son grabaciones cortas, de uno a tres segundos.
+3. **Suéltalos.** Arrastra la carpeta, archivos sueltos o un ZIP al recuadro de la herramienta, o elígelos. El programa te dice cuántas grabaciones son nuevas, cuántas reemplazaron a una anterior y qué no encajó.
+
+Desde entonces cada 🔊 reproduce primero tu grabación; para las palabras sin grabación sigue leyendo la voz del sistema. El 🔊 aparece entonces también en idiomas para los que tu sistema no tiene ninguna voz. En la lista «Palabras con grabación propia» puedes escuchar cada grabación (▶) o eliminarla (🗑); «Limpiar» quita las grabaciones cuya palabra ya no está en ninguna carta. Todo se puede deshacer con ↶.
+
+- Las grabaciones están en la carpeta `stimmen` junto a `karten.csv` y viajan en el **ZIP del proyecto** (en la app del celular: «Respaldar todo»). Pertenecen al texto, no a la carta: si cambias una palabra, necesita una grabación nueva; mayúsculas, minúsculas y espacios dobles no importan.
+- El programa no convierte nada ni envía nada a internet. Si tu navegador no puede reproducir un formato, esa palabra la lee la voz del sistema.
+- **Usa solo tu propia voz, o una para la que tengas permiso.**
+- **Desinstalar** borra solo tus grabaciones de la carpeta `stimmen` (crea antes un ZIP del proyecto si quieres conservarlas); las cartas y las imágenes se quedan.
 
 ## Más idiomas
 
@@ -469,7 +489,7 @@ Solo se lee en voz alta con voces que trae tu sistema y que funcionan sin intern
 | Android | Configuración → Sistema → Idiomas → Salida de texto a voz → engrane de Servicios de voz de Google → Instalar datos de voz |
 | iPhone/iPad | Configuración → Accesibilidad → Contenido leído → Voces → elige el idioma y descarga una voz |
 
-Si el programa sigue diciendo «todavía no hay voz local», tu navegador solo ofrece esa voz en línea; el programa no la usa a propósito, para cuidar tu privacidad.
+Si el programa sigue diciendo «todavía no hay voz local», tu navegador solo ofrece esa voz en línea; el programa no la usa a propósito, para cuidar tu privacidad. ¿Prefieres oír tu propia voz, o que la voz del sistema hable más despacio? Para eso está la herramienta **«Tu propia voz»** (sección «Tu propia voz» en «Herramientas opcionales»).
 
 ## Estudiar en digital
 

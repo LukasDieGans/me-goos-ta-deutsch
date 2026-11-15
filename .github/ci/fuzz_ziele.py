@@ -3,8 +3,9 @@
 
 Ziele (je eines pro Aufruf): markdown (gans_ui.markdown_html: Hilfe/Leitfäden), wortliste (erweiterungen.wortliste_lesen:
 eingefügte oder gewählte Wortlisten), signatur (signatur.pruefe: .minisig der Releases), update_zip
-(aktualisieren.pruefe_zip: heruntergeladenes Release-ZIP), karten (gans_lernkarten.lies_karten: karten.csv).
-Jedes Ziel darf nur seinen eigenen, verständlichen Fehler werfen (WortlisteFehler, SignaturFehler, UpdateFehler) –
+(aktualisieren.pruefe_zip: heruntergeladenes Release-ZIP), karten (gans_lernkarten.lies_karten: karten.csv), stimmen
+(stimmen.pruefe + stimmen.aus_zip: eingelesene Audiodateien und ZIPs, seit 2.6).
+Jedes Ziel darf nur seinen eigenen, verständlichen Fehler werfen (WortlisteFehler, SignaturFehler, UpdateFehler, StimmenFehler) –
 jede andere Ausnahme ist ein Fund.
 
     python fuzz_ziele.py <Programm-Ordner> --ziel markdown --zeit 60      # Atheris/libFuzzer (CI, fuzz.yml, Linux x64)
@@ -18,10 +19,11 @@ import random
 import sys
 import tempfile
 import traceback
+import wave
 import zipfile
 from pathlib import Path
 
-ZIELE = ("markdown", "wortliste", "signatur", "update_zip", "karten")
+ZIELE = ("markdown", "wortliste", "signatur", "update_zip", "karten", "stimmen")
 
 
 def lade(programm):
@@ -34,6 +36,7 @@ def lade(programm):
     import gans_lernkarten as gl
     import gans_ui
     import signatur
+    import stimmen
 
     def markdown(b):
         gans_ui.markdown_html(b.decode("utf-8", "replace"))
@@ -57,6 +60,24 @@ def lade(programm):
         csv.write_bytes(b)
         gl.lies_karten(csv, bilder)
 
+    def stimme(b):                                       # erstes Byte wählt die Endung; danach dieselben Bytes als ZIP
+        try:
+            stimmen.pruefe(b[1:], "a." + stimmen.ENDUNGEN[b[0] % len(stimmen.ENDUNGEN)] if b else "a.wav")
+        except stimmen.StimmenFehler:
+            pass
+        stimmen.aus_zip(b)
+
+    ton = io.BytesIO()
+    with wave.open(ton, "wb") as w:
+        w.setnchannels(1)
+        w.setsampwidth(2)
+        w.setframerate(8000)
+        w.writeframes(b"\x01\x02" * 400)
+    ton_zip = io.BytesIO()
+    with zipfile.ZipFile(ton_zip, "w", zipfile.ZIP_DEFLATED) as z:
+        z.writestr("de/0123456789abcdef.wav", ton.getvalue())
+        z.writestr("es/fedcba9876543210.mp3", b"ID3\x04" + b"\x00" * 64)
+
     beispiel = (Path(programm) / "beispiel-karten.csv").read_bytes()
     w = aktualisieren.WURZEL_NAME
     roh = io.BytesIO()
@@ -75,6 +96,8 @@ def lade(programm):
         "signatur": (sig, (signatur.SignaturFehler,), [b"inhalt\x00" + sig_start, sig_start]),
         "update_zip": (update_zip, (aktualisieren.UpdateFehler,), [roh.getvalue()]),
         "karten": (karten, (), [beispiel, b"bild;de;es;notiz\nhaus.jpg;Haus;casa;\n"]),
+        "stimmen": (stimme, (stimmen.StimmenFehler,), [b"\x00" + ton.getvalue(), ton_zip.getvalue(), b"\x01ID3\x04" + b"\x00" * 64,
+                                                       b"\x02OggS" + b"\x00" * 64, b"\x04\x00\x00\x00\x20ftypM4A " + b"\x00" * 32]),
     }
 
 
@@ -121,7 +144,7 @@ def zufall(ziele, programm, anzahl, saat=0):
 
 def atheris_lauf(ziel, programm, zeit):
     import atheris                                       # nur in der CI (fuzz.lock), Linux x64
-    with atheris.instrument_imports(include=["gans_ui", "erweiterungen", "signatur", "aktualisieren", "gans_lernkarten"]):
+    with atheris.instrument_imports(include=["gans_ui", "erweiterungen", "signatur", "aktualisieren", "gans_lernkarten", "stimmen"]):
         tabelle = lade(programm)
     f, erlaubt, starts = tabelle[ziel]
     korpus = Path(tempfile.mkdtemp(prefix=f"mgd-korpus-{ziel}-"))

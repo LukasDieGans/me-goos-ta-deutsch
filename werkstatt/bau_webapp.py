@@ -41,7 +41,7 @@ PROGRAMM_DATEIEN = ("beispiel-karten.csv", "LEITFADEN.md", "LEITFADEN_en.md", "L
                     "web_adresse.txt")
 MODELL_KLEIN = 5 * 1024 * 1024                                  # FSRCNN (Kern) ins Programm, Real-ESRGAN nach modelle/
 NUTZERDATEN = re.compile(r"(^|/)(karten(\.bak)?\.csv|ideen\.json|lernstand[^/]*\.json|ui_einstellungen\.json|tools\.json|"
-                         r"uebersetzung(en)?\.json|bilder/|ideen/|ausgabe/|__pycache__/|_alt/|gans_hintergrund\.)")
+                         r"uebersetzung(en)?\.json|bilder/|ideen/|stimmen/|ausgabe/|__pycache__/|_alt/|gans_hintergrund\.)")
 ZEIT = (2026, 1, 1, 0, 0, 0)                                    # feste Zeit in der ZIP → gleicher Inhalt = gleiche Prüfsumme
 HINTERGRUND, VORDERGRUND = "#E8F2FA", "#FFFFFF"                  # Standard-Farben (Gänsehimmel): Startbildschirm, Kopfzeile
 

@@ -12,6 +12,12 @@ version such as 2.5.1). Updating always keeps your cards, images, ideas, setting
   your starting point. Next to the switch you see which offline voices your system has, with a link to the new guide
   section “Installing voices” (Windows, macOS, Linux, Android, iPhone).
 - The study page (`.html`) has the same switch (“🔊 Both languages”, off by default, remembered by the page).
+- New tool “🎙 Your own voice” (nothing to download, off until you activate it): choose voice, speed and pitch per
+  language for your system’s voice, and import your own recordings – get the word list (CSV), name one audio file per
+  word (WAV, MP3, OGG, Opus, M4A or WebM, at most 2 MB), then drop the folder, files or a ZIP into the tool. Every 🔊
+  plays your recording first and falls back to the system voice. Recordings live in the `stimmen` folder next to
+  `karten.csv`, travel in the project ZIP, can be undone with ↶, and are checked on import (file signature, size, WAV
+  rewritten). New guide section “Your own voice”.
 
 ### Changed
 - With the switch off (the default), learning only offers the German 🔊; until 2.5.1 the 🔊 for the card language was

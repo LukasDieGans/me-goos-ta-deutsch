@@ -37,7 +37,7 @@ NOTIZEN = ("UEBERGABE.md", "FORTSETZUNG.md", "ARBEITSSTAND.md", "UMSETZUNGSPLAN.
 # Beispiele, die nie ins Repo dürfen (Nutzerdaten wie aktualisieren.NUTZER, Archive, Proben, Ergebnisse)
 NIE = NOTIZEN + tuple(f"{PROJEKT}/Programm/{n}" for n in (
     "karten.csv", "karten.bak.csv", "ui_einstellungen.json", "ideen.json", "lernstand.json", "lernstand.bak.json",
-    "bilder/gans-x.png", "ideen/gans-x.png", "ausgabe/druck.pdf", "ausgabe/.verlauf/1/karten.csv", "_beispiele/karten.csv",
+    "bilder/gans-x.png", "ideen/gans-x.png", "stimmen/de/0123456789abcdef.wav", "ausgabe/druck.pdf", "ausgabe/.verlauf/1/karten.csv", "_beispiele/karten.csv",
     "assets/gans_hintergrund.png", "assets/_alt/gans.png", "modelle/realesrgan-x4plus.npz", "modelle/realesrgan-x2plus.npz",
     "__pycache__/gans_ui.cpython-313.pyc")) + (
     "Me-Goos-ta-Deutsch-2.4.zip", "Release-2.5/Me-Goos-ta-Deutsch/README.md", "probe/daten/start.json", "ci_ergebnis.json",

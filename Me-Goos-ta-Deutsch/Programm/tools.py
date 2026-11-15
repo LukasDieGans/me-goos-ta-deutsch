@@ -39,6 +39,11 @@ except ImportError:                                  # Testkopie ohne die Datei 
     ki_bild = None
 
 try:
+    import stimmen  # noqa: E402
+except ImportError:                                      # Datei fehlt (z. B. in einer Testkopie) → ohne das Tool
+    stimmen = None
+
+try:
     import sprachen  # noqa: E402
 except ImportError:                                  # Testkopie ohne die Datei → nur Spanisch
     sprachen = None
@@ -361,6 +366,56 @@ TOOLS["lernen"] = dict(
     laden=(), nutzt=(),
     ort=lambda: _ln_dateien()[0].parent if _ln_dateien() else daten_ordner(), da=lambda: False,
     belegt=lambda: sum(_groesse(p) for p in _ln_dateien()), auftrag=lambda teil: None, entferne=_ln_loeschen)
+
+
+# Eigene Stimme: nichts zu laden – Installieren = aktivieren, Deinstallieren löscht nur die eigenen Audiodateien in
+# <Projektordner>/stimmen. gans_ui setzt dafür stimmen_dateien (Funktion → [Pfade]) und stimmen_ordner (→ Pfad).
+stimmen_dateien = None
+stimmen_ordner = None
+
+
+def _st_dateien():
+    return [Path(p) for p in (stimmen_dateien() if stimmen_dateien else [])]
+
+
+def _st_loeschen(teil):
+    weg = []
+    for datei in _st_dateien():
+        if datei.is_file() and not datei.is_symlink():
+            datei.unlink()
+            weg.append(datei)
+    for o in sorted({d.parent for d in weg}) + ([Path(stimmen_ordner())] if stimmen_ordner else []):
+        try:
+            o.rmdir()                                    # nur, wenn jetzt leer (nie rekursiv)
+        except OSError:
+            pass
+    return weg
+
+
+if stimmen:
+    TOOLS["stimmen"] = dict(
+        symbol="🎙", art="aktivierung",
+        titel=L("Eigene Stimme", "Your own voice", "Tu propia voz"),
+        nutzen=L("Gib dem 🔊 deine Note: je Sprache Stimme, Tempo und Tonhöhe wählen – und eigene Aufnahmen einlesen, "
+                 "die dann jedes 🔊 zuerst spielt (Wortliste laden, Audiodateien benennen, ablegen). Gans persönlich. "
+                 "Bitte nur die eigene Stimme oder eine, für die du die Erlaubnis hast.",
+                 "Give the 🔊 your own touch: pick voice, speed and pitch per language – and import your own "
+                 "recordings, which every 🔊 then plays first (get the word list, name the audio files, drop them "
+                 "in). Honkingly personal. Please use only your own voice or one you have permission for.",
+                 "Dale tu toque al 🔊: elige voz, velocidad y tono por idioma, e importa tus propias grabaciones, que "
+                 "cada 🔊 reproduce primero (descarga la lista de palabras, nombra los audios y suéltalos). Muy a lo "
+                 "ganso. Usa solo tu propia voz o una para la que tengas permiso."),
+        groesse=0, platz=1024 * 1024, quelle="WAV · MP3 · OGG · Opus · M4A · WebM",
+        dauer=L("sofort", "instantly", "al instante"),
+        loeschen=L("deine Audiodateien im Ordner „stimmen“ neben karten.csv – erstelle vorher ein Projekt-ZIP, wenn "
+                   "du sie behalten möchtest; deine Karten und Bilder bleiben",
+                   "your audio files in the “stimmen” folder next to karten.csv – create a project ZIP first if you "
+                   "want to keep them; your cards and images stay",
+                   "tus archivos de audio de la carpeta «stimmen» junto a karten.csv; crea antes un ZIP del proyecto "
+                   "si quieres conservarlos. Tus cartas e imágenes se quedan"),
+        laden=(), nutzt=(),
+        ort=lambda: Path(stimmen_ordner()) if stimmen_ordner else daten_ordner(), da=lambda: False,
+        belegt=lambda: sum(_groesse(p) for p in _st_dateien()), auftrag=lambda teil: None, entferne=_st_loeschen)
 
 
 # =============================================================================================

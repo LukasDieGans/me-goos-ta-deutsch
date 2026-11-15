@@ -48,7 +48,7 @@ PFLICHT = ("Programm/starter.py", "Programm/gans_ui.py", "Programm/gans_lernkart
            "Me Goos-ta Deutsch - Windows.cmd", "Me Goos-ta Deutsch - Mac.command", "Me Goos-ta Deutsch - Linux.sh")
 # Eigene Daten im Programmordner – stehen nie im Release und werden beim Ersetzen nie angefasst
 NUTZER = re.compile(r"^Programm/(karten\.csv|karten\.bak\.csv|ui_einstellungen\.json|ideen\.json|lernstand[^/]*\.json"
-                    r"|(bilder|ideen|ausgabe|_beispiele)/.*|assets/gans_hintergrund\.[^/]+|assets/_alt/.*"
+                    r"|(bilder|ideen|stimmen|ausgabe|_beispiele)/.*|assets/gans_hintergrund\.[^/]+|assets/_alt/.*"
                     r"|modelle/realesrgan[^/]*\.npz|.*__pycache__/.*)$", re.I)
 START = {"win": "Me Goos-ta Deutsch - Windows.cmd", "mac": "Me Goos-ta Deutsch - Mac.command",
          "linux": "Me Goos-ta Deutsch - Linux.sh"}

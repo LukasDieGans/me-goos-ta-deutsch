@@ -903,6 +903,16 @@ button.sprach-chip[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--schnabel);
 .lern-einst { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr)); gap: 14px 18px; }
 .lern-einst .breit { grid-column: 1 / -1; }
 .lern-stimmen { margin: 6px 0 0; padding-left: 20px; }
+.stimmen-wahl { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); gap: 12px; margin: 10px 0 4px; }
+.stimmen-sprache { display: flex; flex-direction: column; gap: 8px; padding: 12px 14px; border: 1px solid var(--linie); border-radius: var(--radius); min-width: 0; }
+.stimmen-sprache select, .stimmen-sprache input[type="range"] { width: 100%; }
+.stimmen-schritte { margin: 8px 0; padding-left: 22px; display: flex; flex-direction: column; gap: 10px; }
+.stimmen-ablage { border: 2px dashed var(--linie); border-radius: var(--radius); padding: 12px 14px; }
+.stimmen-ablage.ziel { border-color: var(--wasser); }
+.stimmen-details > summary { cursor: pointer; font-weight: 600; color: var(--nacht-2); }
+.stimmen-liste { list-style: none; margin: 8px 0 0; padding: 0; max-height: 320px; overflow: auto; display: flex; flex-direction: column; gap: 4px; }
+.stimmen-liste li { display: flex; align-items: center; gap: 8px; padding: 4px 8px; border: 1px solid var(--linie); border-radius: var(--radius); }
+.stimmen-liste .wort { flex: 1; min-width: 0; overflow-wrap: anywhere; }
 #doku h2, #doku h3 { scroll-margin-top: 84px; }               /* Sprung zu einem Abschnitt: nicht unter der klebenden Kopfzeile */
 .f input[type=range] { min-height: 32px; padding: 0; border: 0; accent-color: var(--nacht); background: transparent; }
 .lern-frage-reset { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 10px; padding: 10px 12px;
@@ -1253,6 +1263,7 @@ label.knopf input[type="file"] { display: none; }
         <div>
           <section class="flaeche" id="update-bereich" hidden></section>
           <section class="flaeche" id="tools-bereich" hidden></section>
+          <section class="flaeche" id="stimmen-bereich" hidden></section>
           <section class="flaeche"><div class="liste-zeilen" id="werkzeug-liste"></div></section>
           <section class="flaeche" id="ue-einstellungen"></section>
         </div>
@@ -1514,6 +1525,7 @@ de: {
   vl_art_entwurf_weg: "Neues Bild verworfen", vl_art_gans_bild: "Gänse-Bild geändert", vl_art_ki_bild: "KI-Bild übernommen", vl_art_gans: "Gans ergänzt",
   vl_art_werkzeug: "Werkzeug", vl_art_idee: "Idee geändert", vl_art_idee_weg: "Idee entfernt", vl_art_idee_karte: "Idee als Karte aufgenommen",
   vl_art_wortliste: "Wortliste", vl_art_import: "Import", vl_art_aenderung: "Änderung",
+  vl_art_stimmen_import: "Aufnahmen einlesen", vl_art_stimme_weg: "Aufnahme löschen", vl_art_stimmen_aufraeumen: "Aufnahmen aufräumen",
   gans_ergaenzen_knopf: "Gans ergänzen", h_gans_ergaenzen: "Setzt „Gans“ an den Anfang jeder Karte, deren deutscher Text noch keine Gans hat – lässt sich rückgängig machen",
   u_letzter: "Letzter Lauf", u_keiner: "noch keiner", u_erweitern: "Neue Funktionen ergänzen",
   u_erweitern_text: "Neue Schalter werden in gans_lernkarten.py in baue_parser() eingetragen und erscheinen in Schritt 3 automatisch. Eine neue Auswahl bei --nur wird automatisch zu einem Startknopf, neue Werkzeuge entstehen in gans_ui.py mit @werkzeug(…).",
@@ -1700,6 +1712,7 @@ en: {
   vl_art_entwurf_weg: "New image discarded", vl_art_gans_bild: "Goose image changed", vl_art_ki_bild: "AI image taken over", vl_art_gans: "Goose added",
   vl_art_werkzeug: "Tool", vl_art_idee: "Idea changed", vl_art_idee_weg: "Idea removed", vl_art_idee_karte: "Idea turned into a card",
   vl_art_wortliste: "Word list", vl_art_import: "Import", vl_art_aenderung: "Change",
+  vl_art_stimmen_import: "Import recordings", vl_art_stimme_weg: "Delete recording", vl_art_stimmen_aufraeumen: "Tidy up recordings",
   gans_ergaenzen_knopf: "Add the goose", h_gans_ergaenzen: "Puts “Gans” at the start of every card whose German text has no goose yet – can be undone",
   u_letzter: "Last run", u_keiner: "none yet", u_erweitern: "Adding new features",
   u_erweitern_text: "New switches are added in gans_lernkarten.py in baue_parser() and appear in step 3 automatically. A new choice for --nur automatically becomes a start button; new tools are created in gans_ui.py with @werkzeug(…).",
@@ -1886,6 +1899,7 @@ es: {
   vl_art_entwurf_weg: "Imagen nueva descartada", vl_art_gans_bild: "Imagen del ganso cambiada", vl_art_ki_bild: "Imagen de IA adoptada", vl_art_gans: "Ganso añadido",
   vl_art_werkzeug: "Herramienta", vl_art_idee: "Idea cambiada", vl_art_idee_weg: "Idea quitada", vl_art_idee_karte: "Idea convertida en carta",
   vl_art_wortliste: "Lista de palabras", vl_art_import: "Importación", vl_art_aenderung: "Cambio",
+  vl_art_stimmen_import: "Importar grabaciones", vl_art_stimme_weg: "Eliminar grabación", vl_art_stimmen_aufraeumen: "Limpiar grabaciones",
   gans_ergaenzen_knopf: "Añadir el ganso", h_gans_ergaenzen: "Pone «Gans» al principio de cada carta cuyo texto alemán aún no tiene ganso; se puede deshacer",
   u_letzter: "Última ejecución", u_keiner: "ninguna", u_erweitern: "Agregar funciones",
   u_erweitern_text: "Los interruptores nuevos se agregan en gans_lernkarten.py en baue_parser() y aparecen solos en el paso 3. Una opción nueva en --nur se convierte en un botón; las herramientas nuevas se crean en gans_ui.py con @werkzeug(…).",
@@ -2896,6 +2910,33 @@ Object.assign(TXT.de, {
   h_ln_aussprache_beide: "An: 🔊 auch für das Wort auf {zs} – so lernst du mit Deutschkenntnissen ganz (gans!) bequem {zs}. Aus: nur 🔊 Deutsch nach dem Aufdecken.",
   ln_stimme_ok: (s, n) => `✓ ${s}: ${n}`, ln_stimme_de: "Deutsch", ln_stimmen_hilfe: "Stimmen installieren",
   ln_stimme_fehlt: s => `${s}: noch keine lokale Stimme – die Gans zeigt dir gern, wie du eine dazuholst`,
+  /* Eigene Stimme (Tool „stimmen“) */
+  st_tool_titel: "Eigene Stimme", st_aktivieren: "Aktivieren",
+  st_intro: "Gib dem 🔊 deine Note: je Sprache Stimme, Tempo und Tonhöhe wählen – und eigene Aufnahmen einlesen, die jedes 🔊 dann zuerst spielt. Ohne das Tool liest wie bisher die Stimme deines Systems.",
+  st_erlaubnis: "Bitte nur die eigene Stimme verwenden – oder eine, für die du die Erlaubnis hast. Ehrensache unter Gänsen.",
+  st_wahl_titel: "Stimme deines Systems", st_wahl_unter: "Gilt auf diesem Gerät. Tempo und Tonhöhe wirken bei der Stimme des Systems – eigene Aufnahmen klingen so, wie du sie aufgenommen hast.",
+  st_stimme: "Stimme", st_stimme_auto: "Automatisch", st_tempo: "Tempo", st_hoehe: "Tonhöhe", st_probe: "Probe hören",
+  st_stand: (n, m) => `${n} von ${m} Wörtern mit eigener Aufnahme`,
+  st_import_titel: "Eigene Aufnahmen einlesen", st_wortliste: "Wortliste laden (CSV)",
+  st_schritt1: "Wortliste laden – sie nennt für jedes Wort den Dateinamen (Spalte „datei“).",
+  st_schritt2: (mb, s) => `Für jedes Wort eine Audiodatei mit genau diesem Namen erzeugen, z. B. es/3f2a….mp3 – WAV, MP3, OGG, Opus, M4A oder WebM, höchstens ${mb} MB (WAV höchstens ${s} s).`,
+  st_anleitung: "So geht’s im Leitfaden",
+  st_schritt3: "Ordner, Dateien oder eine ZIP hierher ziehen – oder auswählen:", st_schritt3_touch: "Dateien oder eine ZIP auswählen:",
+  st_waehlen: "Dateien oder ZIP wählen", st_ordner: "Ordner wählen",
+  st_laeuft: (n, m) => `Die Gans hört rein … ${n} von ${m}`,
+  st_ergebnis: (neu, ers, unb, abg) => `Eingelesen: ${neu} neu, ${ers} ersetzt${unb ? ` · ${unb} ohne passendes Wort` : ""}${abg ? ` · ${abg} nicht angenommen` : ""} – gans schön stimmig.`,
+  st_abgelehnt_hinweis: (mb, s) => `Nicht angenommen wird, was kein WAV, MP3, OGG, Opus, M4A oder WebM ist, über ${mb} MB groß ist oder als WAV länger als ${s} s dauert.`,
+  st_liste_titel: n => `Wörter mit eigener Aufnahme (${n})`, st_leer: "Noch keine eigene Aufnahme – die Gans ist gespannt auf deine Stimme.",
+  st_geloescht: "Aufnahme gelöscht – ↶ holt sie zurück.",
+  st_aufraeumen: n => `${n} verwaiste Aufnahmen aufräumen`, st_aufgeraeumt: n => `${n} Aufnahmen aufgeräumt – ↶ holt sie zurück.`,
+  ln_stimme_eigen: n => `${n} ${n === 1 ? "Wort" : "Wörter"} mit eigener Aufnahme`,
+  h_st_wahl: "Welche Stimme deines Systems liest diese Sprache? „Automatisch“ nimmt die passendste.",
+  h_st_tempo: "Wie schnell die Stimme des Systems spricht (1 = normal)", h_st_hoehe: "Wie hoch die Stimme des Systems klingt (1 = normal)",
+  h_st_probe: "Liest ein Wort deiner Karten mit dieser Einstellung vor",
+  h_st_wortliste: "Lädt die Liste aller Wörter mit dem Dateinamen für jede Aufnahme (CSV, öffnet in jeder Tabellen-App)",
+  h_st_waehlen: "Audiodateien oder eine ZIP mit den Namen aus der Wortliste auswählen", h_st_ordner: "Einen ganzen Ordner mit Aufnahmen auswählen (Unterordner de, es, … zählen als Sprache)",
+  h_st_anhoeren: "Eigene Aufnahme anhören", h_st_loeschen: "Diese Aufnahme löschen – das Wort liest danach wieder die Stimme des Systems",
+  h_st_aufraeumen: "Löscht Aufnahmen, zu denen es kein Wort mehr auf deinen Karten gibt",
   ln_zaehler: (n, l, w) => `${n} neu · ${l} lernen · ${w} wiederholen`,
   ln_tasten: "Tastatur: Leertaste = Antwort zeigen · 1–4 = bewerten · Strg+Z = rückgängig · Esc = beenden",
   ln_tasten_touch: "Karte antippen = Antwort zeigen · nach rechts wischen = Gut, nach links = Nochmal (↶ nimmt es zurück)",
@@ -2963,6 +3004,33 @@ Object.assign(TXT.en, {
   h_ln_aussprache_beide: "On: 🔊 for the {zs} word too – perfect for learning {zs} when you already speak German. Off: only 🔊 German after revealing. Goose-tastic either way!",
   ln_stimme_ok: (s, n) => `✓ ${s}: ${n}`, ln_stimme_de: "German", ln_stimmen_hilfe: "Installing voices",
   ln_stimme_fehlt: s => `${s}: no local voice yet – the goose happily shows you how to add one`,
+  /* Eigene Stimme (Tool „stimmen“) */
+  st_tool_titel: "Your own voice", st_aktivieren: "Activate",
+  st_intro: "Give the 🔊 your own touch: pick voice, speed and pitch per language – and import your own recordings, which every 🔊 then plays first. Without the tool, your system’s voice reads as before.",
+  st_erlaubnis: "Please use only your own voice – or one you have permission for. A matter of honour among geese.",
+  st_wahl_titel: "Your system’s voice", st_wahl_unter: "Applies on this device. Speed and pitch affect the system voice – your own recordings sound just the way you recorded them.",
+  st_stimme: "Voice", st_stimme_auto: "Automatic", st_tempo: "Speed", st_hoehe: "Pitch", st_probe: "Play a sample",
+  st_stand: (n, m) => `${n} of ${m} words with a recording of your own`,
+  st_import_titel: "Import your own recordings", st_wortliste: "Get the word list (CSV)",
+  st_schritt1: "Get the word list – it names the file for every word (column “datei”).",
+  st_schritt2: (mb, s) => `Create one audio file per word with exactly that name, e.g. es/3f2a….mp3 – WAV, MP3, OGG, Opus, M4A or WebM, at most ${mb} MB (WAV at most ${s} s).`,
+  st_anleitung: "How it works, in the guide",
+  st_schritt3: "Drag a folder, files or a ZIP here – or choose:", st_schritt3_touch: "Choose files or a ZIP:",
+  st_waehlen: "Choose files or ZIP", st_ordner: "Choose folder",
+  st_laeuft: (n, m) => `The goose is listening … ${n} of ${m}`,
+  st_ergebnis: (neu, ers, unb, abg) => `Imported: ${neu} new, ${ers} replaced${unb ? ` · ${unb} without a matching word` : ""}${abg ? ` · ${abg} not accepted` : ""} – sounds honking good.`,
+  st_abgelehnt_hinweis: (mb, s) => `Not accepted: anything that isn’t WAV, MP3, OGG, Opus, M4A or WebM, is larger than ${mb} MB, or is a WAV longer than ${s} s.`,
+  st_liste_titel: n => `Words with a recording of your own (${n})`, st_leer: "No recording of your own yet – the goose can’t wait to hear your voice.",
+  st_geloescht: "Recording deleted – ↶ brings it back.",
+  st_aufraeumen: n => `Tidy up ${n} orphaned recordings`, st_aufgeraeumt: n => `${n} recordings tidied up – ↶ brings them back.`,
+  ln_stimme_eigen: n => `${n} ${n === 1 ? "word" : "words"} with a recording of your own`,
+  h_st_wahl: "Which of your system’s voices reads this language? “Automatic” picks the best match.",
+  h_st_tempo: "How fast the system voice speaks (1 = normal)", h_st_hoehe: "How high the system voice sounds (1 = normal)",
+  h_st_probe: "Reads a word from your cards with this setting",
+  h_st_wortliste: "Downloads the list of all words with the file name for each recording (CSV, opens in any spreadsheet app)",
+  h_st_waehlen: "Choose audio files or a ZIP named as in the word list", h_st_ordner: "Choose a whole folder of recordings (subfolders de, es, … count as the language)",
+  h_st_anhoeren: "Listen to your own recording", h_st_loeschen: "Delete this recording – the system voice reads the word again afterwards",
+  h_st_aufraeumen: "Deletes recordings whose word is no longer on your cards",
   ln_zaehler: (n, l, w) => `${n} new · ${l} learning · ${w} to review`,
   ln_tasten: "Keyboard: space = show answer · 1–4 = rate · Ctrl+Z = undo · Esc = finish",
   ln_tasten_touch: "Tap the card = show answer · swipe right = Good, left = Again (↶ takes it back)",
@@ -3030,6 +3098,33 @@ Object.assign(TXT.es, {
   h_ln_aussprache_beide: "Activado: 🔊 también para la palabra en {zs}, ideal para aprender {zs} si ya sabes alemán. Desactivado: solo 🔊 en alemán al voltear. ¡El ganso te acompaña de las dos formas!",
   ln_stimme_ok: (s, n) => `✓ ${s}: ${n}`, ln_stimme_de: "Alemán", ln_stimmen_hilfe: "Instalar voces",
   ln_stimme_fehlt: s => `${s}: todavía no hay voz local; el ganso te muestra con gusto cómo agregar una`,
+  /* Eigene Stimme (Tool „stimmen“) */
+  st_tool_titel: "Tu propia voz", st_aktivieren: "Activar",
+  st_intro: "Dale tu toque al 🔊: elige voz, velocidad y tono por idioma, e importa tus propias grabaciones, que cada 🔊 reproduce primero. Sin la herramienta, lee la voz de tu sistema como hasta ahora.",
+  st_erlaubnis: "Usa solo tu propia voz, o una para la que tengas permiso. Palabra de ganso.",
+  st_wahl_titel: "La voz de tu sistema", st_wahl_unter: "Vale en este dispositivo. La velocidad y el tono afectan a la voz del sistema; tus grabaciones suenan tal como las grabaste.",
+  st_stimme: "Voz", st_stimme_auto: "Automática", st_tempo: "Velocidad", st_hoehe: "Tono", st_probe: "Escuchar una muestra",
+  st_stand: (n, m) => `${n} de ${m} palabras con grabación propia`,
+  st_import_titel: "Importar tus grabaciones", st_wortliste: "Descargar la lista de palabras (CSV)",
+  st_schritt1: "Descarga la lista de palabras: indica el nombre del archivo para cada palabra (columna «datei»).",
+  st_schritt2: (mb, s) => `Crea un audio por palabra con exactamente ese nombre, p. ej. es/3f2a….mp3: WAV, MP3, OGG, Opus, M4A o WebM, máximo ${mb} MB (WAV máximo ${s} s).`,
+  st_anleitung: "Cómo se hace, en la guía",
+  st_schritt3: "Arrastra aquí una carpeta, archivos o un ZIP, o elige:", st_schritt3_touch: "Elige archivos o un ZIP:",
+  st_waehlen: "Elegir archivos o ZIP", st_ordner: "Elegir carpeta",
+  st_laeuft: (n, m) => `El ganso está escuchando … ${n} de ${m}`,
+  st_ergebnis: (neu, ers, unb, abg) => `Importado: ${neu} nuevas, ${ers} reemplazadas${unb ? ` · ${unb} sin palabra correspondiente` : ""}${abg ? ` · ${abg} no aceptadas` : ""}. ¡Suena de ganso!`,
+  st_abgelehnt_hinweis: (mb, s) => `No se acepta lo que no sea WAV, MP3, OGG, Opus, M4A o WebM, pese más de ${mb} MB o sea un WAV de más de ${s} s.`,
+  st_liste_titel: n => `Palabras con grabación propia (${n})`, st_leer: "Todavía no hay grabaciones propias; el ganso tiene muchas ganas de oír tu voz.",
+  st_geloescht: "Grabación eliminada; ↶ la recupera.",
+  st_aufraeumen: n => `Limpiar ${n} grabaciones huérfanas`, st_aufgeraeumt: n => `${n} grabaciones limpiadas; ↶ las recupera.`,
+  ln_stimme_eigen: n => `${n} ${n === 1 ? "palabra" : "palabras"} con grabación propia`,
+  h_st_wahl: "¿Qué voz de tu sistema lee este idioma? «Automática» elige la más adecuada.",
+  h_st_tempo: "Qué tan rápido habla la voz del sistema (1 = normal)", h_st_hoehe: "Qué tan aguda suena la voz del sistema (1 = normal)",
+  h_st_probe: "Lee una palabra de tus cartas con este ajuste",
+  h_st_wortliste: "Descarga la lista de todas las palabras con el nombre de archivo de cada grabación (CSV, se abre en cualquier hoja de cálculo)",
+  h_st_waehlen: "Elige audios o un ZIP con los nombres de la lista de palabras", h_st_ordner: "Elige una carpeta entera con grabaciones (las subcarpetas de, es, … cuentan como idioma)",
+  h_st_anhoeren: "Escuchar tu grabación", h_st_loeschen: "Eliminar esta grabación; después la palabra la vuelve a leer la voz del sistema",
+  h_st_aufraeumen: "Elimina las grabaciones cuya palabra ya no está en tus cartas",
   ln_zaehler: (n, l, w) => `${n} nuevas · ${l} aprendiendo · ${w} por repasar`,
   ln_tasten: "Teclado: espacio = mostrar respuesta · 1–4 = calificar · Ctrl+Z = deshacer · Esc = terminar",
   ln_tasten_touch: "Toca la carta = mostrar respuesta · desliza a la derecha = Bien, a la izquierda = Otra vez (↶ lo deshace)",
@@ -3649,7 +3744,7 @@ async function verlaufSchritt(zurueck) {
   try {
     const r = await api(zurueck ? "/api/rueckgaengig" : "/api/wiederholen", { methode: "POST", daten: {} });
     uebernehmeKarten(r.karten);
-    await Promise.all([ladeEntwuerfe(), ladeGans(), IDEEN ? ladeIdeen(false) : null]).catch(() => {});
+    await Promise.all([ladeEntwuerfe(), ladeGans(), IDEEN ? ladeIdeen(false) : null, stimmenDa() ? ladeStimmen().then(stimmenBlobsLeeren) : null]).catch(() => {});
     zeige();
     toast(t(zurueck ? "vl_zurueck_ok" : "vl_vor_ok", vlArt(r.art)),
       { aktion: { label: t(zurueck ? "vl_vor" : "vl_zurueck"), fn: () => verlaufSchritt(!zurueck) } });
@@ -3702,7 +3797,7 @@ function zeige() {
   if (name === "beschriften") zeichneEditoren();
   if (name === "erzeugen") { zeichneOptionen(); zeigeBefehl(); }
   if (name === "pruefen") ladeErgebnisse();
-  if (name === "werkzeuge") { zeichneWerkzeuge(); ladeUe().then(zeichneUeEinstellungen); toolsAuffrischen(); }
+  if (name === "werkzeuge") { zeichneWerkzeuge(); ladeUe().then(zeichneUeEinstellungen); toolsAuffrischen().then(ladeStimmen).then(() => { if (ansicht() === "werkzeuge") zeichneStimmen(); }); }
   if (name === "hilfe") ladeHilfe();
   if (name === "ideen") ladeIdeen();
   if (name === "deinstallieren") zeichneDeinstallieren();
@@ -4140,7 +4235,7 @@ document.addEventListener("dragend", () => { innenZieh = false; });
   if (typ === "drop") innenZieh = false;
 }, true));
 let ziehZaehler = 0;
-const ABLAGE_ZIELE = "[data-gansbild], .editor:not([data-neu]) .bilder";      // Gänse-Bild bzw. neues Bild einer Karte
+const ABLAGE_ZIELE = "[data-gansbild], .editor:not([data-neu]) .bilder, [data-st-ablage]";      // Gänse-Bild, neues Bild einer Karte, eigene Aufnahmen
 function gansZiel(e) { return e.target && e.target.closest ? e.target.closest(ABLAGE_ZIELE) : null; }
 window.addEventListener("dragenter", e => { if ([...e.dataTransfer.types].includes("Files")) { ziehZaehler++; $("#ablage").hidden = !!gansZiel(e); } });
 window.addEventListener("dragleave", () => { ziehZaehler = Math.max(0, ziehZaehler - 1); if (!ziehZaehler) { $("#ablage").hidden = true; $$(ABLAGE_ZIELE).forEach(g => g.classList.remove("ziel")); } });
@@ -4153,7 +4248,8 @@ window.addEventListener("drop", e => {
   e.preventDefault(); ziehZaehler = 0; $("#ablage").hidden = true;
   const g = gansZiel(e); $$(ABLAGE_ZIELE).forEach(x => x.classList.remove("ziel"));
   if (!e.dataTransfer.files.length) return;
-  if (g && g.matches("[data-gansbild]")) ladeGansbild(e.dataTransfer.files[0]);
+  if (g && g.matches("[data-st-ablage]")) stimmenAusAblage(e.dataTransfer).then(stimmenEinlesen);
+  else if (g && g.matches("[data-gansbild]")) ladeGansbild(e.dataTransfer.files[0]);
   else if (g) ladeErsatz(g.closest(".editor").dataset.bild, e.dataTransfer.files[0]);
   else neueBilder(e.dataTransfer.files);
 });
@@ -4967,6 +5063,7 @@ async function ladeWerkzeuge() { WERKZEUGE = await api("/api/werkzeuge"); }
 function zeichneWerkzeuge() {
   zeichneUpdateBereich();
   zeichneTools();
+  zeichneStimmen();
   const imToolBereich = x => x.tool && TOOLS && TOOLS.tools.some(z => z.id === x.tool);     // dort statt doppelt
   $("#werkzeug-liste").innerHTML = WERKZEUGE.filter(x => !(AM_HANDY && x.nur_rechner) && !imToolBereich(x)).map(x => `<div class="werkzeug"><div><h3 style="margin:0">${esc(x.titel)}</h3>
     <div class="klein">${esc(x.beschreibung)}</div></div><div class="knoepfe">${x.zustand ? `<span class="pille${x.aktiv ? "" : " ok"}">${esc(x.zustand)}</span>` : ""}
@@ -5070,6 +5167,7 @@ async function toolInstallieren(id, { teil = null, knopf = null, weiter = null }
     } else { toast(r.meldung || t("tool_ist_bereit", x.titel)); if (weiter) setTimeout(weiter, 0); }
     await toolsAuffrischen(); ladeStatus();
     if (id === "lernen" && !r.lauf) lernAktiviert();
+    if (id === "stimmen" && !r.lauf) stimmenAktiviert();
     return true;
   } catch (err) { fehlerToast(err); return false; }
   finally { if (knopf) knopf.disabled = false; }
@@ -5079,6 +5177,7 @@ async function toolDeinstallieren(id, teil = null) {
   catch (err) { fehlerToast(err); }
   await toolsAuffrischen(); ladeStatus(); ladeWerkzeuge().catch(() => {});
   if (id === "uebersetzung") ladeUe().then(zeichneUeEinstellungen);
+  if (id === "stimmen" && !stimmenDa()) { STIMMEN = null; stimmenMeldung = ""; stimmenStoppUndLeeren(); ladeKartenSpaeter(); }
   if (id === "lernen" && !lernDa()) { LERN = null; LS = null; S.lernFilter = ""; S.lernAuswahl = null; lernZahl(); ladeKartenSpaeter(); if (ansicht() === "lernen") zeichneLernen(); }
 }
 async function toolFertig(L) {                             // Download eines Tools beendet (einmal je Auftrag)
@@ -5102,6 +5201,173 @@ function toolHinweiseHTML(x) {                             // Arbeitsspeicher (K
   return h.map(s => `<p class="klein"><b>${esc(s)}</b></p>`).join("");
 }
 const toolFehlt = e => !!(e && e.status === 409 && e.daten && e.daten.code === "tool_fehlt" && e.daten.tool);
+
+/* ===================== Eigene Stimme (Tool „stimmen“): Stimmenwahl, eigene Aufnahmen einlesen, Wiedergabe =====================
+   Server: stimmen.py + /api/stimmen, /api/stimme, /api/stimmen-import, /api/stimmen-wortliste, /api/stimme-loeschen,
+   /api/stimmen-aufraeumen. Die Stimmenwahl gilt je Gerät (localStorage „mgd-stimmen“), die Aufnahmen liegen im Projekt
+   (stimmen/<sprache>/<schlüssel>.<endung>); die Schlüssel je Karte schickt der Server mit (stimme: {de, zs}). */
+let STIMMEN = null, stimmeTon = null, stimmenMeldung = "", stimmenArbeitet = false;
+const STIMME_BLOBS = new Map();                            // "sprache/schlüssel" → blob:-Adresse (vorgeladen, damit 🔊 sofort spielt)
+const ST_STANDARD = { name: "", tempo: 1, hoehe: 1 };
+function stimmenDa() { const x = toolInfo("stimmen"); return !!(x && x.installiert); }
+function stimmenBlobsLeeren() { for (const u of STIMME_BLOBS.values()) URL.revokeObjectURL(u); STIMME_BLOBS.clear(); }
+async function ladeStimmen() {                             // nur bei aktivem Tool (sonst 409 in der Konsole)
+  if (!stimmenDa()) { STIMMEN = null; stimmenBlobsLeeren(); return null; }
+  try { STIMMEN = await api("/api/stimmen"); } catch (e) { STIMMEN = null; }
+  return STIMMEN;
+}
+function stimmeDatei(sprache, schluessel) { return !!(schluessel && STIMMEN && stimmenDa() && STIMMEN.liste[sprache] && STIMMEN.liste[sprache][schluessel]); }
+function stimmenAlle() { try { const w = JSON.parse(localStorage.getItem("mgd-stimmen") || "{}"); return w && typeof w === "object" ? w : {}; } catch (e) { return {}; } }
+function stimmenWahl(code) {                               // {name, tempo, hoehe} – ohne Tool immer der Standard
+  if (!stimmenDa()) return ST_STANDARD;
+  const w = stimmenAlle()[code] || {}, grenze = (x, a, b) => Math.min(b, Math.max(a, Number.isFinite(+x) && +x > 0 ? +x : 1));
+  return { name: typeof w.name === "string" ? w.name : "", tempo: grenze(w.tempo, 0.6, 1.2), hoehe: grenze(w.hoehe, 0.8, 1.2) };
+}
+function stimmenWahlSetzen(code, wert) {
+  const alle = stimmenAlle(); alle[code] = Object.assign({}, stimmenWahl(code), wert);
+  try { localStorage.setItem("mgd-stimmen", JSON.stringify(alle)); } catch (e) { /* egal */ }
+}
+function lokaleStimmen(code) {                             // alle Stimmen des Systems (offline) für die Sprache
+  if (!window.speechSynthesis || !speechSynthesis.getVoices) return [];
+  const ziel = code === "no" ? ["nb", "no", "nn"] : [code];
+  return speechSynthesis.getVoices().filter(v => v.localService !== false && ziel.includes(String(v.lang || "").toLowerCase().replace("_", "-").split("-")[0]));
+}
+function stimmeStopp() {                                   // Laufendes abbrechen: eigene Aufnahme und Stimme des Systems
+  if (stimmeTon) { try { stimmeTon.pause(); } catch (e) { /* egal */ } stimmeTon = null; }
+  if (window.speechSynthesis) speechSynthesis.cancel();
+}
+async function stimmeHolen(sprache, schluessel) {
+  const k = sprache + "/" + schluessel; if (STIMME_BLOBS.has(k)) return STIMME_BLOBS.get(k);
+  const r = await fetch(url("/api/stimme", { sprache, schluessel }), { headers: { "X-GL-Token": TOKEN, "X-GL-Sprache": S.sprache }, credentials: "same-origin" });
+  if (!r.ok) throw new Error(String(r.status));
+  const u = URL.createObjectURL(await r.blob());
+  if (STIMME_BLOBS.size >= 200) stimmenBlobsLeeren();
+  STIMME_BLOBS.set(k, u); return u;
+}
+function stimmeVorladen(sprache, schluessel) { if (stimmeDatei(sprache, schluessel)) stimmeHolen(sprache, schluessel).catch(() => {}); }
+function spieleStimme(sprache, schluessel) {               // eigene Aufnahme abspielen (Promise; scheitert, wenn der Browser das Format nicht kann)
+  const k = sprache + "/" + schluessel, a = new Audio(); stimmeTon = a;
+  const los = u => { if (stimmeTon !== a) return null; a.src = u; return a.play(); };
+  return STIMME_BLOBS.has(k) ? Promise.resolve().then(() => los(STIMME_BLOBS.get(k))) : stimmeHolen(sprache, schluessel).then(los);
+}
+const kannVorlesen = (code, schluessel) => stimmeDatei(code, schluessel) || !!lernStimme(code);   // 🔊 zeigen: Aufnahme oder Stimme da
+function stimmenWahlHTML(code) {
+  const name = code === "de" ? t("ln_stimme_de") : zsName(code), w = stimmenWahl(code), vs = lokaleStimmen(code);
+  const m = STIMMEN ? STIMMEN.gesamt[code] || 0 : 0, n = STIMMEN ? m - (STIMMEN.fehlen[code] || 0) : 0;
+  const regler = (feld, wert, min, max, hover) => `<label class="f"><span>${esc(t("st_" + feld))}: <b data-st-wert>${esc(zahl(wert.toFixed(2)))}</b></span>
+      <input type="range" min="${min}" max="${max}" step="0.05" value="${wert}" data-st-wahl="${feld}" data-code="${esc(code)}" title="${esc(t(hover))}"></label>`;
+  const wahl = vs.length ? `<label class="f"><span>${esc(t("st_stimme"))}</span><select data-st-wahl="name" data-code="${esc(code)}" title="${esc(t("h_st_wahl"))}">
+      <option value="">${esc(t("st_stimme_auto"))}</option>${vs.map(v => `<option value="${esc(v.name)}"${v.name === w.name ? " selected" : ""}>${esc(v.name)}</option>`).join("")}</select></label>
+    ${regler("tempo", w.tempo, 0.6, 1.2, "h_st_tempo")}${regler("hoehe", w.hoehe, 0.8, 1.2, "h_st_hoehe")}
+    <div class="knopfzeile"><button class="knopf klein" type="button" data-st="probe" data-code="${esc(code)}" title="${esc(t("h_st_probe"))}">▶ ${esc(t("st_probe"))}</button></div>`
+    : `<p class="klein" style="margin:0">${esc(t("ln_stimme_fehlt", name))} <a href="#hilfe" data-st="stimmen-hilfe">${esc(t("ln_stimmen_hilfe"))}</a></p>`;
+  return `<div class="stimmen-sprache"><b>${esc(name)}</b>${STIMMEN ? `<span class="klein">🎙 ${esc(t("st_stand", n, m))}</span>` : ""}${wahl}</div>`;
+}
+function zeichneStimmen() {
+  const el = $("#stimmen-bereich"); if (!el) return;
+  const x = toolInfo("stimmen"); el.hidden = !x; if (!x) return;
+  if (!x.installiert) {
+    el.innerHTML = `<h2 style="margin:0">🎙 ${esc(t("st_tool_titel"))}</h2><p>${esc(t("st_intro"))}</p>
+      <div class="knopfzeile"><button class="knopf haupt" type="button" data-st="aktivieren">${esc(t("st_aktivieren"))}</button></div>`;
+    return;
+  }
+  const s = STIMMEN, mb = s ? s.max_mb : 2, sek = s ? s.max_sekunden : 15, woerter = s ? s.woerter : [];
+  const liste = woerter.length ? `<details class="stimmen-details"${woerter.length <= 12 ? " open" : ""}><summary>${esc(t("st_liste_titel", woerter.length))}</summary><ul class="stimmen-liste">${woerter.map(w =>
+      `<li><span class="pille">${esc(w.sprache.toUpperCase())}</span><span class="wort" ${w.sprache === "de" ? 'lang="de"' : zsAttr(w.sprache)}>${esc(w.text)}</span>
+        <button class="knopf klein" type="button" data-st="anhoeren" data-code="${esc(w.sprache)}" data-schluessel="${esc(w.schluessel)}" title="${esc(t("h_st_anhoeren"))}" aria-label="${esc(t("h_st_anhoeren"))}">▶</button>
+        <button class="knopf klein leise gefahr" type="button" data-st="loeschen" data-code="${esc(w.sprache)}" data-schluessel="${esc(w.schluessel)}" title="${esc(t("h_st_loeschen"))}" aria-label="${esc(t("h_st_loeschen"))}">🗑</button></li>`).join("")}</ul></details>`
+    : `<p class="klein">${esc(t("st_leer"))}</p>`;
+  el.innerHTML = `<h2 style="margin:0">🎙 ${esc(t("st_tool_titel"))}</h2><p class="klein">${esc(t("st_erlaubnis"))}</p>
+    <h3>${esc(t("st_wahl_titel"))}</h3><p class="klein" style="margin:0">${esc(t("st_wahl_unter"))}</p>
+    <div class="stimmen-wahl">${["de", ZS.code].filter((c, i, a) => c && a.indexOf(c) === i).map(stimmenWahlHTML).join("")}</div>
+    <h3>${esc(t("st_import_titel"))}</h3>
+    <ol class="stimmen-schritte"><li>${esc(t("st_schritt1"))}<div class="knopfzeile"><a class="knopf" href="/api/stimmen-wortliste" download title="${esc(t("h_st_wortliste"))}">⇩ ${esc(t("st_wortliste"))}</a></div></li>
+      <li>${esc(t("st_schritt2", mb, sek))} <a href="#hilfe" data-st="anleitung">${esc(t("st_anleitung"))}</a></li>
+      <li><div class="stimmen-ablage" data-st-ablage>${esc(t("st_schritt3"))}<div class="knopfzeile" style="margin-top:8px">
+        <label class="knopf" title="${esc(t("h_st_waehlen"))}">📦 ${esc(t("st_waehlen"))}<input type="file" multiple accept=".zip,.wav,.mp3,.ogg,.opus,.m4a,.webm,audio/*,application/zip" data-st-dateien></label>
+        ${BERUEHRUNG ? "" : `<label class="knopf" title="${esc(t("h_st_ordner"))}">📁 ${esc(t("st_ordner"))}<input type="file" webkitdirectory data-st-dateien></label>`}</div></div></li></ol>
+    <p class="klein" data-st-ergebnis aria-live="polite">${esc(stimmenMeldung)}</p>${liste}
+    ${s && s.verwaist ? `<div class="knopfzeile"><button class="knopf klein leise" type="button" data-st="aufraeumen" title="${esc(t("h_st_aufraeumen"))}">🧹 ${esc(t("st_aufraeumen", s.verwaist))}</button></div>` : ""}`;
+  if (S.stimmenZiel) { S.stimmenZiel = false; el.scrollIntoView({ block: "start" }); }
+}
+function stimmenGeaendert() {                              // Aufnahmen anders → Zwischenspeicher leeren, Ansichten nachziehen
+  stimmenBlobsLeeren();
+  if (ansicht() === "werkzeuge") { zeichneStimmen(); ladeTools().then(() => { if (ansicht() === "werkzeuge") zeichneTools(); }); }
+  if (ansicht() === "lernen") {
+    if (LS && LS.n.karte) zeichneSitzung();
+    else { const st = $("[data-ln-stimmen]"); if (st && LERN) st.innerHTML = lernStimmenHTML(); }
+  }
+}
+async function stimmenAktiviert() {                         // Tool eben aktiviert: Stand holen, Karten (mit Schlüsseln) neu laden
+  await ladeStimmen(); await ladeKarten().catch(() => {});
+  if (ansicht() === "werkzeuge") zeichneStimmen();
+  if (ansicht() === "lernen" && !LS) await zeichneLernen();
+}
+async function stimmenAusAblage(dt) {                       // abgelegte Dateien und Ordner (auch verschachtelt) → [File mit .pfad]
+  const eintraege = [...(dt.items || [])].map(i => i.webkitGetAsEntry ? i.webkitGetAsEntry() : null).filter(Boolean);
+  if (!eintraege.length) return [...dt.files];
+  const aus = [];
+  const lies = async (e, pfad) => {
+    if (aus.length >= 20000) return;
+    if (e.isFile) { const f = await new Promise((ok, nein) => e.file(ok, nein)).catch(() => null); if (f) { f.pfad = pfad + f.name; aus.push(f); } return; }
+    const leser = e.createReader();
+    for (;;) {
+      const teil = await new Promise((ok, nein) => leser.readEntries(ok, nein)).catch(() => []);
+      if (!teil.length) break;
+      for (const x of teil) await lies(x, pfad + e.name + "/");
+    }
+  };
+  for (const e of eintraege) await lies(e, "");
+  return aus;
+}
+async function stimmenEinlesen(dateien) {                   // ZIPs und Audiodateien nacheinander zum Server (ein Schritt für Rückgängig)
+  const alle = [...dateien].filter(f => f && f.name && !f.name.startsWith(".") && /\.(zip|wav|mp3|ogg|opus|m4a|webm)$/i.test(f.name));
+  if (stimmenArbeitet) return;
+  if (!stimmenDa()) return brauchtTool("stimmen", () => stimmenEinlesen(alle));
+  const summe = { neu: 0, ersetzt: 0, unbekannt: [...dateien].length - alle.length, abgelehnt: 0 }, gruppe = "stimmen-" + Date.now();
+  const mb = (STIMMEN && STIMMEN.max_mb) || 2, sek = (STIMMEN && STIMMEN.max_sekunden) || 15;
+  const melde = txt => { stimmenMeldung = txt; const m = $("[data-st-ergebnis]"); if (m) m.textContent = txt; };
+  stimmenArbeitet = true;
+  try {
+    for (let i = 0; i < alle.length; i++) {
+      const f = alle[i], zip = /\.zip$/i.test(f.name);
+      melde(t("st_laeuft", i + 1, alle.length));
+      if (!zip && f.size > mb * 1048576) { summe.abgelehnt++; continue; }
+      const name = String(f.pfad || f.webkitRelativePath || f.name).split("/").slice(-2).join("/");
+      const r = await api(url("/api/stimmen-import", { name }), { methode: "POST", roh: f, gruppe });
+      STIMMEN = r; for (const k of ["neu", "ersetzt", "unbekannt", "abgelehnt"]) summe[k] += (r.ergebnis && r.ergebnis[k]) || 0;
+    }
+    melde(t("st_ergebnis", summe.neu, summe.ersetzt, summe.unbekannt, summe.abgelehnt) + (summe.abgelehnt ? " " + t("st_abgelehnt_hinweis", mb, sek) : ""));
+  } catch (e) { melde(""); if (!toolFehlt(e)) fehlerToast(e); }
+  finally { stimmenArbeitet = false; stimmenGeaendert(); }
+}
+$("#stimmen-bereich").addEventListener("click", async e => {
+  const b = e.target.closest("[data-st]"); if (!b) return;
+  const a = b.dataset.st, code = b.dataset.code, schluessel = b.dataset.schluessel;
+  if (a === "aktivieren") return brauchtTool("stimmen", () => {});
+  if (a === "stimmen-hilfe" || a === "anleitung") { e.preventDefault(); S.doc = "leitfaden"; S.hilfeZiel = t(a === "anleitung" ? "st_tool_titel" : "ln_stimmen_hilfe"); location.hash = "hilfe"; return; }
+  if (a === "probe") {
+    const k = S.karten.find(x => String((code === "de" ? x.de : x.es) || "").trim());
+    return vorlesen(k ? (code === "de" ? k.de : k.es) : (code === "de" ? t("ln_stimme_de") : zsName(code)), lernStimme(code), { sprache: code });
+  }
+  if (a === "anhoeren") return vorlesen("", null, { sprache: code, schluessel });
+  try {
+    if (a === "loeschen") { STIMMEN = await api("/api/stimme-loeschen", { methode: "POST", daten: { sprache: code, schluessel } }); toast(t("st_geloescht")); }
+    if (a === "aufraeumen") { STIMMEN = await api("/api/stimmen-aufraeumen", { methode: "POST", daten: {} }); toast(t("st_aufgeraeumt", STIMMEN.geloescht || 0)); }
+    stimmenMeldung = ""; stimmenGeaendert();
+  } catch (err) { if (toolFehlt(err)) return toolsAuffrischen(); fehlerToast(err); }
+});
+$("#stimmen-bereich").addEventListener("input", e => {
+  const f = e.target.closest('input[type="range"][data-st-wahl]'); if (!f) return;
+  const w = $("[data-st-wert]", f.closest("label")); if (w) w.textContent = zahl((+f.value).toFixed(2));
+});
+$("#stimmen-bereich").addEventListener("change", e => {
+  const d = e.target.closest("[data-st-dateien]");
+  if (d) { const fs = [...d.files]; d.value = ""; return stimmenEinlesen(fs); }
+  const f = e.target.closest("[data-st-wahl]"); if (!f) return;
+  stimmenWahlSetzen(f.dataset.code, { [f.dataset.stWahl]: f.dataset.stWahl === "name" ? f.value : +f.value });
+});
+function stimmenStoppUndLeeren() { stimmeStopp(); stimmenBlobsLeeren(); }
 function toolErstHTML() {                                  // Erstabfrage – gemeinsam für Willkommens-Assistent und Fenster
   const offen = (TOOLS ? TOOLS.tools : []).filter(x => !x.installiert);
   const summe = offen.filter(x => TOOL_ERST.has(x.id)).reduce((s, x) => s + x.groesse, 0);
@@ -7174,22 +7440,32 @@ function lernStimme(code) {                                 // Vorlesen nur mit 
   if (!window.speechSynthesis || !speechSynthesis.getVoices) return null;
   const ziel = code === "no" ? ["nb", "no", "nn"] : [code];
   const lang = v => String(v.lang || "").toLowerCase().replace("_", "-");
+  const wahl = stimmenWahl(code).name;                       // Tool „Eigene Stimme“: gewählte Stimme, sonst still die Automatik
+  if (wahl) { const v = lokaleStimmen(code).find(x => x.name === wahl); if (v) return v; }
   for (const r of STIMME_VORZUG[code] || []) {               // de: de-DE → de-AT → de-CH; es: es-MX → es-419 → es-US → es-ES; dann andere
     const v = speechSynthesis.getVoices().find(x => x.localService !== false && lang(x) === r); if (v) return v;
   }
   return speechSynthesis.getVoices().find(v => v.localService !== false && ziel.includes(lang(v).split("-")[0])) || null;
 }
 const lernBeide = () => !!(LERN && LERN.einstellungen && LERN.einstellungen.aussprache_beide === true);   // Schalter „beide Sprachen“
-function lernStimmenHTML() {                                 // je Sprache: ✓ Stimme oder Hinweis + Link zum Leitfaden
+function lernStimmenHTML() {                                 // je Sprache: ✓ Stimme oder Hinweis + Link zum Leitfaden; mit Tool: eigene Aufnahmen
   const zs = (LERN && LERN.sprache) || ZS.code;
+  const eigen = code => { const n = stimmenDa() && STIMMEN ? Object.keys(STIMMEN.liste[code] || {}).length : 0; return n ? ` · 🎙 ${esc(t("ln_stimme_eigen", n))}` : ""; };
   const zeile = (code, name) => { const v = lernStimme(code);
-    return v ? `<li>${esc(t("ln_stimme_ok", name, v.name))}</li>`
-      : `<li>${esc(t("ln_stimme_fehlt", name))} <a href="#hilfe" data-ln="stimmen-hilfe">${esc(t("ln_stimmen_hilfe"))}</a></li>`; };
-  return `<ul class="lern-stimmen klein">${zeile(zs, zsName(zs))}${zeile("de", t("ln_stimme_de"))}</ul>`;
+    return v ? `<li>${esc(t("ln_stimme_ok", name, v.name))}${eigen(code)}</li>`
+      : `<li>${esc(t("ln_stimme_fehlt", name))} <a href="#hilfe" data-ln="stimmen-hilfe">${esc(t("ln_stimmen_hilfe"))}</a>${eigen(code)}</li>`; };
+  return `<ul class="lern-stimmen klein">${zeile(zs, zsName(zs))}${zeile("de", t("ln_stimme_de"))}</ul>${toolInfo("stimmen")
+    ? `<p class="klein" style="margin:6px 0 0"><a href="#werkzeuge" data-ln="stimmen-tool">🎙 ${esc(t("st_tool_titel"))}</a></p>` : ""}`;
 }
-function vorlesen(text, stimme) {                            // gemeinsamer Weg für jedes 🔊 (vorher Laufendes abbrechen)
+function vorlesen(text, stimme, { sprache = "", schluessel = "" } = {}) {   // gemeinsamer Weg für jedes 🔊: eigene Aufnahme → Stimme des Systems
+  stimmeStopp();                                             // vorher Laufendes abbrechen
+  if (stimmeDatei(sprache, schluessel)) { spieleStimme(sprache, schluessel).catch(() => sprich(text, stimme, sprache)); return; }
+  sprich(text, stimme, sprache);
+}
+function sprich(text, stimme, sprache) {                     // Stimme des Systems (offline), mit Tempo und Tonhöhe aus der Stimmenwahl
   if (!stimme || !text || !window.speechSynthesis) return;
-  speechSynthesis.cancel(); const s = new SpeechSynthesisUtterance(text); s.voice = stimme; s.lang = stimme.lang; speechSynthesis.speak(s);
+  const w = stimmenWahl(sprache);
+  speechSynthesis.cancel(); const s = new SpeechSynthesisUtterance(text); s.voice = stimme; s.lang = stimme.lang; s.rate = w.tempo; s.pitch = w.hoehe; speechSynthesis.speak(s);
 }
 if (window.speechSynthesis && speechSynthesis.addEventListener) speechSynthesis.addEventListener("voiceschanged", () => {
   if (ansicht() !== "lernen") return;
@@ -7198,6 +7474,7 @@ if (window.speechSynthesis && speechSynthesis.addEventListener) speechSynthesis.
 });
 async function lernStart(stapel) {
   try {
+    if (stimmenDa() && !STIMMEN) await ladeStimmen();
     const n = await api(url("/api/lernen-karte", { stapel }));
     LS = { stapel, n, gezeigt: false, zeit: Date.now(), gelernt: 0, gesamt: lernRest(n), rueck: !!(LERN && LERN.rueckgaengig) };
     if (ansicht() !== "lernen") location.hash = "#lernen"; else zeichneSitzung();
@@ -7206,13 +7483,14 @@ async function lernStart(stapel) {
 function lernKarteHTML(k) {
   const kk = S.karten.find(x => x.bild === k.bild) || { bild: k.bild, fit: "contain" };
   const bild = `<img class="lern-bild" alt="${esc(k.de || k.bild)}" data-seite="vorn" data-bild="${esc(k.bild)}" src="${vorschauUrl(kk, "vorn")}">`;
-  const stimme = lernBeide() && lernStimme(k.sprache) ? `<button type="button" class="knopf klein" data-ln="vorlesen" title="${esc(t("h_ln_vorlesen"))}" aria-label="${esc(t("h_ln_vorlesen"))}">🔊</button>` : "";
+  const sz = k.stimme || {};                                 // Schlüssel der eigenen Aufnahmen (Tool „stimmen“)
+  const stimme = lernBeide() && kannVorlesen(k.sprache, sz.zs) ? `<button type="button" class="knopf klein" data-ln="vorlesen" title="${esc(t("h_ln_vorlesen"))}" aria-label="${esc(t("h_ln_vorlesen"))}">🔊</button>` : "";
   const kopf = `<div class="lern-kopf-chip">${sprachChip(k.sprache, { aktuell: false })}${stimme}</div>`;
   const wort = `<div class="lern-wort" ${zsAttr(k.sprache)}>${esc(k.wort)}</div>`;
   const vorn = k.richtung === "r" ? `<p class="lern-frage">${esc(t("ln_frage_r"))}</p>${kopf}${wort}` : `<p class="lern-frage">${esc(t("ln_frage_v", zsName(k.sprache)))}</p>${bild}`;
   const zusatz = `${k.notiz ? `<div class="lern-notiz klein">${esc(k.notiz)}</div>` : ""}${k.problem ? `<div class="lern-problem"><p>${esc(t("ln_problem_hinweis"))}</p>
     <button class="knopf klein" type="button" data-ln="bearbeiten" data-bild="${esc(k.bild)}">${esc(t("ln_karte_bearbeiten"))}</button></div>` : ""}`;
-  const deKnopf = LS.gezeigt && k.de && lernStimme("de") ? ` <button type="button" class="knopf klein lern-de-ton" data-ln="vorlesen-de" title="${esc(t("h_ln_vorlesen_de"))}" aria-label="${esc(t("h_ln_vorlesen_de"))}">🔊</button>` : "";
+  const deKnopf = LS.gezeigt && k.de && kannVorlesen("de", sz.de) ? ` <button type="button" class="knopf klein lern-de-ton" data-ln="vorlesen-de" title="${esc(t("h_ln_vorlesen_de"))}" aria-label="${esc(t("h_ln_vorlesen_de"))}">🔊</button>` : "";
   const deZeile = `<div class="lern-de"><span lang="de">${esc(k.de)}</span>${deKnopf}</div>`;
   const hinten = LS.gezeigt ? (k.richtung === "r" ? `${bild}${deZeile}` : `${kopf}${wort}${deZeile}`) + zusatz : "";
   return `<div class="lern-karte${LS.gezeigt ? " gezeigt" : ""}" data-ln-karte${LS.gezeigt ? "" : ` role="button" tabindex="0" aria-label="${esc(t("ln_zeigen"))}"`}>
@@ -7222,6 +7500,7 @@ function zeichneSitzung() {
   const el = $("#lern-inhalt"); if (!el || !LS) return;
   const n = LS.n, k = n.karte;
   if (!k) { el.innerHTML = lernFertigHTML(); return; }
+  if (k.stimme) { stimmeVorladen(k.sprache, k.stimme.zs); stimmeVorladen("de", k.stimme.de); }
   const rest = lernRest(n), gesamt = Math.max(LS.gesamt, LS.gelernt + rest), pro = gesamt ? Math.round(LS.gelernt * 100 / gesamt) : 0, z = n.zaehler;
   const noten = LS.gezeigt ? [1, 2, 3, 4].map(x => `<button class="knopf note n${x}" type="button" data-ln="note" data-note="${x}" title="${esc(t("h_ln_noten"))}">
       <b>${esc(t("ln_n" + x))}</b><span>${esc((k.vorschau_text || {})[x] || "")}</span><kbd>${x}</kbd></button>`).join("")
@@ -7270,7 +7549,7 @@ async function lernRueck() {
     zeichneSitzung(); lernSpaeter(); ladeKartenSpaeter();
   } catch (e) { if (LS && e.status === 409) { LS.rueck = false; zeichneSitzung(); } fehlerToast(e); }
 }
-function lernBeenden() { LS = null; if (window.speechSynthesis) speechSynthesis.cancel(); zeichneLernen(); }
+function lernBeenden() { LS = null; if (window.speechSynthesis) speechSynthesis.cancel(); stimmeStopp(); zeichneLernen(); }
 const ladeKartenSpaeter = entprellt(() => ladeKarten().then(() => { if (ansicht() === "karten") zeichneKarten(); }).catch(() => {}), 900);
 
 $("#lern-inhalt").addEventListener("click", async e => {
@@ -7286,9 +7565,10 @@ $("#lern-inhalt").addEventListener("click", async e => {
   if (a === "beenden") return lernBeenden();
   if (a === "bearbeiten") return oeffneEditor(b.dataset.bild);
   if (a === "vorlesen" && LS && LS.n.karte && lernBeide()) {
-    const k = LS.n.karte; vorlesen(k.wort, lernStimme(k.sprache)); return;
+    const k = LS.n.karte; vorlesen(k.wort, lernStimme(k.sprache), { sprache: k.sprache, schluessel: (k.stimme || {}).zs }); return;
   }
-  if (a === "vorlesen-de" && LS && LS.n.karte && LS.gezeigt) { vorlesen(LS.n.karte.de, lernStimme("de")); return; }
+  if (a === "vorlesen-de" && LS && LS.n.karte && LS.gezeigt) { vorlesen(LS.n.karte.de, lernStimme("de"), { sprache: "de", schluessel: (LS.n.karte.stimme || {}).de }); return; }
+  if (a === "stimmen-tool") { e.preventDefault(); S.stimmenZiel = true; location.hash = "werkzeuge"; return; }
   if (a === "stimmen-hilfe") { e.preventDefault(); S.doc = "leitfaden"; S.hilfeZiel = t("ln_stimmen_hilfe"); location.hash = "hilfe"; return; }
   if (a === "problemkarten") { S.lernFilter = "problem"; S.lernAuswahl = null; location.hash = "#karten"; return; }
   if (a === "stapel-neu") return lernStapelDialog();
@@ -7669,6 +7949,7 @@ async function start() {
   uebersetze();
   try {
     await Promise.all([ladeOptionen(), ladeKarten(), ladeWerkzeuge(), ladeStatus(), ladeEntwuerfe(), ladeGans(), ladeUe(), ladeTools()]);
+    ladeStimmen();
     api("/api/ergebnisse").then(d => { S.namen = d.namen; }).catch(() => {});
     const laufend = await api(url("/api/lauf", { ab: 0 }));
     if (laufend && laufend.id) { if (laufend.laeuft) starteBeobachtung(laufend); else { S.lauf = laufend; S.laufAb = laufend.anzahl; S.laufGemeldet.add(laufend.id); } }

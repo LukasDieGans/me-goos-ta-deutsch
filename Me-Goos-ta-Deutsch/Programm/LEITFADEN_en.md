@@ -356,12 +356,32 @@ Some extras need a lot of space or send something to the internet. That’s why 
 | 🎨 AI images | realistic goose images, offline on your computer | about 3.5 GB |
 | 🗣 Languages (back side) | more languages for the back – each one on its own (see “More languages”) | 0–17 MB per language |
 | 🎓 Learn cards | learn your cards like with Anki (FSRS scheduler) – installing simply means: switching it on; uninstalling deletes your learning progress (export it first if you want to keep it) | no download |
+| 🎙 Your own voice | pick voice, speed and pitch per language and import your own recordings, which every 🔊 plays first (see “Your own voice”) – installing here means: switching it on; uninstalling deletes your recordings | no download |
 
 - **The first time you open the program** it asks once which tools to download right away – nothing is preselected, and “Later” is perfectly fine.
 - **Tools → Optional tools** shows each tool with its state (not installed · waiting · downloading … % · installed) and the space it uses. “Install” downloads it through the **queue** – you keep working meanwhile.
 - **If a tool is missing** when you need it, the program asks (benefit, size, location, time). “Install and carry on” downloads it and then continues with your action by itself.
 - **“Uninstall …”** asks first and then deletes only the tool’s files to free up space. Your cards, images and ideas stay, and you can reinstall the tool any time.
 - Models or a consent from an earlier version count as installed straight away. Image enhancement also keeps a copy in the data folder – a new program version takes it over without a download.
+
+### Your own voice
+
+With the **🎙 Your own voice** tool (Tools tab → “Your own voice” → **Activate**) you give every 🔊 your own touch – honkingly personal. Without the tool everything stays as before: your system’s voice reads.
+
+**Setting your system’s voice.** For German and for the card language you choose which voice reads (“Automatic” picks the best match), plus **speed** (0.6 to 1.2) and **pitch** (0.8 to 1.2). “▶ Play a sample” reads a word from your cards. The choice applies to this device, because voices have different names on every system; if the chosen voice is ever missing, the automatic one quietly takes over.
+
+**Importing your own recordings** – in three steps:
+
+1. **Get the word list.** The CSV file (`datei;sprache;text;vorhanden`) names the file for every word on your cards – German and the card language – e.g. `es/3f2a9c0d1e4b5a67`.
+2. **Create the files.** Record each word (phone voice recorder, a recording program on your computer …) and save it under exactly that name plus extension, e.g. `es/3f2a9c0d1e4b5a67.mp3`. WAV, MP3, OGG, Opus, M4A and WebM are accepted, at most 2 MB per file (WAV at most 15 seconds). Short recordings of one to three seconds are ideal.
+3. **Drop them in.** Drag the folder, single files or a ZIP onto the field in the tool – or choose them. The program tells you how many recordings are new, how many replaced an older one and what didn’t fit.
+
+From then on every 🔊 plays your recording first; for words without one, the system voice keeps reading. The 🔊 then also appears for languages your system has no voice for at all. In the list “Words with a recording of your own” you can listen to each recording (▶) or delete it (🗑); “Tidy up” removes recordings whose word is no longer on any card. Everything can be undone with ↶.
+
+- The recordings live in the `stimmen` folder next to `karten.csv` and travel in the **project ZIP** (in the phone app: “Back up everything”). They belong to the text, not to the card: if you change a word, it needs a new recording – upper and lower case and double spaces don’t matter.
+- The program converts nothing and sends nothing to the internet. If your browser can’t play a format, the system voice reads that word.
+- **Please use only your own voice – or one you have permission for.**
+- **Uninstalling** deletes only your recordings in the `stimmen` folder (create a project ZIP first if you want to keep them); cards and images stay.
 
 ## More languages
 
@@ -469,7 +489,7 @@ Words are only read aloud with voices your system brings along and that work wit
 | Android | Settings → System → Languages → Text-to-speech output → gear of Speech Services by Google → Install voice data |
 | iPhone/iPad | Settings → Accessibility → Spoken Content → Voices → pick the language and download a voice |
 
-If the program still says “no local voice yet”, your browser only offers that voice online – the program deliberately doesn’t use it, for your privacy.
+If the program still says “no local voice yet”, your browser only offers that voice online – the program deliberately doesn’t use it, for your privacy. Would you rather hear your own voice, or have the system voice speak more slowly? That’s what the **“Your own voice”** tool is for (section “Your own voice” under “Tools”).
 
 ## Studying digitally
 

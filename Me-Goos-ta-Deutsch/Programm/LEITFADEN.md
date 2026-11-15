@@ -356,12 +356,32 @@ Manche Extras brauchen viel Platz oder schicken etwas ins Internet. Darum sind s
 | 🎨 KI-Bilder | realistische Gänse-Bilder, offline auf deinem Rechner | ca. 3,5 GB |
 | 🗣 Sprachen (Rückseite) | weitere Sprachen für die Rückseite – jede einzeln (siehe „Weitere Sprachen“) | 0–17 MB je Sprache |
 | 🎓 Karten lernen | deine Karten lernen wie mit Anki (Planer FSRS) – Installieren heißt hier: einschalten; Deinstallieren löscht den Lernstand (vorher exportieren, wenn du ihn behalten willst) | kein Download |
+| 🎙 Eigene Stimme | Stimme, Tempo und Tonhöhe je Sprache wählen und eigene Aufnahmen einlesen, die jedes 🔊 zuerst spielt (siehe „Eigene Stimme“) – Installieren heißt hier: einschalten; Deinstallieren löscht deine Aufnahmen | kein Download |
 
 - **Beim ersten Öffnen** fragt das Programm einmal, welche Tools gleich geladen werden sollen – nichts ist vorausgewählt, „Später“ ist völlig in Ordnung.
 - **Werkzeuge → Tools** zeigt jedes Tool mit Zustand (nicht installiert · wartet · lädt … % · installiert) und belegtem Platz. „Installieren“ lädt es über die **Warteschlange** – du arbeitest nebenbei weiter.
 - **Fehlt ein Tool**, wenn du es brauchst, fragt das Programm nach (Nutzen, Größe, Speicherort, Dauer). „Installieren und weitermachen“ lädt es und macht danach von selbst mit deiner Aktion weiter.
 - **„Deinstallieren …“** löscht nach einer Rückfrage nur die Dateien des Tools und gibt den Platz frei. Deine Karten, Bilder und Ideen bleiben, und das Tool lässt sich jederzeit wieder installieren.
 - Modelle bzw. eine Zustimmung aus einer früheren Version zählen gleich als installiert. Die Bildverbesserung liegt zusätzlich als Kopie im Datenordner – eine neue Programmversion übernimmt sie ohne Download.
+
+### Eigene Stimme
+
+Mit dem Tool **🎙 Eigene Stimme** (Werkzeuge → „Eigene Stimme“ → **Aktivieren**) gibst du jedem 🔊 deine Note – gans persönlich. Ohne das Tool bleibt alles wie bisher: Es liest die Stimme deines Systems.
+
+**Stimme deines Systems einstellen.** Für Deutsch und für die Kartensprache wählst du, welche Stimme liest („Automatisch“ nimmt die passendste), dazu **Tempo** (0,6 bis 1,2) und **Tonhöhe** (0,8 bis 1,2). „▶ Probe hören“ liest ein Wort deiner Karten vor. Die Wahl gilt für dieses Gerät, denn Stimmen heißen auf jedem System anders; fehlt die gewählte Stimme einmal, liest still wieder die automatische.
+
+**Eigene Aufnahmen einlesen** – in drei Schritten:
+
+1. **Wortliste laden.** Die CSV-Datei (`datei;sprache;text;vorhanden`) nennt für jedes Wort deiner Karten – Deutsch und Kartensprache – den Dateinamen, z. B. `es/3f2a9c0d1e4b5a67`.
+2. **Dateien erzeugen.** Nimm jedes Wort auf (Handy-Diktiergerät, Aufnahmeprogramm am Rechner …) und speichere es unter genau diesem Namen samt Endung, z. B. `es/3f2a9c0d1e4b5a67.mp3`. Erlaubt sind WAV, MP3, OGG, Opus, M4A und WebM, je Datei höchstens 2 MB (WAV höchstens 15 Sekunden). Kurze Aufnahmen von ein bis drei Sekunden sind ideal.
+3. **Ablegen.** Zieh den Ordner, einzelne Dateien oder eine ZIP auf das Feld im Tool – oder wähle sie aus. Das Programm meldet, wie viele Aufnahmen neu sind, wie viele eine ältere ersetzt haben und was nicht passte.
+
+Von da an spielt jedes 🔊 zuerst deine Aufnahme; für Wörter ohne Aufnahme liest weiter die Stimme des Systems. Den 🔊 gibt es dann auch für Sprachen, für die dein System gar keine Stimme hat. In der Liste „Wörter mit eigener Aufnahme“ hörst du jede Aufnahme an (▶) oder löschst sie (🗑); „Aufräumen“ entfernt Aufnahmen, deren Wort es auf keiner Karte mehr gibt. Alles lässt sich mit ↶ zurücknehmen.
+
+- Die Aufnahmen liegen im Ordner `stimmen` neben `karten.csv` und reisen im **Projekt-ZIP** mit (in der Handy-App: „Alles sichern“). Sie gehören zum Text, nicht zur Karte: Änderst du ein Wort, braucht es eine neue Aufnahme – Groß- und Kleinschreibung und doppelte Leerzeichen spielen keine Rolle.
+- Das Programm wandelt nichts um und schickt nichts ins Internet. Spielt dein Browser ein Format nicht ab, liest für dieses Wort die Stimme des Systems.
+- **Bitte nur die eigene Stimme verwenden – oder eine, für die du die Erlaubnis hast.**
+- **Deinstallieren** löscht nur deine Aufnahmen im Ordner `stimmen` (vorher ein Projekt-ZIP erstellen, wenn du sie behalten willst); Karten und Bilder bleiben.
 
 ## Weitere Sprachen
 
@@ -469,7 +489,7 @@ Vorgelesen wird nur mit Stimmen, die dein System selbst mitbringt und die ohne I
 | Android | Einstellungen → System → Sprachen → Sprachausgabe (bzw. „Text-in-Sprache“) → Zahnrad der Sprachausgabe von Google → Sprachdaten installieren |
 | iPhone/iPad | Einstellungen → Bedienungshilfen → Gesprochene Inhalte → Stimmen → Sprache wählen und eine Stimme laden |
 
-Zeigt das Programm danach immer noch „noch keine lokale Stimme“, bietet dein Browser die Stimme nur online an – das Programm nutzt sie aus Datenschutzgründen bewusst nicht.
+Zeigt das Programm danach immer noch „noch keine lokale Stimme“, bietet dein Browser die Stimme nur online an – das Programm nutzt sie aus Datenschutzgründen bewusst nicht. Du möchtest lieber deine eigene Stimme hören oder die Stimme des Systems langsamer sprechen lassen? Das geht mit dem Tool **„Eigene Stimme“** (Abschnitt „Eigene Stimme“ unter „Tools“).
 
 ## Digital lernen
 
