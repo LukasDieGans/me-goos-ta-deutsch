@@ -910,6 +910,26 @@ button.sprach-chip[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--schnabel);
 .lern-zustaende .st-jung { background: var(--wasser); } .lern-zustaende .st-sicher { background: var(--gut); }
 .lern-einst { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr)); gap: 14px 18px; }
 .lern-einst .breit { grid-column: 1 / -1; }
+.lern-stimmen { margin: 6px 0 0; padding-left: 20px; }
+.stimmen-wahl { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); gap: 12px; margin: 10px 0 4px; }
+.stimmen-sprache { display: flex; flex-direction: column; gap: 8px; padding: 12px 14px; border: 1px solid var(--linie); border-radius: var(--radius); min-width: 0; }
+.stimmen-sprache select, .stimmen-sprache input[type="range"] { width: 100%; }
+.stimmen-schritte { margin: 8px 0; padding-left: 22px; display: flex; flex-direction: column; gap: 10px; }
+.stimmen-ablage { border: 2px dashed var(--linie); border-radius: var(--radius); padding: 12px 14px; }
+.stimmen-ablage.ziel { border-color: var(--wasser); }
+.stimmen-details > summary { cursor: pointer; font-weight: 600; color: var(--nacht-2); }
+.stimmen-liste { list-style: none; margin: 8px 0 0; padding: 0; max-height: 320px; overflow: auto; display: flex; flex-direction: column; gap: 4px; }
+.stimmen-liste li { display: flex; align-items: center; gap: 8px; padding: 4px 8px; border: 1px solid var(--linie); border-radius: var(--radius); }
+.stimmen-liste .wort { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.stimmen-runde { align-items: flex-end; margin: 8px 0 4px; }
+.stimmen-runde .f { min-width: min(220px, 100%); }
+.aufnahme { display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; }
+.aufnahme img { width: min(100%, 240px); height: auto; border-radius: var(--radius); border: 1px solid var(--linie); }
+.aufnahme-wort { font-size: clamp(26px, 6vw, 40px); font-weight: 700; line-height: 1.2; overflow-wrap: anywhere; }
+.aufnahme-status { min-height: 1.5em; margin: 0; }
+.aufnahme-status.laeuft { color: var(--schlecht); font-weight: 700; }
+.aufnahme .knopfzeile { justify-content: center; }
+#doku h2, #doku h3 { scroll-margin-top: 84px; }               /* Sprung zu einem Abschnitt: nicht unter der klebenden Kopfzeile */
 .f input[type=range] { min-height: 32px; padding: 0; border: 0; accent-color: var(--nacht); background: transparent; }
 .lern-frage-reset { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 10px; padding: 10px 12px;
   border-radius: var(--radius); background: var(--fehler-flaeche); }
@@ -1280,6 +1300,7 @@ label.knopf input[type="file"] { display: none; }
         <div>
           <section class="flaeche" id="update-bereich" hidden></section>
           <section class="flaeche" id="tools-bereich" hidden></section>
+          <section class="flaeche" id="stimmen-bereich" hidden></section>
           <section class="flaeche"><div class="liste-zeilen" id="werkzeug-liste"></div></section>
           <section class="flaeche" id="ue-einstellungen"></section>
         </div>
@@ -1293,6 +1314,7 @@ label.knopf input[type="file"] { display: none; }
       <div class="reiter" role="tablist">
         <button role="tab" data-doc="leitfaden" aria-selected="true" data-t="tab_leitfaden" data-t-attr="title:h_tab_leitfaden"></button>
         <button role="tab" data-doc="spec" aria-selected="false" data-t="tab_spec" data-t-attr="title:h_tab_spec"></button>
+        <button role="tab" data-doc="stimmen" aria-selected="false" data-t="tab_stimmen" data-t-attr="title:h_tab_stimmen"></button>
         <button role="tab" data-doc="ueber" aria-selected="false" data-t="tab_ueber" data-t-attr="title:h_tab_ueber"></button>
       </div>
       <article class="flaeche doku" id="doku"></article>
@@ -1400,6 +1422,12 @@ label.knopf input[type="file"] { display: none; }
   <div class="fenster" role="dialog" aria-modal="true" aria-labelledby="lern-dlg-titel">
     <div class="fenster-kopf"><h2 id="lern-dlg-titel"></h2><button class="knopf klein leise" data-zu data-t="schliessen"></button></div>
     <div id="lern-dlg-inhalt"></div>
+  </div>
+</div>
+<div class="overlay" id="aufnahme-fenster" hidden data-dialogfenster>
+  <div class="fenster schmal" role="dialog" aria-modal="true" aria-labelledby="aufnahme-titel">
+    <div class="fenster-kopf"><h2 id="aufnahme-titel"></h2><button class="knopf klein leise" data-zu data-t="schliessen"></button></div>
+    <div id="aufnahme-inhalt"></div>
   </div>
 </div>
 <div class="overlay" id="farben-fenster" hidden data-dialogfenster>
