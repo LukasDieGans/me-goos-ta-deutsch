@@ -6,6 +6,8 @@ version such as 2.5.1). Updating always keeps your cards, images, ideas, setting
 
 ## [Unreleased]
 
+## [2.6] – 2026-11-18
+
 ### Added
 - Learning: new switch “🔊 Pronunciation in both languages” in the learning settings (off by default). When it is on, the
   word in the card language gets its own 🔊 too, so you can also learn Spanish or another card language with German as
@@ -140,7 +142,8 @@ version such as 2.5.1). Updating always keeps your cards, images, ideas, setting
 ### Changed
 - Updating keeps your own cards: the example cards ship as `beispiel-karten.csv` and `beispiel-bilder/`.
 
-[Unreleased]: https://github.com/lukasdiegans/me-goos-ta-deutsch/compare/v2.5.1...HEAD
+[Unreleased]: https://github.com/lukasdiegans/me-goos-ta-deutsch/compare/v2.6...HEAD
+[2.6]: https://github.com/lukasdiegans/me-goos-ta-deutsch/compare/v2.5.1...v2.6
 [2.5.1]: https://github.com/lukasdiegans/me-goos-ta-deutsch/compare/v2.5...v2.5.1
 [2.5]: https://github.com/lukasdiegans/me-goos-ta-deutsch/releases/tag/v2.5
 [2.4]: https://github.com/lukasdiegans/me-goos-ta-deutsch/releases/tag/v2.4

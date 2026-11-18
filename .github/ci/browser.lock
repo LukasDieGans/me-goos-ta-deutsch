@@ -1,6 +1,6 @@
 # Me Goos-ta Deutsch - feste Paketfassungen mit SHA-256: CI: Playwright fuer den Browser-Test (Jobs browser: Linux x64, macOS Intel)
 # pip install --require-hashes --only-binary=:all: -r browser.lock
-# Gebaut von bau_lock.py (Arbeitsordner) aus: playwright==1.63.0 | PyPI-Stand 2026-11-10
+# Gebaut von bau_lock.py (Arbeitsordner) aus: playwright==1.63.0 | PyPI-Stand 2026-11-18
 # Python 3.13 (CPython) | macOS Intel, Linux x64 (glibc)
 # Nicht von Hand aendern - neu bauen: python bau_lock.py [--neueste]
 

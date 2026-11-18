@@ -1,6 +1,6 @@
 # Me Goos-ta Deutsch - feste Paketfassungen mit SHA-256: Ersatz-Satz "bewaehrt" (nur Windows, wenn Smart App Control sperrt)
 # pip install --require-hashes --only-binary=:all: -r pakete-bewaehrt.lock
-# Gebaut von bau_lock.py (Arbeitsordner) aus: reportlab>=4.0,<5, pillow>=13,<14, numpy>=2.1,<2.3, pypdfium2>=4.30,<5 | PyPI-Stand 2026-11-10
+# Gebaut von bau_lock.py (Arbeitsordner) aus: reportlab>=4.0,<5, pillow>=13,<14, numpy>=2.1,<2.3, pypdfium2>=4.30,<5 | PyPI-Stand 2026-11-18
 # Python 3.13 (CPython) | Windows x64
 # Nicht von Hand aendern - neu bauen: python bau_lock.py [--neueste]
 

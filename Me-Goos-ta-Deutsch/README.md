@@ -27,15 +27,15 @@ program counts.
 **Already have it?** From version 2.4 on, **Tools → “Keep the program up to date”** finds a new version and installs it
 in the same folder – no second folder, your cards stay.
 
-## New in 2.5.1
+## New in 2.6
 
-**Security update** – Pillow 13 closes the vulnerabilities of the image library published in October
-2026; an existing installation fetches the new packages on its first start of this version (internet needed once) ·
-new installations get Python 3.13.17 (Windows) or 3.13.18 (macOS, Linux) · a damaged update ZIP and unusual card lists
-(old encodings, Mac line endings, very long picture names) now end with a friendly message instead of an error · the
-automatic checks on GitHub install every helper with checksums, run on fixed system versions and include fuzzing.
-Version 2.5 brought signed releases, pinned packages and all the source code on GitHub. Updating keeps your cards,
-ideas, settings and learning progress.
+**Your own voice** – the new tool “🎙 Your own voice” (nothing to download, off until you activate it): choose voice,
+speed and pitch per language, record every word right in the program (🎙 in the card editor or the recording round
+through all words) or import recordings made elsewhere; every 🔊 plays your recording first, and your recordings travel
+along in the study page and the Anki package · **pronunciation in both languages** while learning (switch, off by
+default), so you can also learn the card language with German as your starting point · new guide “Voice with other
+programs” in the Help tab (free programs only). Version 2.5.1 was a security update (Pillow 13). Updating keeps your
+cards, ideas, settings and learning progress.
 
 Earlier versions: see `CHANGELOG.md`.
 
