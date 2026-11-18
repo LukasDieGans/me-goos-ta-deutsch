@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Me Goos-ta Deutsch">
+  <title>Me Goos-ta Deutsch</title>
+  <defs>
+    <clipPath id="mgd-decke"><path d="M118 304 C186 268 300 264 352 296 L354 424 C292 442 190 444 126 424 Z"/></clipPath>
+    <clipPath id="mgd-krone"><path d="M318 134 C318 66 338 38 368 38 C398 38 418 66 418 134 Z"/></clipPath>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="#BFDDF2"/>
+  <!-- Füße -->
+  <path d="M200 458 L190 490 M266 460 L274 490" stroke="#F6A94B" stroke-width="16" stroke-linecap="round"/>
+  <path d="M172 492 H210 M256 492 H294" stroke="#F6A94B" stroke-width="12" stroke-linecap="round"/>
+  <!-- Körper, Schwanz, Hals, Kopf -->
+  <path d="M84 344 C54 322 38 294 44 272 C72 276 104 292 128 310 Z" fill="#fff"/>
+  <ellipse cx="228" cy="372" rx="168" ry="100" fill="#fff"/>
+  <path d="M300 312 C292 252 306 212 332 182 L402 198 C380 228 370 268 382 324 Z" fill="#fff"/>
+  <circle cx="368" cy="184" r="54" fill="#fff"/>
+  <path d="M110 392 C150 430 250 446 330 430" stroke="#D6E6F3" stroke-width="10" fill="none" stroke-linecap="round"/>
+  <!-- Sarape (bunt gestreifte Decke) über dem Rücken -->
+  <g clip-path="url(#mgd-decke)">
+    <rect x="110" y="250" width="16" height="200" fill="#D7263D"/>
+    <rect x="126" y="250" width="10" height="200" fill="#F7D046"/>
+    <rect x="136" y="250" width="22" height="200" fill="#1E9E5A"/>
+    <rect x="158" y="250" width="7"  height="200" fill="#FFFFFF"/>
+    <rect x="165" y="250" width="22" height="200" fill="#E4007C"/>
+    <rect x="187" y="250" width="10" height="200" fill="#F6A94B"/>
+    <rect x="197" y="250" width="24" height="200" fill="#1FA2B8"/>
+    <rect x="221" y="250" width="7"  height="200" fill="#1B2D4F"/>
+    <rect x="228" y="250" width="24" height="200" fill="#F7D046"/>
+    <rect x="252" y="250" width="10" height="200" fill="#D7263D"/>
+    <rect x="262" y="250" width="22" height="200" fill="#1E9E5A"/>
+    <rect x="284" y="250" width="7"  height="200" fill="#FFFFFF"/>
+    <rect x="291" y="250" width="22" height="200" fill="#E4007C"/>
+    <rect x="313" y="250" width="10" height="200" fill="#F6A94B"/>
+    <rect x="323" y="250" width="40" height="200" fill="#D7263D"/>
+  </g>
+  <!-- Fransen -->
+  <path d="M134 428 l-3 18 M156 432 l-2 18 M180 435 l-1 18 M204 437 v18 M228 438 v18 M252 437 v18 M276 436 l1 18 M300 433 l2 18 M324 429 l3 18 M346 425 l3 17"
+        stroke="#D7263D" stroke-width="5" stroke-linecap="round" fill="none"/>
+  <!-- Schnabel und Auge -->
+  <path d="M412 170 C446 166 474 176 484 190 C474 204 448 210 412 204 Z" fill="#F6A94B"/>
+  <path d="M414 190 C440 192 462 192 478 190" stroke="#DE8A2B" stroke-width="4" stroke-linecap="round" fill="none"/>
+  <circle cx="386" cy="176" r="10" fill="#1B2D4F"/>
+  <circle cx="389" cy="173" r="3" fill="#fff"/>
+  <!-- Sombrero -->
+  <g transform="rotate(-8 368 130)">
+    <ellipse cx="368" cy="138" rx="136" ry="31" fill="#E7A93C"/>
+    <ellipse cx="368" cy="132" rx="130" ry="26" fill="#F2C462"/>
+    <ellipse cx="368" cy="132" rx="114" ry="21" fill="none" stroke="#1E9E5A" stroke-width="4"/>
+    <ellipse cx="368" cy="132" rx="100" ry="17" fill="none" stroke="#D7263D" stroke-width="5" stroke-dasharray="12 8"/>
+    <path d="M318 134 C318 66 338 38 368 38 C398 38 418 66 418 134 Z" fill="#F2C462"/>
+    <g clip-path="url(#mgd-krone)">
+      <rect x="300" y="102" width="140" height="20" fill="#D7263D"/>
+      <path d="M300 112 l10 -8 l10 8 l10 -8 l10 8 l10 -8 l10 8 l10 -8 l10 8 l10 -8 l10 8 l10 -8 l10 8 l10 -8"
+            stroke="#F7D046" stroke-width="4" fill="none" stroke-linejoin="round"/>
+      <path d="M342 52 C334 72 332 94 334 102" stroke="#E7A93C" stroke-width="6" fill="none" stroke-linecap="round"/>
+    </g>
+    <circle cx="246" cy="156" r="9" fill="#D7263D"/>
+    <circle cx="274" cy="163" r="9" fill="#1E9E5A"/>
+    <circle cx="462" cy="163" r="9" fill="#1E9E5A"/>
+    <circle cx="490" cy="156" r="9" fill="#D7263D"/>
+  </g>
+</svg>

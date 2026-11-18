@@ -1,0 +1,52 @@
+# Me Goos-ta Deutsch – Fuzzing (seit 2.5.1 G03): Atheris (Apache-2.0, libFuzzer für Python, fest per fuzz.lock) füttert
+# die Eingänge, die fremde Daten lesen, mit abgewandelten Daten – Hilfe-Markdown, Wortlisten, Signaturen der Releases,
+# Update-ZIP, karten.csv (.github/ci/fuzz_ziele.py). Jede unerwartete Ausnahme ist ein Fund (Job rot, Eingabe als
+# Artefakt). Wöchentlich auf main, bei jedem CI-Lauf auf ci und von Hand. Keine Secrets, nur Lesen.
+name: Fuzzing
+
+on:
+  push:
+    branches: [ci]
+  schedule:
+    - cron: "17 4 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fuzz-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  fuzz:
+    name: fuzz-${{ matrix.ziel }}
+    runs-on: ubuntu-26.04
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        ziel: [markdown, wortliste, signatur, update_zip, karten, stimmen]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.13"
+      - name: Programm-Pakete (pakete.lock) und Atheris (fuzz.lock), beide mit Prüfsummen
+        run: |
+          python -m pip install -q --require-hashes --only-binary=:all: -r Me-Goos-ta-Deutsch/Programm/pakete.lock
+          python -m pip install -q --require-hashes --only-binary=:all: -r .github/ci/fuzz.lock
+      - name: Fuzzing (4 Minuten je Ziel)
+        run: python .github/ci/fuzz_ziele.py Me-Goos-ta-Deutsch/Programm --ziel ${{ matrix.ziel }} --zeit 240
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: failure()
+        with:
+          name: fund-${{ matrix.ziel }}
+          path: |
+            crash-*
+            timeout-*
+            oom-*
+          retention-days: 14
+          if-no-files-found: ignore

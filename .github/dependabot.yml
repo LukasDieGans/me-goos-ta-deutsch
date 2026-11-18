@@ -1,0 +1,16 @@
+# Me Goos-ta Deutsch – Dependabot (seit 2.5 G05): nur GitHub Actions, wöchentlich. Jeder Vorschlag kommt als Pull Request
+# und läuft durch den vollen Frischtest (tests.yml, pull_request auf main). Python-Pakete nicht hier: die festen Fassungen
+# mit Prüfsummen (Programm/pakete*.lock) baut werkstatt/bau_lock.py; neue Fassungen meldet der Job „neueste“ der
+# Release-Prüfung, Sicherheitslücken die Dependabot-Warnungen des Repositorys.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    commit-message:
+      prefix: CI
+    groups:
+      actions:
+        patterns: ["*"]
