@@ -2729,6 +2729,19 @@ class _Kopf(dict):
         return super().get(str(k).lower(), vorgabe)
 
 
+def _koerper_abholen(koerper, kopf):
+    """Ablehnung vor dem Lesen: einen kleinen Anfragekörper (≤ 64 KB) aus dem Strom abholen, damit Windows die
+    Verbindung beim Schließen nicht zurücksetzt (die Antwort käme sonst nicht an). Bytes (Web-App) brauchen nichts."""
+    if not hasattr(koerper, "read"):
+        return
+    try:
+        n = int((kopf or {}).get("Content-Length") or 0)
+        if 0 < n <= 65536:
+            koerper.read(n)
+    except (ValueError, OSError):
+        pass
+
+
 def _nur_rechner_text():
     """403-Text für Wege, die nur am Rechner gehen: Handy-Zugang wie bisher, in der Web-App eigener Text."""
     if erweiterungen and not im_browser():
@@ -2772,6 +2785,7 @@ def verarbeite(methode, weg, abfrage="", koerper=b"", kopf=None, am_handy=False)
     post = methode == "POST"
     try:
         if post and a.am_handy and weg in NUR_RECHNER_WEGE:
+            _koerper_abholen(koerper, a.headers)              # wie Handler._ablehnen (sonst WinError 10053, Frischtest G08)
             a._fehler(403, _nur_rechner_text())
         elif post and weg in VERLAUF_WEGE and _verlauf():      # ändert eigene Daten → ein Schritt für Rückgängig
             with _verlauf().schritt(VERLAUF_WEGE[weg], a.headers.get("X-GL-Gruppe") or ""):

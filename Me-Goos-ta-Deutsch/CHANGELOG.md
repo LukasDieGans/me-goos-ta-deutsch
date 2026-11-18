@@ -35,6 +35,10 @@ version such as 2.5.1). Updating always keeps your cards, images, ideas, setting
   always shown. Switch it on to get it back.
 - Spanish voices: a voice from Mexico (es-MX) is preferred, then Latin America, the USA and Spain.
 
+### Fixed
+- Phone access: a button that only works on the computer (quit, uninstall, phone switch) now always shows its friendly
+  “only on the computer” answer on the phone; on Windows the connection was occasionally reset instead.
+
 ## [2.5.1] – 2026-11-10
 
 ### Security
