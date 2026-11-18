@@ -378,6 +378,12 @@ With the **🎙 Your own voice** tool (Tools tab → “Your own voice” → **
 
 From then on every 🔊 plays your recording first; for words without one, the system voice keeps reading. The 🔊 then also appears for languages your system has no voice for at all. In the list “Words with a recording of your own” you can listen to each recording (▶) or delete it (🗑); “Tidy up” removes recordings whose word is no longer on any card. Everything can be undone with ↶.
 
+**Record it yourself** – no detour via other programs: next to every word field in the card editor and in the tool’s word lists there is a **🎙**. Click it, say the word, listen to it and choose **Keep**, **Again** or (for an existing recording) **Delete**. The **recording round** in the tool goes through all words without a recording one after the other – for German, the card language or both: picture and word appear large, the space bar starts and stops, Enter keeps, and on comes the next word; “End round” works at any time. The program trims silence at the start and end, evens out the volume and saves each recording as WAV (at most 10 seconds); a whole round is taken back with a single ↶. The microphone only runs during a recording. Recording works on the computer and in the phone app; over Wi-Fi access the browser doesn’t offer the microphone. If you have only just activated the tool, reload the page once.
+
+**Taking them along.** When you generate the digital flashcards, your recordings travel along: the study page plays them at every 🔊 (even without a system voice), the Anki package contains them as sound on the word. Below the format you see how many there are and roughly how big they get; with **“Leave out your own recordings”** the study page and package stay as before. If the study page would grow beyond 25 MB, the program asks first.
+
+**With other programs.** Ready-made voices, a cloned voice of your own or recordings with Audacity: the guide is in Help on the tab **“🎙 Voice with other programs”** – with licence, size and date per program, free programs only.
+
 - The recordings live in the `stimmen` folder next to `karten.csv` and travel in the **project ZIP** (in the phone app: “Back up everything”). They belong to the text, not to the card: if you change a word, it needs a new recording – upper and lower case and double spaces don’t matter.
 - The program converts nothing and sends nothing to the internet. If your browser can’t play a format, the system voice reads that word.
 - **Please use only your own voice – or one you have permission for.**

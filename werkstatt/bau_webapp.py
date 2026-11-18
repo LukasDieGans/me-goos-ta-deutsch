@@ -38,7 +38,7 @@ REPORTLAB = ("reportlab", "5.0.1", "1c36e6bb0e71780c72331eba60da7f602e8d4389a872
 MODULE_WEG = {"starter.py", "ki_bild.py", "aktualisieren.py", "signatur.py"}   # App aktualisiert sich über ihren Service Worker
 PROGRAMM_ORDNER = ("assets", "beispiel-bilder", "schrift", "vorlagen")
 PROGRAMM_DATEIEN = ("beispiel-karten.csv", "LEITFADEN.md", "LEITFADEN_en.md", "LEITFADEN_es.md", "SPEC.md", "DRITTLIZENZEN.md",
-                    "web_adresse.txt")
+                    "STIMMEN_EXTERN.md", "STIMMEN_EXTERN_en.md", "STIMMEN_EXTERN_es.md", "web_adresse.txt")
 MODELL_KLEIN = 5 * 1024 * 1024                                  # FSRCNN (Kern) ins Programm, Real-ESRGAN nach modelle/
 NUTZERDATEN = re.compile(r"(^|/)(karten(\.bak)?\.csv|ideen\.json|lernstand[^/]*\.json|ui_einstellungen\.json|tools\.json|"
                          r"uebersetzung(en)?\.json|bilder/|ideen/|stimmen/|ausgabe/|__pycache__/|_alt/|gans_hintergrund\.)")

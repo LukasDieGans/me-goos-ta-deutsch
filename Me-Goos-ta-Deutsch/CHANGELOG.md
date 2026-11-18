@@ -18,6 +18,15 @@ version such as 2.5.1). Updating always keeps your cards, images, ideas, setting
   plays your recording first and falls back to the system voice. Recordings live in the `stimmen` folder next to
   `karten.csv`, travel in the project ZIP, can be undone with ↶, and are checked on import (file signature, size, WAV
   rewritten). New guide section “Your own voice”.
+- Your own voice: record words right in the program – 🎙 next to each word in the card editor and in the tool, or the
+  recording round that goes through all words without a recording (picture and big word, space bar = start/stop,
+  Enter = keep). Silence is trimmed and the volume evened out; the microphone only runs while recording and is only
+  allowed with the tool active (on the computer and in the phone app).
+- Your recordings travel along in the study page and the Anki package (switch “Leave out your own recordings”;
+  without recordings both stay exactly as before).
+- New guide “Voice with other programs” (Help tab, German/English/Spanish): record with Audacity or a phone, ready-made
+  voices with Piper, cloning with Chatterbox Multilingual or Pocket TTS, your own Piper model, voice conversion – free
+  programs only, with licence and size.
 
 ### Changed
 - With the switch off (the default), learning only offers the German 🔊; until 2.5.1 the 🔊 for the card language was

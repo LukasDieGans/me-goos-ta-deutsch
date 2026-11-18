@@ -17,7 +17,8 @@ p = tg.kopiere_projekt(ARBEIT / "projekt")
 for f in QUELLE.glob("*.py"):
     if not (p / f.name).exists():
         shutil.copy2(f, p / f.name)
-for name in ("web_adresse.txt", "DRITTLIZENZEN.md"):                      # Adresse der Handy-App (seit G14)
+for name in ("web_adresse.txt", "DRITTLIZENZEN.md",                       # Adresse der Handy-App (seit G14)
+             "STIMMEN_EXTERN.md", "STIMMEN_EXTERN_en.md", "STIMMEN_EXTERN_es.md"):   # Anleitung Eigene Stimme (2.6)
     if (QUELLE / name).exists():
         shutil.copy2(QUELLE / name, p / name)
 for name in ("Me Goos-ta Deutsch - Linux.sh", "Me Goos-ta Deutsch - Android.html", "Me Goos-ta Deutsch - iPhone.html",

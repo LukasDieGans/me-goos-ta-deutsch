@@ -2231,6 +2231,14 @@ def baue_parser():
     opt(g, "--deck", default="Me Goos-ta Deutsch", label=L("Name des Stapels", "Deck name", "Nombre del mazo"),
         help=L("So heißt der Stapel in Anki und auf der Lernseite", "the deck's name in Anki and on the study page",
                "así se llama el mazo en Anki y en la página de estudio"))
+    opt(g, "--ohne-aufnahmen", action="store_true",
+        label=L("Eigene Aufnahmen weglassen", "Leave out your own recordings", "Dejar fuera tus grabaciones"),
+        help=L("Aufnahmen aus dem Tool „Eigene Stimme“ (Ordner stimmen/ neben der Kartenliste) nicht in Anki-Paket und "
+               "Lernseite einbetten – ohne Haken reisen sie mit, und 🔊 spielt deine Stimme",
+               "do not embed the recordings from the tool “Your own voice” (folder stimmen/ next to the card list) in "
+               "the Anki package and the study page – unticked they travel along and 🔊 plays your voice",
+               "no incluir las grabaciones de la herramienta «Tu propia voz» (carpeta stimmen/ junto a la lista) en el "
+               "paquete de Anki ni en la página de estudio; sin marcar viajan contigo y 🔊 reproduce tu voz"))
 
     g = gruppe(L("Heimdruck", "Home print", "Impresión en casa"),
                L("Papier und Raster für das Drucken zu Hause", "Paper and grid for printing at home",
@@ -2470,8 +2478,9 @@ def main(argv=None):
                          "html": T("Lernseite:      ", "Study page:     ", "Página estudio: "),
                          "pdf": T("Bildschirm-PDF: ", "Screen PDF:     ", "PDF pantalla:   "),
                          "csv": T("Tabellen:       ", "Tables:         ", "Tablas:         ")}
-        for fmt, pfad, anzahl in lernkarten_digital.erzeuge(karten, cfg, ausgabe, a.digital, a.deck, sprache(),
-                                                            sys.modules[__name__]):
+        for fmt, pfad, anzahl in lernkarten_digital.erzeuge(
+                karten, cfg, ausgabe, a.digital, a.deck, sprache(), sys.modules[__name__], melde,
+                projekt=None if a.ohne_aufnahmen else Path(a.csv).resolve().parent):
             erzeugt.append(namen_digital[fmt] + f"{ausgabe.name}/{lernkarten_digital.ORDNER}/{pfad.name}" +
                            T(f"  ({anzahl} Karten)", f"  ({anzahl} cards)", f"  ({anzahl} cartas)"))
 

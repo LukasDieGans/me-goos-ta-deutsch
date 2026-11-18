@@ -73,6 +73,38 @@ def medienname(k) -> str:
     return re.sub(r"[^\w.\-]", "_", Path(k["bild"]).stem) + ".jpg"
 
 
+def aufnahmen_fuer(karten, projekt, code="es") -> dict:
+    """Eigene Aufnahmen (Tool „Eigene Stimme“, stimmen.py) zu den Karten: {bild: {"de": Pfad, "zs": Pfad}} – nur was
+    es gibt. Leer ohne Projektordner, ohne stimmen.py oder ohne Ordner stimmen/ (dann bleibt alles wie bisher)."""
+    if not projekt:
+        return {}
+    try:
+        import stimmen
+    except ImportError:
+        return {}
+    if not stimmen.ordner(projekt).is_dir():
+        return {}
+    aus = {}
+    for k in karten:
+        eintrag = {}
+        for seite, sprache, text in (("de", "de", k.get("de")), ("zs", code or "es", k.get("es"))):
+            p = stimmen.pfad(projekt, sprache, stimmen.schluessel(text))
+            if p is not None and 0 < p.stat().st_size <= stimmen.MAX_DATEI:
+                eintrag[seite] = p
+        if eintrag:
+            aus[k["bild"]] = eintrag
+    return aus
+
+
+def aufnahmen_anzahl(aufnahmen) -> int:
+    return len({p for e in (aufnahmen or {}).values() for p in e.values()})
+
+
+def _ton_mime(pfad) -> str:
+    return {"wav": "audio/wav", "mp3": "audio/mpeg", "ogg": "audio/ogg", "opus": "audio/ogg", "m4a": "audio/mp4",
+            "webm": "audio/webm"}.get(pfad.suffix[1:].lower(), "application/octet-stream")
+
+
 # --------------------------------------------------------------------------- Anki-Paket (.apkg)
 _BASE91 = string.ascii_lowercase + string.ascii_uppercase + string.digits + "!#$%&()*+,-./:;<=>?@[]^_`{|}~"
 SCHEMA = """
@@ -170,7 +202,10 @@ def modell_fuer(code="es"):
     return (MODELLNAME.replace("Spanisch", name), felder, afmt, f"Bild → {name}", f"me-goosta-bild-v1-{code}")
 
 
-def schreibe_apkg(karten, ziel: Path, deck: str, code: str = "es") -> Path:
+def schreibe_apkg(karten, ziel: Path, deck: str, code: str = "es", aufnahmen=None) -> Path:
+    """aufnahmen ({bild: {"de": Pfad, "zs": Pfad}}, siehe aufnahmen_fuer): eigene Aufnahmen reisen als Medien mit –
+    [sound:mgd-<sprache>-<schlüssel>.<endung>] am deutschen Wort bzw. am Wort der Kartensprache (Anki spielt sie auf
+    der Rückseite ab). Ohne Aufnahmen ist das Paket wie bisher."""
     jetzt = time.time()
     ms = int(jetzt * 1000)
     ids = itertools.count(ms)
@@ -191,12 +226,24 @@ def schreibe_apkg(karten, ziel: Path, deck: str, code: str = "es") -> Path:
     conf = {"activeDecks": [1], "addToCur": True, "collapseTime": 1200, "curDeck": 1, "curModel": str(modell_id),
             "dueCounts": True, "estTimes": True, "newBury": True, "newSpread": 0, "nextPos": len(karten) + 1,
             "sortBackwards": False, "sortType": "noteFld", "timeLim": 0}
-    notizen, kartenzeilen, medien = [], [], []
+    notizen, kartenzeilen, medien, ton_namen = [], [], [], set()
+
+    def klang(k, seite):
+        p = (aufnahmen or {}).get(k["bild"], {}).get(seite)
+        if p is None:
+            return ""
+        ton = f"mgd-{'de' if seite == 'de' else (code or 'es')}-{p.name}"   # eindeutig im Medienordner von Anki
+        if ton not in ton_namen:
+            ton_namen.add(ton)
+            medien.append((ton, p.read_bytes()))
+        return f"[sound:{ton}]"
+
     for pos, k in enumerate(karten, 1):
         name = medienname(k)
         medien.append((name, bild_bytes(k["front_jpg"])))
         haupt, alternativen = teile(k["es"])
-        felder = [esc(k["de"]), f'<img src="{esc(name)}">', esc(haupt), esc(" · ".join(alternativen)), esc(k.get("notiz"))]
+        felder = [esc(k["de"]) + klang(k, "de"), f'<img src="{esc(name)}">', esc(haupt) + klang(k, "zs"),
+                  esc(" · ".join(alternativen)), esc(k.get("notiz"))]
         nid = next(ids)
         guid = f"me-goosta:{k['bild']}" if code == "es" else f"me-goosta:{code}:{k['bild']}"
         notizen.append((nid, guid_fuer(guid), modell_id, int(jetzt), -1, "" if code == "es" else f" {code} ",
@@ -391,6 +438,58 @@ neueReihe(); zeige(); zeigeBeide();
 """
 
 
+# Mit eigenen Aufnahmen (Tool „Eigene Stimme“): k.ton = {de, zs} als data:-Adresse; jedes 🔊 spielt zuerst die Aufnahme,
+# sonst die Stimme des Systems. Nur dann bekommt die Seite diesen Block und „media-src data:“ – ohne Aufnahmen bleibt
+# sie Byte für Byte wie bisher (LERNSEITE unverändert).
+LERNSEITE_CSP = "default-src 'none'; img-src data:; style-src 'unsafe-inline'; script-src 'unsafe-inline'"
+LERNSEITE_CSP_TON = "default-src 'none'; img-src data:; media-src data:; style-src 'unsafe-inline'; script-src 'unsafe-inline'"
+LERNSEITE_STIMME = """function knopfStimme() {
+  $("sprechen").hidden = !(stimme && aktuell && umgedreht());
+  $("sprechen-zs").hidden = !(beide && stimmeZs && aktuell && (rueckwaerts || umgedreht()));
+}
+function sage(text, st) { const u = new SpeechSynthesisUtterance(text); u.voice = st; u.lang = st.lang; speechSynthesis.cancel(); speechSynthesis.speak(u); }
+function sprich() {
+  if (!aktuell || !stimme || !umgedreht()) return;
+  sage(aktuell.de, stimme);
+}
+function sprichZs() {
+  if (!aktuell || !beide || !stimmeZs || !(rueckwaerts || umgedreht())) return;
+  sage(aktuell.es, stimmeZs);
+}
+"""
+LERNSEITE_STIMME_TON = """let ton = null;
+function aufnahme(seite) { return (aktuell && aktuell.ton && aktuell.ton[seite]) || ""; }
+function knopfStimme() {
+  $("sprechen").hidden = !((stimme || aufnahme("de")) && aktuell && umgedreht());
+  $("sprechen-zs").hidden = !(beide && (stimmeZs || aufnahme("zs")) && aktuell && (rueckwaerts || umgedreht()));
+}
+function still() { if (ton) { try { ton.pause(); } catch (e) { /* egal */ } ton = null; } if (window.speechSynthesis) speechSynthesis.cancel(); }
+function sage(text, st, datei) {
+  still();
+  if (datei) { const a = new Audio(datei); ton = a; const p = a.play(); if (p && p.catch) p.catch(() => { if (ton === a && st) sage(text, st, ""); }); return; }
+  if (!st || !window.speechSynthesis) return;
+  const u = new SpeechSynthesisUtterance(text); u.voice = st; u.lang = st.lang; speechSynthesis.speak(u);
+}
+function sprich() {
+  if (!aktuell || !(stimme || aufnahme("de")) || !umgedreht()) return;
+  sage(aktuell.de, stimme, aufnahme("de"));
+}
+function sprichZs() {
+  if (!aktuell || !beide || !(stimmeZs || aufnahme("zs")) || !(rueckwaerts || umgedreht())) return;
+  sage(aktuell.es, stimmeZs, aufnahme("zs"));
+}
+"""
+
+
+def lernseite_vorlage(mit_ton: bool) -> str:
+    """Vorlage der Lernseite; mit eigenen Aufnahmen: CSP + Vorlese-Block getauscht (sonst unverändert)."""
+    if not mit_ton:
+        return LERNSEITE
+    if LERNSEITE.count(LERNSEITE_CSP) != 1 or LERNSEITE.count(LERNSEITE_STIMME) != 1:
+        raise RuntimeError("Lernseite: Vorlage passt nicht zum Aufnahme-Block")
+    return LERNSEITE.replace(LERNSEITE_CSP, LERNSEITE_CSP_TON).replace(LERNSEITE_STIMME, LERNSEITE_STIMME_TON)
+
+
 def lernseite_texte(sprache: str, code: str = "es") -> dict:
     """Texte der Lernseite; bei einer anderen Kartensprache steht deren Name statt „Spanisch“."""
     texte = dict(LERNSEITE_TEXTE.get(sprache, LERNSEITE_TEXTE["en"]))
@@ -404,7 +503,8 @@ def lernseite_texte(sprache: str, code: str = "es") -> dict:
     return texte
 
 
-def schreibe_lernseite(karten, ziel: Path, deck: str, sprache: str, code: str = "es") -> Path:
+def schreibe_lernseite(karten, ziel: Path, deck: str, sprache: str, code: str = "es", aufnahmen=None) -> Path:
+    """aufnahmen ({bild: {"de": Pfad, "zs": Pfad}}): eigene Aufnahmen stecken als data:-Adressen in der Seite."""
     texte = lernseite_texte(sprache, code)
     info = sprach_info(code)
     daten = dict(titel=f"{deck} · {texte['titel']}", deck_id=stabile_id("deck:" + deck), texte=texte, karten=[],
@@ -415,9 +515,14 @@ def schreibe_lernseite(karten, ziel: Path, deck: str, sprache: str, code: str = 
                                     alt=" · ".join(alternativen), notiz=k.get("notiz") or "",
                                     bild="data:image/jpeg;base64," +
                                          base64.b64encode(bild_bytes(k["front_jpg"], 720, 80)).decode()))
+        ton = {seite: f"data:{_ton_mime(p)};base64," + base64.b64encode(p.read_bytes()).decode()
+               for seite, p in (aufnahmen or {}).get(k["bild"], {}).items()}
+        if ton:
+            daten["karten"][-1]["ton"] = ton
+    mit_ton = any("ton" in k for k in daten["karten"])
     # JSON im <script type="application/json">: „<“ maskieren, damit kein Text das Skript beenden kann
     roh = json.dumps(daten, ensure_ascii=False).replace("<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026")
-    seite = (LERNSEITE.replace("__LANG__", sprache if sprache in LERNSEITE_TEXTE else "en")
+    seite = (lernseite_vorlage(mit_ton).replace("__LANG__", sprache if sprache in LERNSEITE_TEXTE else "en")
              .replace("__TITEL__", esc(daten["titel"])).replace("__DATEN__", roh))
     pfad = ziel / f"Me-Goos-ta-Deutsch_Lernseite{info['endung']}.html"
     tmp = pfad.with_name(pfad.name + ".tmp")
@@ -496,8 +601,10 @@ def schreibe_tabellen(karten, ziel: Path, deck: str, code: str = "es") -> Path:
 
 
 # --------------------------------------------------------------------------- Einstieg für den Generator
-def erzeuge(karten, cfg, ausgabe: Path, auswahl: str, deck: str, sprache: str, gl, melde=print):
-    """Schreibt die gewählten Formate nach ausgabe/digital/. Gibt die Liste der Zeilen für „Erzeugt“ zurück."""
+def erzeuge(karten, cfg, ausgabe: Path, auswahl: str, deck: str, sprache: str, gl, melde=print, projekt=None):
+    """Schreibt die gewählten Formate nach ausgabe/digital/. Gibt die Liste der Zeilen für „Erzeugt“ zurück.
+    projekt: Ordner der Kartenliste – liegen dort eigene Aufnahmen (stimmen/), reisen sie in Anki-Paket und Lernseite
+    mit (None = ohne)."""
     ziel = ausgabe / ORDNER
     ziel.mkdir(parents=True, exist_ok=True)
     deck = " ".join(str(deck or "Me Goos-ta Deutsch").split())[:80] or "Me Goos-ta Deutsch"
@@ -506,12 +613,19 @@ def erzeuge(karten, cfg, ausgabe: Path, auswahl: str, deck: str, sprache: str, g
         ui = sprache if sprache in ("de", "en", "es") else "en"
         deck = f"{deck} – {sprach_info(code)['namen'][ui]}"
     mit_bild = [k for k in karten if k.get("front_jpg") and Path(k["front_jpg"]).is_file()]
+    formate = AUSWAHL.get(auswahl, AUSWAHL["empfohlen"])
+    aufnahmen = aufnahmen_fuer(mit_bild, projekt, code) if {"apkg", "html"} & set(formate) else {}
+    if aufnahmen:
+        n = aufnahmen_anzahl(aufnahmen)
+        melde(gl.T(f"  🎙 {n} eigene Aufnahmen reisen mit (Anki-Paket und Lernseite)",
+                   f"  🎙 {n} recordings of your own travel along (Anki package and study page)",
+                   f"  🎙 {n} grabaciones propias viajan contigo (paquete de Anki y página de estudio)"))
     erzeugt = []
-    for fmt in AUSWAHL.get(auswahl, AUSWAHL["empfohlen"]):
+    for fmt in formate:
         if fmt == "apkg":
-            p = schreibe_apkg(mit_bild, ziel, deck, code)
+            p = schreibe_apkg(mit_bild, ziel, deck, code, aufnahmen)
         elif fmt == "html":
-            p = schreibe_lernseite(mit_bild, ziel, deck, sprache, code)
+            p = schreibe_lernseite(mit_bild, ziel, deck, sprache, code, aufnahmen)
         elif fmt == "pdf":
             p = schreibe_bildschirm_pdf(mit_bild, ziel, cfg, gl)
         else:

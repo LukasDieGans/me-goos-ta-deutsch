@@ -32,6 +32,7 @@ Erweitern:
 from __future__ import annotations
 
 import argparse
+import base64
 import hmac
 import html
 import io
@@ -47,6 +48,7 @@ import subprocess
 import sys
 import threading
 import time
+import wave
 import webbrowser
 import zipfile
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -289,6 +291,12 @@ TEXTE = {
                   "Todavía no hay una grabación propia para esta palabra."),
     "st_ungueltig": L("Das hat nicht geklappt – bitte Sprache und Datei prüfen.", "That didn’t work – please check language and file.",
                       "Eso no funcionó; revisa el idioma y el archivo."),
+    "st_lang": L("Die Aufnahme ist der Gans zu lang (höchstens {sek} s) – kurz und knackig klingt am schönsten.",
+                 "That recording is too long for the goose (at most {sek} s) – short and crisp sounds best.",
+                 "La grabación es demasiado larga para el ganso (máximo {sek} s); corta y clara suena mejor."),
+    "st_leer": L("Da war nichts zu hören – nimm das Wort gern noch einmal auf.",
+                 "There was nothing to hear – feel free to record the word again.",
+                 "No se oyó nada; graba la palabra otra vez con gusto."),
     "st_zip": L("Diese ZIP-Datei lässt sich nicht lesen – nichts wurde verändert.",
                 "This ZIP file can’t be read – nothing was changed.", "Este ZIP no se puede leer; no se cambió nada."),
     "st_zip_gross": L("Das ist der Gans zu schwer (höchstens {mb} MB auf einmal) – teile die Aufnahmen auf mehrere ZIPs auf.",
@@ -2167,6 +2175,8 @@ def starte_lauf(art, nur=None, karten=None, modell=None, bilder=None, alle=False
         extra = {"nur": nur or "alles", "karten": karten or ""}
         if (nur or "alles") != "vorlagen":
             extra["sprache"] = codes[0]
+        if nur == "digital" and stimmen and not stimmen_da() and stimmen.dateien(_projekt()):
+            extra["ohne_aufnahmen"] = True                 # Aufnahmen reisen nur mit aktivem Tool „Eigene Stimme“ mit
         argv = argv_aus(lade_einstellungen(), _bildverbesserung_pruefen(extra, ohne_tool))
         _, fehler = parse(argv)
         if fehler:
@@ -2635,8 +2645,13 @@ def _liste(zeilen):
 def hilfe_datei(doc, sprache):
     if doc == "spec":
         return HIER / "SPEC.md"
-    p = HIER / ("LEITFADEN.md" if sprache == "de" else f"LEITFADEN_{sprache}.md")
-    return p if p.exists() else HIER / "LEITFADEN.md"
+    for stamm in (("STIMMEN_EXTERN", "LEITFADEN") if doc == "stimmen" else ("LEITFADEN",)):   # stimmen: Anleitung „mit anderen Programmen“
+        p = HIER / (f"{stamm}.md" if sprache == "de" else f"{stamm}_{sprache}.md")
+        if p.exists():
+            return p
+        if (HIER / f"{stamm}.md").exists():
+            return HIER / f"{stamm}.md"
+    return HIER / "LEITFADEN.md"
 
 
 _HILFE_CACHE = {}  # Pfad → (Änderungszeit, Größe, HTML)
@@ -3169,7 +3184,9 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Referrer-Policy", "no-referrer")
         self.send_header("Cross-Origin-Opener-Policy", "same-origin")
         self.send_header("Cross-Origin-Resource-Policy", "same-origin")
-        self.send_header("Permissions-Policy", "camera=(), microphone=(), geolocation=(), payment=(), usb=()")
+        # Mikrofon nur für die Seite selbst und nur mit dem Tool „Eigene Stimme“ (Aufnahme im Programm), sonst gesperrt
+        mikro = "(self)" if mime.startswith("text/html") and nonce and _mikrofon_erlaubt() else "()"
+        self.send_header("Permissions-Policy", f"camera=(), microphone={mikro}, geolocation=(), payment=(), usb=()")
         if mime.startswith("text/html"):                       # PDFs/Bilder ohne CSP (sonst zeigt Chrome keine PDFs)
             skript = f"'nonce-{nonce}'" if nonce else "'none'"
             self.send_header("Content-Security-Policy",
@@ -3648,7 +3665,7 @@ VERLAUF_WEGE = {"/api/karten": "karten", "/api/karte-speichern": "karte", "/api/
                 "/api/idee-bild": "idee", "/api/idee-weg": "idee_weg", "/api/idee-zurueck": "idee",
                 "/api/idee-aufnehmen": "idee_karte", "/api/wortliste-uebernehmen": "wortliste",
                 "/api/wortliste-rueckgaengig": "wortliste", "/api/import-uebernehmen": "import",
-                "/api/stimmen-import": "stimmen_import", "/api/stimme-loeschen": "stimme_weg",
+                "/api/stimme": "stimme_neu", "/api/stimmen-import": "stimmen_import", "/api/stimme-loeschen": "stimme_weg",
                 "/api/stimmen-aufraeumen": "stimmen_aufraeumen"}
 _VERLAUF = None
 _verlauf_lock = threading.Lock()
@@ -3936,6 +3953,14 @@ def stimmen_da():
     return bool(stimmen and tools and tools.gibt_es("stimmen") and tool_da("stimmen"))
 
 
+def _mikrofon_erlaubt():
+    """Permissions-Policy der Seite: microphone=(self) nur bei aktivem Tool „Eigene Stimme“ (nie ein Fehler nach außen)."""
+    try:
+        return stimmen_da()
+    except Exception:  # noqa: BLE001
+        return False
+
+
 def _stimmen_pruefen():
     if not stimmen_da():
         _tool_fehlt("stimmen")
@@ -3944,7 +3969,7 @@ def _stimmen_pruefen():
 def _stimmen_fehler(e):
     code = "st_" + e.code
     return Meldung(code if code in TEXTE else "st_ungueltig", status=413 if e.code == "zip_gross" else 400,
-                   mb=stimmen.MAX_ZIP // (1024 * 1024))
+                   mb=stimmen.MAX_ZIP // (1024 * 1024), sek=AUFNAHME_SEKUNDEN)
 
 
 def _mit_stimme(n):
@@ -3959,20 +3984,28 @@ def stimmen_info():
     """GET /api/stimmen → was da ist (liste), die Wörter mit Datei, Zahl der Wörter mit/ohne Datei je Sprache."""
     projekt, zs = _projekt(), zielsprache()
     da = stimmen.liste(projekt)
-    alle = stimmen.woerter(_lern_karten(), zs)
+    karten = _lern_karten()
+    alle = stimmen.woerter(karten, zs)
+    bild = {}                                                # (sprache, schlüssel) → erstes Bild mit diesem Wort (Aufnahme-Runde)
+    for k in karten:
+        for code, schl, _ in stimmen.woerter([k], zs):
+            bild.setdefault((code, schl), k["bild"])
     gesamt, fehlen = {"de": 0, zs: 0}, {"de": 0, zs: 0}
-    woerter = []
+    woerter, offen = [], []
     for code, schl, text in alle:
         gesamt[code] += 1
         if schl in da.get(code, {}):
-            woerter.append(dict(sprache=code, schluessel=schl, text=text, endung=da[code][schl]))
+            woerter.append(dict(sprache=code, schluessel=schl, text=text, endung=da[code][schl],
+                                bild=bild.get((code, schl), "")))
         else:
             fehlen[code] += 1
-    erlaubt = stimmen.gewuenscht(_lern_karten())
+            offen.append(dict(sprache=code, schluessel=schl, text=text, bild=bild.get((code, schl), "")))
+    erlaubt = stimmen.gewuenscht(karten)
     verwaist = sum(1 for code, d in da.items() for schl in d if schl not in erlaubt.get(code, ()))
-    return dict(liste=da, belegt=stimmen.belegt(projekt), woerter=woerter, gesamt=gesamt, fehlen=fehlen,
+    return dict(liste=da, belegt=stimmen.belegt(projekt), woerter=woerter, offen=offen, gesamt=gesamt, fehlen=fehlen,
                 verwaist=verwaist, zielsprache=zs, sprachen=["de", zs], endungen=list(stimmen.ENDUNGEN),
-                max_mb=stimmen.MAX_DATEI // (1024 * 1024), max_sekunden=stimmen.MAX_SEKUNDEN)
+                max_mb=stimmen.MAX_DATEI // (1024 * 1024), max_sekunden=stimmen.MAX_SEKUNDEN,
+                aufnahme_sekunden=AUFNAHME_SEKUNDEN)
 
 
 def stimmen_wortliste():
@@ -3993,9 +4026,42 @@ def stimmen_import(roh, name):
     return dict(stimmen_info(), ergebnis=erg)
 
 
+AUFNAHME_SEKUNDEN = 10                                   # Aufnahme im Programm: höchstens so lang (die Seite kappt schon)
+AUFNAHME_TEXT_MAX = 200
+
+
+def stimme_aufnahme(daten):
+    """POST /api/stimme {sprache, text, wav (base64)} – Aufnahme aus dem Programm (WAV, PCM). Den Schlüssel bildet der
+    Server aus dem Text; der Text darf auch ein noch nicht gespeichertes Wort sein (Karten-Editor) – bleibt die Karte
+    ungespeichert, zählt die Aufnahme als verwaist und „Aufräumen“ nimmt sie mit. → Stand wie /api/stimmen +
+    gespeichert ("neu" | "ersetzt"), sprache, schluessel."""
+    sprache, text = daten.get("sprache"), daten.get("text")
+    if not isinstance(text, str) or len(text) > AUFNAHME_TEXT_MAX or not stimmen.sprache_ok(sprache):
+        raise Meldung("st_ungueltig")
+    schl = stimmen.schluessel(text)
+    if not schl:
+        raise Meldung("st_ungueltig")
+    try:
+        roh = base64.b64decode(daten.get("wav") if isinstance(daten.get("wav"), str) else "", validate=True)
+    except ValueError:
+        raise Meldung("st_ungueltig") from None
+    try:
+        endung, inhalt = stimmen.pruefe(roh, "aufnahme.wav")
+        with wave.open(io.BytesIO(inhalt), "rb") as w:
+            if w.getnframes() > w.getframerate() * (AUFNAHME_SEKUNDEN + 1):
+                raise stimmen.StimmenFehler("lang")
+        art = stimmen.speichere(_projekt(), sprache, schl, inhalt, "aufnahme." + endung, _sichere)
+    except stimmen.StimmenFehler as e:
+        raise _stimmen_fehler(e) from None
+    return dict(stimmen_info(), gespeichert=art, sprache=sprache, schluessel=schl)
+
+
 def stimmen_post(weg, daten):
-    """POST /api/stimme-loeschen {sprache, schluessel} · /api/stimmen-aufraeumen (verwaiste Dateien löschen)."""
+    """POST /api/stimme (Aufnahme) · /api/stimme-loeschen {sprache, schluessel} · /api/stimmen-aufraeumen (verwaiste
+    Dateien löschen)."""
     _stimmen_pruefen()
+    if weg == "/api/stimme":
+        return stimme_aufnahme(daten)
     if weg == "/api/stimme-loeschen":
         if not stimmen.loesche(_projekt(), daten.get("sprache"), daten.get("schluessel"), _sichere):
             raise Meldung("st_fehlt", status=404)

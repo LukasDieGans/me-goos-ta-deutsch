@@ -664,6 +664,131 @@ STIMMEN_AUS_JS = """async () => {
 }"""
 
 
+# Nachgebildetes Mikrofon (Aufnahme im Programm): getUserMedia, MediaRecorder und die Audio-Kontexte liefern 1 s mit einem
+# Ton in der Mitte (0,25–0,5 s, Spitze 0,3) – geprüft wird der Weg: Erlaubnis, Schnitt, Pegel, WAV, Freigabe des Mikrofons
+MIKRO_JS = """verweigert => {
+  window.__mk = { strom: 0, gestoppt: 0, anfrage: null };
+  Object.defineProperty(window, "isSecureContext", { configurable: true, value: true });
+  Object.defineProperty(navigator, "mediaDevices", { configurable: true, value: { getUserMedia: async c => {
+    __mk.anfrage = c;
+    if (verweigert) { const e = new Error("nein"); e.name = "NotAllowedError"; throw e; }
+    __mk.strom++; const spuren = [{ stop() { __mk.gestoppt++; } }]; return { getTracks: () => spuren };
+  } } });
+  window.MediaRecorder = class {
+    constructor() { this.state = "inactive"; this.mimeType = "audio/webm"; this.l = {}; }
+    addEventListener(n, f) { (this.l[n] = this.l[n] || []).push(f); }
+    start() { this.state = "recording"; }
+    stop() { this.state = "inactive"; (this.l.dataavailable || []).forEach(f => f({ data: new Blob([new Uint8Array(16)]) }));
+      setTimeout(() => (this.l.stop || []).forEach(f => f({})), 0); }
+  };
+  window.AudioContext = window.webkitAudioContext = class { decodeAudioData() { return Promise.resolve({ duration: 1 }); } close() {} };
+  window.OfflineAudioContext = window.webkitOfflineAudioContext = class {
+    constructor(k, n, rate) { this.k = k; this.n = n; this.rate = rate; this.destination = {}; __mk.offline = [k, n, rate]; }
+    createBufferSource() { return { connect() {}, start() {}, buffer: null }; }
+    startRendering() { const n = this.n, x = new Float32Array(n);
+      for (let i = Math.floor(n / 4); i < Math.floor(n / 2); i++) x[i] = 0.3 * Math.sin(i / 8);
+      return Promise.resolve({ getChannelData: () => x }); }
+  };
+}"""
+AUF_ZUSTAND = "z => { const a = document.querySelector('#aufnahme-inhalt .aufnahme'); return !!a && !document.getElementById('aufnahme-fenster').hidden && a.dataset.aufZustand === z; }"
+AUF_WAV_JS = """() => { const w = AUF && AUF.wav; if (!w) return [AUF ? AUF.zustand : "", "", 0, 0, 0, AUF ? AUF.hinweis : ""];
+  const d = new DataView(w.buffer); let max = 0; for (let i = 44; i + 1 < w.length; i += 2) max = Math.max(max, Math.abs(d.getInt16(i, true)));
+  return [AUF.zustand, String.fromCharCode(w[0], w[1], w[2], w[3]), d.getUint32(24, true), d.getUint16(22, true) * 100 + d.getUint16(34, true), (w.length - 44) / 2, max]; }"""
+
+
+def b1_aufnahme(s, u):
+    """Aufnahme im Programm (seit 2.6, Tool „Eigene Stimme“ ist aktiv, Ansicht Werkzeuge): Tool erst nach dem Laden aktiviert →
+    Hinweis „Seite neu laden“; danach mit nachgebildetem Mikrofon: aufnehmen → anhören → behalten → 🔊 spielt die Datei
+    (Mono, 22 050 Hz, 16 Bit, Stille gekappt, −3 dB, Mikrofon wieder frei); Aufnahme-Runde über zwei Wörter mit Leertaste und
+    Enter (ein Rückgängig-Schritt); verweigerte Erlaubnis zeigt den freundlichen Hinweis. Chromium nimmt zusätzlich echt auf
+    (nachgebildetes Gerät des Browsers)."""
+    t0 = time.time()
+    fenster_zu = "() => document.getElementById('aufnahme-fenster').hidden && AUF === null"
+    s.js(MIKRO_JS, False)
+    gesperrt = s.js("() => { const n = document.querySelectorAll('#toasts .toast button').length; aufnahmeAmWort('de', 'die Probegans', '');"
+                    " return [mikroGesperrt(), document.querySelectorAll('#toasts .toast button').length - n,"
+                    " document.getElementById('aufnahme-fenster').hidden, __mk.strom]; }")
+    s.page.reload()
+    s.warte("() => typeof stimmenDa === 'function' && stimmenDa() && MIKRO_AB_START === true && !!STIMMEN && S.karten.length > 0")
+    _ansicht(s, "werkzeuge")
+    s.warte("() => !!document.querySelector(\"#stimmen-bereich [data-st='runde']\")")
+    echt = None
+    if s.engine == "chromium":                                  # echt: Mikrofon des Browsers (nachgebildetes Gerät), echter Recorder
+        s.js("() => { oeffneAufnahme([{ sprache: 'de', text: 'die Probegans', bild: '', schluessel: '' }]); }")
+        s.page.click("#aufnahme-inhalt [data-auf='start']")
+        s.warte(AUF_ZUSTAND, "laeuft")
+        time.sleep(1.6)
+        s.page.click("#aufnahme-inhalt [data-auf='stopp']")
+        s.warte("() => !!AUF && (AUF.zustand === 'fertig' || (AUF.zustand === 'bereit' && !!AUF.hinweis))")
+        echt = s.js(AUF_WAV_JS)
+        s.page.click("#aufnahme-fenster .fenster-kopf [data-zu]")
+        s.warte(fenster_zu)
+    s.js(AUDIO_JS)
+    s.js(MIKRO_JS, False)
+    # --- am Wort: aufnehmen → anhören → behalten → 🔊 spielt die Datei ---
+    wort = s.js("() => { const w = STIMMEN.offen[0]; document.querySelector(`#stimmen-bereich [data-st='aufnehmen'][data-code='${w.sprache}']"
+                "[data-schluessel='${w.schluessel}']`).click(); return w; }")
+    s.warte(AUF_ZUSTAND, "bereit")
+    breite = s.js("() => document.documentElement.scrollWidth <= window.innerWidth + 1")
+    s.page.click("#aufnahme-inhalt [data-auf='start']")
+    s.warte(AUF_ZUSTAND, "laeuft")
+    s.page.click("#aufnahme-inhalt [data-auf='stopp']")
+    s.warte(AUF_ZUSTAND, "fertig")
+    wav = s.js(AUF_WAV_JS)
+    mikro = s.js("() => [__mk.strom, __mk.gestoppt, __mk.anfrage.audio.channelCount, __mk.anfrage.audio.echoCancellation, __mk.offline, __au.slice(-1)[0].slice(0, 5)]")
+    s.page.click("#aufnahme-inhalt [data-auf='behalten']")
+    s.warte(fenster_zu)
+    s.warte("w => stimmeDatei(w.sprache, w.schluessel)", wort)
+    vor = s.js("() => __au.length")
+    s.js("w => document.querySelector(`#stimmen-bereich [data-st='anhoeren'][data-code='${w.sprache}'][data-schluessel='${w.schluessel}']`).click()", wort)
+    s.warte(f"() => __au.length > {vor}")
+    gespielt = s.js("() => [__au.slice(-1)[0].slice(0, 5), S.verlauf.za]")
+    # --- Aufnahme-Runde über zwei Wörter: Leertaste = Start/Stopp, Enter = Behalten, automatisch weiter ---
+    s.page.select_option("#stimmen-bereich [data-st-runde]", "de")
+    s.warte("() => S.stRunde === 'de'")
+    knopf = s.js("() => { const b = document.querySelector(\"#stimmen-bereich [data-st='runde']\"); return [b.disabled, aufnahmeOffen('de').length,"
+                 " b.textContent.includes(String(aufnahmeOffen('de').length)), aufnahmeOffen('de').every(w => w.sprache === 'de')]; }")
+    n_vor = s.js("() => aufnahmenZahl()")
+    s.js("() => { oeffneAufnahme(aufnahmeOffen('de').slice(0, 2).map(w => ({ ...w })), true); }")
+    schritte = []
+    for i in (1, 2):
+        s.warte(AUF_ZUSTAND, "bereit")
+        schritte.append(s.js("() => [(document.querySelector('[data-auf-fortschritt]') || {}).textContent || '', !!document.querySelector('#aufnahme-inhalt img'),"
+                             " document.querySelector('.aufnahme-wort').textContent === AUF.woerter[AUF.i].text]"))
+        s.page.keyboard.press("Space")
+        s.warte(AUF_ZUSTAND, "laeuft")
+        s.page.keyboard.press("Space")
+        s.warte(AUF_ZUSTAND, "fertig")
+        s.page.keyboard.press("Enter")
+    s.warte(fenster_zu)
+    s.warte(f"() => aufnahmenZahl() === {n_vor} + 2")
+    s.js("() => verlaufSchritt(true)")                           # die ganze Runde ist ein Schritt
+    s.warte(f"() => aufnahmenZahl() === {n_vor}")
+    frei = s.js("() => [__mk.strom, __mk.gestoppt]")
+    # --- Erlaubnis verweigert: freundlicher Hinweis, kein Fehler ---
+    s.js(MIKRO_JS, True)
+    s.js("() => { oeffneAufnahme([{ ...STIMMEN.offen[0] }]); }")
+    s.warte(AUF_ZUSTAND, "bereit")
+    s.page.click("#aufnahme-inhalt [data-auf='start']")
+    s.warte("() => !!AUF && AUF.zustand === 'bereit' && AUF.hinweis === t('sta_verweigert')")
+    hinweis = s.js("() => document.querySelector('[data-auf-status]').textContent === t('sta_verweigert')")
+    s.page.click("#aufnahme-fenster .fenster-kopf [data-zu]")
+    s.warte(fenster_zu)
+    editor = s.js("() => (editorHTML({ bild: 'probe.jpg', de: 'die Gans', es: 'el ganso' }).match(/data-k-aktion=\"aufnehmen\"/g) || []).length")
+    fehler = s.fehler()
+    echt_ok = echt is None or (echt[0] == "fertig" and echt[1] == "RIFF" and echt[2] == 22050 and echt[3] == 116 and echt[4] > 2000)
+    pruefe(f"[{s.kurz}] B1 Aufnahme: Tool nach dem Laden aktiviert → „Seite neu laden“; aufnehmen → behalten → 🔊 spielt die Datei "
+           "(Mono 22 050 Hz 16 Bit, Stille gekappt, −3 dB, Mikrofon frei); Runde über zwei Wörter mit Leertaste/Enter = ein Schritt; "
+           "verweigerte Erlaubnis zeigt den Hinweis" + ("; echte Aufnahme" if echt is not None else ""),
+           gesperrt == [True, 1, True, 0] and wav[:4] == ["fertig", "RIFF", 22050, 116] and 8000 < wav[4] < 10500
+           and 23000 <= wav[5] <= 23300 and mikro[:4] == [1, 1, 1, True] and mikro[4][0] == 1 and mikro[4][2] == 22050 and mikro[5] == "blob:"
+           and gespielt == ["blob:", "stimme_neu"] and knopf == [False, knopf[1], True, True] and knopf[1] >= 2
+           and schritte[0][0].startswith("1") and schritte[1][0].startswith("2") and all(x[2] for x in schritte)
+           and frei == [3, 3] and hinweis is True and editor == 2 and breite is True and echt_ok and not fehler,
+           f"gesperrt {gesperrt} · WAV {wav} · Mikrofon {mikro} · gespielt {gespielt} · Runde {knopf} {schritte} · frei {frei} · "
+           f"Hinweis {hinweis} · Editor {editor} · Breite {breite} · echt {echt} · Konsole {fehler[:3]}", t0=t0)
+
+
 def b1_stimmen(s, u):
     """Tool „Eigene Stimme“ (seit 2.6): aktivieren, eine Aufnahme für das deutsche Wort einlesen → 🔊 auch ohne Stimme des
     Systems, Klick spielt die Datei (blob:) und nicht die Stimme; ohne Datei liest die gewählte Stimme mit Tempo und Tonhöhe;
@@ -699,6 +824,7 @@ def b1_stimmen(s, u):
                    " b.querySelectorAll('.stimmen-schritte > li').length, !!b.querySelector(\"a[href='/api/stimmen-wortliste']\"),"
                    " (b.querySelector(\"select[data-st-wahl='name'][data-code='de']\") || {}).value || '',"
                    " document.documentElement.scrollWidth <= window.innerWidth + 1]; }")
+    b1_aufnahme(s, u)
     aus = s.js(STIMMEN_AUS_JS)
     _ansicht(s, "lernen")
     g = gesagt[0] or {}
@@ -1082,7 +1208,10 @@ def lauf(engines, stufen, u):
             for e in engines:
                 t0 = time.time()
                 try:
-                    browser[e] = getattr(pw, e).launch(**({"channel": KANAL[e]} if KANAL.get(e) else {}))
+                    opt = {"channel": KANAL[e]} if KANAL.get(e) else {}
+                    if e == "chromium":                        # echtes Aufnehmen (B1 Aufnahme): nachgebildetes Mikrofon, keine Rückfrage
+                        opt["args"] = ["--use-fake-device-for-media-stream", "--use-fake-ui-for-media-stream"]
+                    browser[e] = getattr(pw, e).launch(**opt)
                     pruefe(f"[{e}] Engine startet ({browser[e].version})", True, t0=t0)
                 except Exception as f:  # noqa: BLE001
                     pruefe(f"[{e}] Engine startet", False, f"{type(f).__name__}: {f}")

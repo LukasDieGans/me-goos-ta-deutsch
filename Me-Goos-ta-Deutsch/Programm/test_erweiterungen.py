@@ -7506,8 +7506,8 @@ def test_stimmen(p, tmp):
            and "Gans" in t["nutzen"]["de"] and "Projekt-ZIP" in t["loeschen"]["de"] and "project ZIP" in t["loeschen"]["en"]
            and ak.NUTZER.match("Programm/stimmen/de/0123456789abcdef.wav") and not ak.NUTZER.match("Programm/stimmen.py")
            and 'NUR_RECHNER_TOOLS = {"ki-bild"}' in g, str(t)[:200])
-    pruefe("CSP der Seite erlaubt Ton nur von hier (media-src 'self' blob:), Mikrofon bleibt gesperrt; Wege sind Rückgängig-Schritte",
-           g.count("media-src 'self' blob:;") == 1 and 'microphone=()' in g
+    pruefe("CSP der Seite erlaubt Ton nur von hier (media-src 'self' blob:), Mikrofon nur mit dem Tool (E61); Wege sind Rückgängig-Schritte",
+           g.count("media-src 'self' blob:;") == 1 and 'microphone={mikro}' in g
            and all(f'"{w}": "{a}"' in g for w, a in (("/api/stimmen-import", "stimmen_import"), ("/api/stimme-loeschen", "stimme_weg"),
                                                      ("/api/stimmen-aufraeumen", "stimmen_aufraeumen")))
            and "ordner.append(stimmen.ordner(csv_pfad.parent))" in g)
@@ -7543,7 +7543,7 @@ def test_stimmen(p, tmp):
                c1 == 200 and r1["ergebnis"]["neu"] == 1 and c2 == 200 and kopf.get("content-type") == "audio/wav"
                and kopf.get("x-content-type-options") == "nosniff" and inhalt == wav() and c4 == 403
                and "media-src 'self' blob:" in kopf3.get("content-security-policy", "")
-               and "microphone=()" in kopf3.get("permissions-policy", ""), (c1, c2, c4, kopf))
+               and "microphone=(self)" in kopf3.get("permissions-policy", ""), (c1, c2, c4, kopf))
         se.json("/api/tool", daten={"id": "stimmen", "aktion": "deinstallieren"})
     finally:
         proc.terminate()
@@ -7610,6 +7610,342 @@ def test_stimmen(p, tmp):
                (r.stdout + r.stderr)[-300:])
     else:
         print("  (.github/ci/fuzz_ziele.py gibt es nur im Quellbaum – 1 Prüfung entfällt)")
+
+
+# =============================================================================================
+# E61 (2.6, G07b): Eigene Stimme Teil 2 – Aufnahme im Programm, Lernseite/Anki, Anleitung für andere Programme
+# =============================================================================================
+E61_PROZESS = r'''
+import base64, hashlib, io, json, os, sqlite3, sys, tempfile, wave, zipfile
+from pathlib import Path
+sys.path.insert(0, sys.argv[1])
+os.environ.pop("MGD_IM_PROZESS", None)
+p = Path(sys.argv[1])
+import gans_ui as ui, gans_lernkarten as gl, stimmen as st, lernkarten_digital as ld
+gl.setze_sprache("de")
+E = []
+def ok(name, gut, detail=""):
+    E.append([name, bool(gut), str(detail)[:700]])
+KOPF, ROH = {}, b""
+def direkt(weg, daten=None, roh=None, abfrage="", methode="POST", gruppe=""):
+    global KOPF, ROH
+    koerper = roh if roh is not None else json.dumps(daten or {}).encode()
+    k = {"X-GL-Sprache": "de", "Content-Type": "application/json"}
+    if gruppe:
+        k["X-GL-Gruppe"] = gruppe
+    s, KOPF, ROH = ui.verarbeite(methode, weg, abfrage, koerper if methode == "POST" else b"", k)
+    try:
+        return s, json.loads(ROH)
+    except ValueError:
+        return s, {}
+def stand():
+    return json.loads(KOPF.get("X-MGD-Verlauf", "{}"))
+def wav(sek=0.3, rate=22050, extra=b""):
+    b = io.BytesIO()
+    with wave.open(b, "wb") as w:
+        w.setnchannels(1); w.setsampwidth(2); w.setframerate(rate); w.writeframes(b"\x01\x02" * int(rate * sek))
+    roh = bytearray(b.getvalue())
+    if extra:
+        roh += extra
+        roh[4:8] = (len(roh) - 8).to_bytes(4, "little")
+    return bytes(roh)
+def b64(x):
+    return base64.b64encode(x).decode()
+MP3 = b"ID3\x04\x00\x00\x00\x00\x00\x0a" + b"\x00" * 10 + b"\xff\xfb\x90\x00" + b"\x00" * 400
+ordner = p / "stimmen"
+karten = ui.karten_daten()["karten"]
+k0, k1 = karten[0], karten[1]
+de0, es0, de1 = st.schluessel(k0["de"]), st.schluessel(k0["es"]), st.schluessel(k1["de"])
+
+# --- ohne Tool ---
+s0, r0 = direkt("/api/stimme", {"sprache": "de", "text": k0["de"], "wav": b64(wav())})
+ok("Ohne Tool „stimmen“: POST /api/stimme → 409 tool_fehlt, nichts angelegt",
+   s0 == 409 and r0.get("code") == "tool_fehlt" and r0.get("tool") == "stimmen" and not ordner.exists(), (s0, r0))
+
+# --- Aufnahme speichern ---
+direkt("/api/tool", {"id": "stimmen", "aktion": "installieren"})
+_, vor = direkt("/api/stimmen", methode="GET")
+schief = "  " + k0["de"].upper().replace(" ", "   ") + " "
+sa, ra = direkt("/api/stimme", {"sprache": "de", "text": schief, "wav": b64(wav(extra=b"LIST\x08\x00\x00\x00fremdes!"))})
+datei = ordner / "de" / f"{de0}.wav"
+inhalt = datei.read_bytes() if datei.is_file() else b""
+st_a = stand()
+w0 = next((w for w in ra.get("woerter", []) if w["sprache"] == "de" and w["schluessel"] == de0), {})
+ok("POST /api/stimme (WAV als base64 + Sprache + Text): den Schlüssel bildet der Server aus dem Text (Groß/Klein und Leerraum egal), "
+   "die WAV wird geprüft und neu geschrieben; Antwort = Stand + gespeichert/schluessel; Schritt stimme_neu",
+   sa == 200 and ra.get("gespeichert") == "neu" and ra.get("schluessel") == de0 and ra.get("sprache") == "de" and inhalt == wav()
+   and b"fremdes!" not in inhalt and ra["liste"] == {"de": {de0: "wav"}} and st_a.get("za") == "stimme_neu"
+   and w0.get("bild") == k0["bild"] and ra.get("aufnahme_sekunden") == 10, (sa, str(ra)[:300], st_a))
+offen = vor.get("offen", [])
+ok("Stand nennt die Wörter ohne Aufnahme (offen: Sprache, Schlüssel, Text, Bild – in Kartenreihenfolge) für die Aufnahme-Runde; nach dem Speichern fehlt das Wort dort",
+   len(offen) == vor["fehlen"]["de"] + vor["fehlen"]["es"] and offen[0] == {"sprache": "de", "schluessel": de0, "text": " ".join(k0["de"].split()), "bild": k0["bild"]}
+   and offen[1]["sprache"] == "es" and offen[1]["schluessel"] == es0 and all(set(o) == {"sprache", "schluessel", "text", "bild"} for o in offen)
+   and not any(o["schluessel"] == de0 and o["sprache"] == "de" for o in ra["offen"]) and len(ra["offen"]) == len(offen) - 1, offen[:2])
+
+# --- ersetzt eine Datei anderer Endung, Rückgängig ---
+direkt("/api/stimmen-import", roh=MP3, abfrage=f"name=es/{es0}.mp3")
+sb, rb = direkt("/api/stimme", {"sprache": "es", "text": k0["es"], "wav": b64(wav(sek=0.5))})
+nur_wav = sorted(q.name for q in (ordner / "es").iterdir())
+su, ru = direkt("/api/rueckgaengig")
+zurueck = sorted(q.name for q in (ordner / "es").iterdir())
+direkt("/api/wiederholen")
+ok("Aufnahme ersetzt die vorhandene Datei auch bei anderer Endung (eine Datei je Schlüssel); Rückgängig holt die alte zurück, Wiederholen die neue",
+   sb == 200 and rb.get("gespeichert") == "ersetzt" and nur_wav == [f"{es0}.wav"] and su == 200 and ru.get("art") == "stimme_neu"
+   and zurueck == [f"{es0}.mp3"] and sorted(q.name for q in (ordner / "es").iterdir()) == [f"{es0}.wav"], (sb, nur_wav, zurueck))
+
+# --- ungültig ---
+vorher = {str(q): q.read_bytes() for q in ordner.rglob("*") if q.is_file()}
+faelle = {"kein_base64": {"sprache": "de", "text": k1["de"], "wav": "kein base64 !!"},
+          "kein_wav": {"sprache": "de", "text": k1["de"], "wav": b64(MP3)},
+          "leer": {"sprache": "de", "text": k1["de"], "wav": ""},
+          "lang": {"sprache": "de", "text": k1["de"], "wav": b64(wav(sek=11.5, rate=8000))},
+          "sprache": {"sprache": "xx", "text": k1["de"], "wav": b64(wav())},
+          "pfad": {"sprache": "../de", "text": k1["de"], "wav": b64(wav())},
+          "ohne_text": {"sprache": "de", "text": "   ", "wav": b64(wav())},
+          "text_lang": {"sprache": "de", "text": "a" * 201, "wav": b64(wav())},
+          "text_zahl": {"sprache": "de", "text": 5, "wav": b64(wav())},
+          "stumm": {"sprache": "de", "text": k1["de"], "wav": b64(wav(sek=0))}}
+antworten = {n: direkt("/api/stimme", d) for n, d in faelle.items()}
+ok("Ungültige Aufnahmen → 400 mit freundlichem Text, nichts verändert: kein base64, kein WAV, leer, über 10 s, fremde Sprache/Pfad, "
+   "ohne Text, Text über 200 Zeichen, stumm",
+   all(s == 400 and r.get("fehler") for s, r in antworten.values()) and "10 s" in antworten["lang"][1]["fehler"]
+   and "hören" in antworten["stumm"][1]["fehler"] and not any("Warnung" in r.get("fehler", "") for _, r in antworten.values())
+   and vorher == {str(q): q.read_bytes() for q in ordner.rglob("*") if q.is_file()} and not (p / "de").exists(),
+   {n: (s, r.get("fehler", "")[:40]) for n, (s, r) in antworten.items()})
+
+# --- Wort, das (noch) auf keiner Karte steht ---
+sn, rn = direkt("/api/stimme", {"sprache": "de", "text": "die Probegans von E61", "wav": b64(wav())})
+sr, rr = direkt("/api/stimmen-aufraeumen", {})
+ok("Aufnahme für ein Wort, das noch auf keiner Karte steht (Editor vor dem Speichern): angenommen, zählt als verwaist – „Aufräumen“ nimmt sie mit",
+   sn == 200 and rn.get("verwaist") == 1 and rn.get("schluessel") == st.schluessel("die Probegans von E61") and sr == 200
+   and rr.get("geloescht") == 1 and rr.get("verwaist") == 0 and datei.is_file(), (sn, rn.get("verwaist"), rr.get("geloescht")))
+
+# --- Lernseite und Anki ---
+direkt("/api/stimmen-import", roh=MP3, abfrage=f"name=de/{de1}.mp3")
+gk = [dict(bild=k["bild"], de=k["de"], es=k["es"], notiz="", front_jpg=str(p / "bilder" / k["bild"])) for k in karten[:3]]
+ziel = Path(tempfile.mkdtemp())
+ton = ld.aufnahmen_fuer(gk, p, "es")
+ok("aufnahmen_fuer: je Karte die vorhandenen Aufnahmen {de, zs} über Sprache + Schlüssel des Textes; ohne Projektordner bzw. ohne stimmen/ leer",
+   ton == {k0["bild"]: {"de": datei, "zs": ordner / "es" / f"{es0}.wav"}, k1["bild"]: {"de": ordner / "de" / f"{de1}.mp3"}}
+   and ld.aufnahmen_fuer(gk, None) == {} and ld.aufnahmen_fuer(gk, ziel) == {} and ld.aufnahmen_anzahl(ton) == 3, ton)
+ohne = ld.schreibe_lernseite(gk, ziel, "E61", "de").read_bytes()
+leer = ld.schreibe_lernseite(gk, ziel, "E61", "de", "es", {}).read_bytes()
+mit = ld.schreibe_lernseite(gk, ziel, "E61", "de", "es", ton).read_text(encoding="utf-8")
+d_mit = json.loads(mit.split('<script type="application/json" id="daten">', 1)[1].split("</script>", 1)[0]) if 'id="daten">' in mit else {}
+ok("Lernseite ohne Aufnahmen: Byte für Byte wie bisher (Vorlage unverändert, keine media-src, kein Aufnahme-Code)",
+   ohne == leer and ld.lernseite_vorlage(False) is ld.LERNSEITE and b"media-src" not in ohne and b"aufnahme(" not in ohne and b'"ton"' not in ohne
+   and ld.LERNSEITE_CSP.encode() in ohne and hashlib.sha256(ld.LERNSEITE.encode("utf-8")).hexdigest() == "82512e35c7f92d78fc2110c14b2ddb7a3f1ecc47b42350d151d2101c1194850a",
+   hashlib.sha256(ld.LERNSEITE.encode("utf-8")).hexdigest())
+kd = {k["de"]: k for k in d_mit.get("karten", [])}
+ok("Lernseite mit Aufnahmen: CSP + media-src data:, je Karte ton {de, zs} als data:-Adresse (fester Typ je Endung), sage() spielt zuerst die Datei "
+   "und fällt auf die Stimme zurück; 🔊 auch ohne Stimme des Systems",
+   mit.count("media-src data:;") == 1 and mit.count("function sage(") == 1 and "function sage(text, st, datei)" in mit
+   and "new Audio(datei)" in mit and '(stimme || aufnahme("de"))' in mit and '(stimmeZs || aufnahme("zs"))' in mit
+   and kd[k0["de"]]["ton"]["de"] == "data:audio/wav;base64," + b64(wav()) and kd[k0["de"]]["ton"]["zs"].startswith("data:audio/wav;base64,")
+   and kd[k1["de"]]["ton"] == {"de": "data:audio/mpeg;base64," + b64(MP3)} and "ton" not in kd[karten[2]["de"]]
+   and "connect-src" not in mit, sorted(kd[k0["de"]].get("ton", {})))
+def paket(pfad):
+    with zipfile.ZipFile(pfad) as z:
+        medien = json.loads(z.read("media"))
+        inhalte = {n: z.read(i) for i, n in medien.items()}
+        tmp = Path(tempfile.mkdtemp()) / "c.anki2"
+        tmp.write_bytes(z.read("collection.anki2"))
+    con = sqlite3.connect(tmp)
+    zeilen = [f for (f,) in con.execute("SELECT flds FROM notes ORDER BY id")]
+    sfld = [s for (s,) in con.execute("SELECT sfld FROM notes ORDER BY id")]
+    con.close()
+    return inhalte, zeilen, sfld
+m_ohne, f_ohne, _ = paket(ld.schreibe_apkg(gk, ziel, "E61"))
+m_mit, f_mit, sf = paket(ld.schreibe_apkg(gk, ziel, "E61", "es", ton))
+ok("Anki-Paket mit Aufnahmen: Medien mgd-<sprache>-<schlüssel>.<endung> + [sound:…] am deutschen Wort und am Wort der Kartensprache; "
+   "ohne Aufnahmen wie bisher (nur Bilder, kein [sound:)",
+   sorted(m_ohne) == sorted(ld.medienname(k) for k in gk) and not any("[sound:" in f for f in f_ohne)
+   and {n for n in m_mit if n.startswith("mgd-")} == {f"mgd-de-{de0}.wav", f"mgd-es-{es0}.wav", f"mgd-de-{de1}.mp3"}
+   and m_mit[f"mgd-de-{de0}.wav"] == wav() and m_mit[f"mgd-de-{de1}.mp3"] == MP3
+   and f_mit[0].split("\x1f")[0].endswith(f"[sound:mgd-de-{de0}.wav]") and f_mit[0].split("\x1f")[2].endswith(f"[sound:mgd-es-{es0}.wav]")
+   and f_mit[1].split("\x1f")[0].endswith(f"[sound:mgd-de-{de1}.mp3]") and "[sound:" not in f_mit[1].split("\x1f")[2]
+   and "[sound:" not in f_mit[2] and "[sound:" not in sf[0] and [f.split("\x1f")[1] for f in f_mit] == [f.split("\x1f")[1] for f in f_ohne],
+   (sorted(m_mit), f_mit[0][:120]))
+gemeldet = []
+erz = ld.erzeuge([dict(k) for k in gk], type("C", (), {"sprache": "es"})(), ziel, "html", "E61", "de", gl, gemeldet.append, projekt=p)
+seite_e = erz[0][1].read_text(encoding="utf-8")
+gemeldet2 = []
+erz2 = ld.erzeuge([dict(k) for k in gk], type("C", (), {"sprache": "es"})(), ziel, "html", "E61", "de", gl, gemeldet2.append)
+a_an, a_aus = gl.argumente(["--nur", "digital"]), gl.argumente(["--nur", "digital", "--ohne-aufnahmen"])
+feld = ui.alle_felder().get("ohne_aufnahmen") or {}
+ok("Generator: Aufnahmen reisen mit, wenn neben der Kartenliste stimmen/ liegt (Meldung nennt die Zahl); --ohne-aufnahmen bzw. ohne "
+   "Projektordner lässt sie weg; das Feld ist ein Schalter der Oberfläche (Standard aus = mitnehmen)",
+   "media-src data:" in seite_e and any("3" in m and "🎙" in m for m in gemeldet) and gemeldet2 == []
+   and "media-src" not in erz2[0][1].read_text(encoding="utf-8") and a_an.ohne_aufnahmen is False and a_aus.ohne_aufnahmen is True
+   and feld.get("art") == "schalter" and feld.get("flag") == "--ohne-aufnahmen"
+   and ui.argv_aus({}, {"nur": "digital", "ohne_aufnahmen": True}) == ["--nur=digital", "--ohne-aufnahmen"], (gemeldet, feld))
+
+# --- Anleitung über /api/hilfe ---
+h = {}
+for s_ in ("de", "en", "es"):
+    gl.setze_sprache(s_)
+    h[s_] = ui.hilfe_datei("stimmen", s_).name
+gl.setze_sprache("de")
+sh, rh = direkt("/api/hilfe", methode="GET", abfrage="doc=stimmen")
+ok("/api/hilfe?doc=stimmen liefert die Anleitung „Eigene Stimme mit anderen Programmen“ in der Sprache der Oberfläche (Leitfaden bleibt Standard)",
+   h == {"de": "STIMMEN_EXTERN.md", "en": "STIMMEN_EXTERN_en.md", "es": "STIMMEN_EXTERN_es.md"} and sh == 200
+   and rh.get("datei") == "STIMMEN_EXTERN.md" and "Piper" in rh.get("html", "") and "<pre><code>" in rh["html"] and "<table" in rh["html"]
+   and ui.hilfe_datei("leitfaden", "de").name == "LEITFADEN.md" and ui.hilfe_datei("unsinn", "en").name == "LEITFADEN_en.md", (h, sh))
+
+direkt("/api/tool", {"id": "stimmen", "aktion": "deinstallieren"})
+if ordner.exists():
+    for q in sorted(ordner.rglob("*"), reverse=True):
+        q.unlink() if q.is_file() else q.rmdir()
+    ordner.rmdir()
+print("#e61 " + json.dumps(E))
+'''
+
+
+def test_stimmen_aufnahme(p, tmp):
+    """E61 (2.6, G07b): Aufnahme im Programm (POST /api/stimme, Mikrofon nur mit Tool), Aufnahme-Baustein und Runde der Seite,
+    Lernseite und Anki-Paket mit eigenen Aufnahmen (ohne: unverändert), Anleitung für andere Programme in drei Sprachen.
+    Klicks, Mikrofon und Klang prüft browser_test.py (B1) mit nachgebildetem getUserMedia/MediaRecorder."""
+    print("\n[E61] Eigene Stimme: Aufnahme, Mitnehmen, Anleitung")
+    for name in ("STIMMEN_EXTERN.md", "STIMMEN_EXTERN_en.md", "STIMMEN_EXTERN_es.md"):
+        if not (p / name).exists():
+            shutil.copy2(HIER / name, p / name)
+    daten = Path(tmp) / "daten-e61"
+    daten.mkdir()
+    env = dict(os.environ, PYTHONIOENCODING="utf-8", MGD_DATEN=str(daten), MGD_START_ID="test")
+    env.pop("MGD_IM_PROZESS", None)
+    r = subprocess.run([sys.executable, "-c", E61_PROZESS, str(p)], cwd=p, env=env,
+                       capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=300)
+    m = re.search(r"^#e61 (.*)$", r.stdout, re.M)
+    if not m:
+        print((r.stdout + r.stderr)[-3000:])
+        pruefe("E61-Prozess lief durch", False, (r.stdout + r.stderr)[-600:])
+    else:
+        for name, gut_, detail in json.loads(m.group(1)):
+            pruefe(name, gut_, detail)
+
+    # ---------- Über HTTP: Mikrofon nur für die Seite und nur mit Tool ----------
+    daten_http = Path(tmp) / "daten-e61-http"
+    daten_http.mkdir()
+    proc, se = starte_server(p, daten_http)
+    try:
+        _, k_ohne, _ = se.anfrage("/")
+        se.json("/api/tool", daten={"id": "stimmen", "aktion": "installieren"})
+        _, k_mit, _ = se.anfrage("/")
+        _, k_api, _ = se.anfrage("/api/stimmen")
+        se.json("/api/tool", daten={"id": "stimmen", "aktion": "deinstallieren"})
+        _, k_nach, _ = se.anfrage("/")
+        pp = "permissions-policy"
+        pruefe("Permissions-Policy: microphone=(self) nur für die Seite und nur bei aktivem Tool „Eigene Stimme“; ohne Tool, nach dem "
+               "Deinstallieren und bei jeder anderen Antwort microphone=() – Kamera und Ort bleiben immer gesperrt",
+               "microphone=()" in k_ohne.get(pp, "") and "microphone=(self)" in k_mit.get(pp, "") and "microphone=()" in k_api.get(pp, "")
+               and "microphone=()" in k_nach.get(pp, "") and all("camera=()" in k.get(pp, "") and "geolocation=()" in k.get(pp, "")
+                                                                 for k in (k_ohne, k_mit, k_api, k_nach)),
+               (k_ohne.get(pp), k_mit.get(pp), k_api.get(pp)))
+    finally:
+        proc.terminate()
+        proc.wait(timeout=10)
+    pruefe("Nach den Prüfungen bleibt im Projekt kein Ordner stimmen/ (E61)", not (p / "stimmen").exists())
+
+    # ---------- Server-Quelle ----------
+    g = (HIER / "gans_ui.py").read_text(encoding="utf-8")
+    pruefe("Server: /api/stimme ist ein Rückgängig-Schritt (stimme_neu), ohne Tool reisen vorhandene Aufnahmen nicht mit, "
+           "Mikrofon-Erlaubnis nur für die Seite mit Nonce",
+           '"/api/stimme": "stimme_neu"' in g and 'extra["ohne_aufnahmen"] = True' in g
+           and 'if nur == "digital" and stimmen and not stimmen_da() and stimmen.dateien(_projekt()):' in g
+           and 'mikro = "(self)" if mime.startswith("text/html") and nonce and _mikrofon_erlaubt() else "()"' in g
+           and "AUFNAHME_SEKUNDEN = 10" in g)
+
+    # ---------- Seite ----------
+    ui = (HIER / "ui" / "index.html").read_text(encoding="utf-8")
+
+    def funktion(kopf, ende="\n}\n"):
+        i = ui.index(kopf)
+        return ui[i:ui.index(ende, i)]
+    na, zw, sch = funktion("async function nimmAuf()"), funktion("async function aufnahmeZuWav(blob)"), funktion("function aufnahmeSchnitt(x, rate)")
+    pruefe("Aufnahme-Baustein nimmAuf(): getUserMedia (Mono, Echo-/Rauschunterdrückung) → MediaRecorder → decodeAudioData → "
+           "OfflineAudioContext (Mono, 22 050 Hz) → Stille kappen (80 ms Rand), −3 dB, höchstens 10 s → WAV 16 Bit; Mikrofon danach frei",
+           "getUserMedia({ audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true } })" in na
+           and "new MediaRecorder(strom)" in na and "strom.getTracks().forEach(tr => tr.stop())" in na and na.count("frei()") >= 4
+           and "decodeAudioData" in zw and "new OC(1, " in zw and "AUFNAHME.rate" in zw
+           and "const AUFNAHME = { rate: 22050, maxSek: 10, schwelle: 0.02, rand: 0.08, ziel: Math.pow(10, -3 / 20) };" in ui
+           and "AUFNAHME.maxSek * rate" in sch and "AUFNAHME.ziel / max" in sch and "return new Float32Array(0);" in sch
+           and 'd.setUint16(34, 16, true)' in funktion("function wavAus(x, rate)") and 's(0, "RIFF")' in ui)
+    mo, oe = funktion("function aufnahmeMoeglich()"), funktion("function oeffneAufnahme(woerter, runde = false)")
+    pruefe("Ohne sicheren Kontext / ohne mediaDevices / Erlaubnis verweigert: freundlicher Hinweis statt Fehler (WLAN-Zugang: am Rechner "
+           "oder in der Handy-App); Aufnehmen nur über brauchtTool; Tool erst nach dem Laden aktiviert → einmal „Seite neu laden“",
+           "window.isSecureContext" in mo and "navigator.mediaDevices.getUserMedia" in mo and "window.MediaRecorder" in mo
+           and 'if (!stimmenDa()) return brauchtTool("stimmen", () => oeffneAufnahme(woerter, runde));' in oe
+           and 'if (!aufnahmeMoeglich()) return toast(t(AM_HANDY ? "sta_kein_mikro_handy" : "sta_kein_mikro"));' in oe
+           and 'e.name === "NotAllowedError" || e.name === "SecurityError") ? "sta_verweigert" : "sta_kein_mikro"' in ui
+           and "data-sta-kein-mikro" in ui and "if (MIKRO_AB_START === null) MIKRO_AB_START = stimmenDa();" in ui
+           and 'if (mikroGesperrt()) return toast(t("sta_neu_laden"), { aktion: { label: t("sta_neu_laden_knopf"), fn: () => location.reload() } });' in oe
+           and "const mikroGesperrt = () => !AM_APP && MIKRO_AB_START === false;" in ui)
+    beh = funktion("async function aufnahmeBehalten()")
+    pruefe("Zwei Wege: 🎙 am Wort (Karten-Editor an beiden Feldern, Listen im Tool) und Aufnahme-Runde (Sprache wählbar, nur fehlende "
+           "Wörter, Bild + großes Wort, Leertaste = Start/Stopp, nach „Behalten“ automatisch weiter, Fortschritt, jederzeit beenden; "
+           "eine Runde = ein Rückgängig-Schritt)",
+           ui.count('${aufnahmeKnopf("zs")}') == 1 and ui.count('${aufnahmeKnopf("de")}') == 1 and 'data-k-aktion="aufnehmen"' in ui
+           and 'toolInfo("stimmen") ? `<button' in funktion("function aufnahmeKnopf(seite)") and 'data-st="aufnehmen"' in ui
+           and 'data-st="runde"' in ui and "data-st-runde>" in ui and 'if (a === "runde") return aufnahmeRunde();' in ui
+           and "aufnahmeOffen(wahl).map(w => ({ ...w })), true)" in ui and 'class="aufnahme-wort"' in ui
+           and 't("sta_fortschritt", a.i + 1, a.woerter.length)' in ui and "data-zu>${esc(t(\"sta_beenden\"))}" in ui
+           and 'if (a.zustand === "bereit") aufnahmeLos(); else if (a.zustand === "laeuft") aufnahmeStopp();' in ui
+           and 'api("/api/stimme", { methode: "POST", daten: { sprache: w.sprache, text: w.text, wav: bytesBase64(a.wav) }, gruppe: a.gruppe })' in beh
+           and "if (a.runde && a.i < a.woerter.length - 1) { a.i++;" in beh and 'gruppe: runde ? "aufnahme-" + Date.now() : undefined' in ui
+           and 'if (el.id === "aufnahme-fenster") aufnahmeZu();' in ui and "if (a.lauf) a.lauf.abbruch();" in funktion("function aufnahmeZu()")
+           and 'id="aufnahme-fenster" hidden data-dialogfenster' in ui)
+    pruefe("Erzeugen: Schalter „Eigene Aufnahmen weglassen“ nur, wenn es Aufnahmen gibt, mit Zahl und Größe; ab 25 MB erst fragen; "
+           "Hilfe hat den Reiter mit der Anleitung, das Tool verlinkt sie",
+           'felder: ["digital", "ohne_aufnahmen", "gans_bild", "format"]' in ui and 'if (!ton) ausgenommen.add("ohne_aufnahmen");' in ui
+           and 't("sta_export_hinweis", ton, toolGroesse(aufnahmenGroesse()))' in ui and "aufnahmenGroesse() > 25 * 1048576" in ui
+           and 't("sta_export_trotzdem")' in ui and 'data-doc="stimmen" aria-selected="false" data-t="tab_stimmen"' in ui
+           and 'data-st="extern"' in ui and 'if (a === "extern") { e.preventDefault(); S.doc = "stimmen";' in ui)
+    bloecke = [b.split("\n  ln_zaehler", 1)[0] for b in ui.split("/* Eigene Stimme: Aufnehmen im Programm, Mitnehmen, Anleitung für andere Programme */")[1:4]]
+    namen = [sorted(set(re.findall(r"(?:^|, |  )((?:h_)?(?:sta|tab|st|vl_art)_[a-z_]+):", b, re.M))) for b in bloecke]
+    pruefe("Texte: gleiche Schlüssel in drei Sprachen (sta_*, Touch-Fassungen, Hover, Reiter, Rückgängig-Art), positiver Ton, Gänse-Witz",
+           len(bloecke) == 3 and namen[0] == namen[1] == namen[2] and len(namen[0]) == 46
+           and {"sta_bereit_touch", "sta_tasten_touch", "h_sta_aufnehmen", "h_sta_runde", "h_tab_stimmen", "tab_stimmen", "vl_art_stimme_neu",
+                "st_extern", "sta_kein_mikro_handy", "sta_verweigert"} <= set(namen[0])
+           and not re.search(r"Warnung|Warning|Advertencia|Fehler:|Error:", "".join(bloecke))
+           and "gans" in bloecke[0] and "goose" in bloecke[1] and "ganso" in bloecke[2]
+           and "Handy-App" in bloecke[0] and "phone app" in bloecke[1] and "app del celular" in bloecke[2], (len(bloecke), [len(n) for n in namen]))
+
+    # ---------- Anleitung, Leitfäden ----------
+    docs = [(HIER / n).read_text(encoding="utf-8") for n in ("STIMMEN_EXTERN.md", "STIMMEN_EXTERN_en.md", "STIMMEN_EXTERN_es.md")]
+
+    def gliederung(text):
+        return ([len(z) - len(z.lstrip("#")) for z in text.split("\n") if z.startswith("#")], text.count("\n| "), text.count("```"),
+                len(re.findall(r"^- ", text, re.M)), len(re.findall(r"^\d+\. ", text, re.M)))
+    code = [d.split("```")[1] for d in docs]
+    pruefe("Anleitung STIMMEN_EXTERN in de/en/es gleich gegliedert (Überschriften, Tabelle, Listen, gleiches Beispiel): Weg in drei "
+           "Schritten, fünf Rezepte (Audacity/Handy, Piper, Chatterbox + Pocket TTS, eigenes Piper-Modell, RVC/Applio) mit Lizenz, "
+           "Größe und Hinweis zur Cloud; nur kostenlose Programme, kein Stufenwort „Warnung“",
+           gliederung(docs[0]) == gliederung(docs[1]) == gliederung(docs[2]) and gliederung(docs[0])[0] == [1] + [2] * 8
+           and code[0] == code[1] == code[2] and '"-m", "piper"' in code[0] and 'delimiter=";"' in code[0]
+           and all(all(w in d for w in ("Audacity", "Piper", "de_DE-thorsten", "es_MX-claude", "es_MX-ald", "Chatterbox Multilingual",
+                                        "Pocket TTS", "Piper Recording Studio", "RVC", "Applio", "GPL-3.0", "MIT", "CC-BY-4.0", "CC0",
+                                        "datei;sprache;text;vorhanden", "2026")) for d in docs)
+           and "verlässt dann dein Gerät" in docs[0] and "leaves your device" in docs[1] and "sale de tu dispositivo" in docs[2]
+           and "Erlaubnis" in docs[0] and "permission" in docs[1] and "permiso" in docs[2]
+           and not re.search(r"Warnung|Warning|Advertencia", "".join(docs)) and all(len(d.encode("utf-8")) < 12000 for d in docs),
+           [gliederung(d) for d in docs])
+    leit = [(HIER / n).read_text(encoding="utf-8") for n in ("LEITFADEN.md", "LEITFADEN_en.md", "LEITFADEN_es.md")]
+    pruefe("Leitfäden de/en/es: Aufnehmen (🎙 am Wort, Aufnahme-Runde), Mitnehmen in Lernseite und Anki, Verweis auf die Anleitung",
+           all("🎙" in d for d in leit) and "Aufnahme-Runde" in leit[0] and "recording round" in leit[1] and "ronda de grabación" in leit[2]
+           and "Eigene Aufnahmen weglassen" in leit[0] and "Leave out your own recordings" in leit[1] and "Dejar fuera tus grabaciones" in leit[2]
+           and "Stimme mit anderen Programmen" in leit[0] and "Voice with other programs" in leit[1] and "Voz con otros programas" in leit[2])
+    bw = HIER.parent.parent / "werkstatt" / "bau_webapp.py"
+    if bw.is_file():
+        bt = bw.read_text(encoding="utf-8")
+        bt_test = (HIER.parent.parent / ".github" / "ci" / "browser_test.py").read_text(encoding="utf-8")
+        pruefe("Handy-App: die drei Anleitungen sind im Programm-Paket, stimmen.py reist als Modul mit; der Browser-Test bildet "
+               "Mikrofon und Recorder nach (aufnehmen → behalten → 🔊 spielt die Datei, Runde, verweigerte Erlaubnis)",
+               all(f'"{n}"' in bt for n in ("STIMMEN_EXTERN.md", "STIMMEN_EXTERN_en.md", "STIMMEN_EXTERN_es.md"))
+               and "stimmen.py" not in bt.split("MODULE_WEG = ", 1)[1].split("\n", 1)[0]
+               and "MIKRO_JS" in bt_test and "getUserMedia" in bt_test and "MediaRecorder" in bt_test and "b1_aufnahme" in bt_test
+               and "NotAllowedError" in bt_test)
+    else:
+        print("  (werkstatt/ und .github/ gibt es nur im Quellbaum – 1 Prüfung entfällt)")
 
 
 def main():
@@ -7688,6 +8024,7 @@ def main():
         test_github_meldungen(Path(tmp))
         test_aussprache_beide(Path(tmp))
         test_stimmen(p, Path(tmp))
+        test_stimmen_aufnahme(p, Path(tmp))
     ok =sum(1 for e in tg.ergebnisse if e[1])
     print(f"\n{ok} von {len(tg.ergebnisse)} Prüfungen bestanden ({time.time() - t0:.0f} s).")
     if ok == len(tg.ergebnisse):

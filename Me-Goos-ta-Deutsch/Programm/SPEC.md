@@ -880,11 +880,29 @@ BOM, `;`, Spalten `datei;sprache;text;vorhanden`, `datei` = `<sprache>/<schlüss
 Kartensprache ohne Doppelte, Formel-Anfang mit `'` entschärft); `POST /api/stimmen-import?name=` (rohe Bytes: ZIP – an
 den Kennbytes `PK` erkannt – oder eine einzelne Audiodatei mit `name` = `<sprache>/<schlüssel>.<endung>`) → Stand wie
 `/api/stimmen` + `ergebnis {neu, ersetzt, unbekannt, abgelehnt, gruende {code: n}}`; `POST /api/stimme-loeschen {sprache,
-schluessel}`; `POST /api/stimmen-aufraeumen` (löscht Aufnahmen, zu denen keine Karte mehr ein Wort hat) → `geloescht`.
-Die drei POST-Wege sind Rückgängig-Schritte (`stimmen_import`, `stimme_weg`, `stimmen_aufraeumen`; `stimmen/` gehört zum
+schluessel}`; `POST /api/stimmen-aufraeumen` (löscht Aufnahmen, zu denen keine Karte mehr ein Wort hat) → `geloescht`;
+`POST /api/stimme {sprache, text, wav}` (seit G07b, Aufnahme im Programm: WAV als base64, PCM, höchstens 10 s – Schlüssel
+bildet der Server aus dem Text, auch für ein Wort, das noch auf keiner Karte steht; es zählt dann als verwaist) → Stand +
+`gespeichert (neu|ersetzt), sprache, schluessel`. `/api/stimmen` nennt zusätzlich `offen [{sprache, schluessel, text, bild}]`
+(Wörter ohne Aufnahme, Kartenreihenfolge – für die Aufnahme-Runde), `bild` je Wort und `aufnahme_sekunden`.
+Die vier POST-Wege sind Rückgängig-Schritte (`stimme_neu`, `stimmen_import`, `stimme_weg`, `stimmen_aufraeumen`; `stimmen/` gehört zum
 Bereich, vor jedem Löschen/Überschreiben `_sichere`). Mit Tool tragen `/api/karten` je Karte und die Lernkarte
 (`/api/lernen-karte`, `naechste`) `stimme {de, zs}` = Schlüssel von Deutsch-Text und Wort – die Seite bildet keinen Hash.
-CSP der Seite: `media-src 'self' blob:`; das Mikrofon bleibt gesperrt (`microphone=()`). **Oberfläche:** Bereich
+CSP der Seite: `media-src 'self' blob:`. `Permissions-Policy`: `microphone=(self)` nur für die Seite (HTML mit Nonce) und nur bei
+aktivem Tool, sonst und bei jeder anderen Antwort `microphone=()` (wurde das Tool erst nach dem Laden aktiviert, bittet die
+Seite einmal um „Seite neu laden“; die Handy-App kennt die Sperre nicht). **Aufnahme (G07b):** `nimmAuf()` – `getUserMedia`
+(Mono, Echo-/Rauschunterdrückung) → `MediaRecorder` → `decodeAudioData` → `OfflineAudioContext` (Mono, 22 050 Hz) → Stille
+vorn/hinten kappen (Schwelle, je 80 ms Rand), auf −3 dB normalisieren, höchstens 10 s → WAV 16 Bit (`wavAus`); Mikrofon nach
+jeder Aufnahme frei (`track.stop()`). Ohne sicheren Kontext/`mediaDevices` bzw. bei verweigerter Erlaubnis ein Hinweis statt
+eines Fehlers. Fenster `#aufnahme-fenster` (aufnehmen → anhören → behalten/nochmal/löschen): 🎙 am Wort im Karten-Editor (beide
+Felder, auch vor dem Speichern) und in den Listen des Tools; Aufnahme-Runde über `STIMMEN.offen` (Sprache wählbar, Bild + Wort
+groß, Leertaste = Start/Stopp, Enter = Behalten, automatisch weiter, eine Runde = eine Rückgängig-Gruppe). **Mitnehmen:**
+Generator-Schalter `--ohne-aufnahmen` (Standard aus); `lernkarten_digital.erzeuge(…, projekt=Ordner der Kartenliste)` →
+`aufnahmen_fuer()`; Lernseite: je Karte `ton {de, zs}` als `data:`-Adresse, CSP + `media-src data:`, `sage()` spielt zuerst die
+Datei (ohne Aufnahmen Byte für Byte wie bisher); Anki: Medien `mgd-<sprache>-<schlüssel>.<endung>` + `[sound:…]` am Feld
+Deutsch bzw. Kartensprache. Ohne aktives Tool setzt der Server `ohne_aufnahmen`. Erzeugen zeigt Zahl + Größe, ab 25 MB
+Rückfrage. Anleitung für andere Programme: `STIMMEN_EXTERN.md` (+ `_en`/`_es`), `/api/hilfe?doc=stimmen`, Reiter der Hilfe.
+**Oberfläche:** Bereich
 `#stimmen-bereich` unter den Tools (ohne Tool Hinweis + „Aktivieren“ über `brauchtTool("stimmen")`): Erlaubnis-Hinweis
 (nur die eigene Stimme oder eine mit Erlaubnis); je Sprache (Deutsch + Kartensprache) Auswahl „Automatisch“ + lokale
 Stimmen (`lokaleStimmen(code)`, nur `localService !== false`), Regler Tempo 0,6–1,2 und Tonhöhe 0,8–1,2, „Probe hören“ –
